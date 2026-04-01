@@ -1,15 +1,15 @@
 # SIBR Core
 
-**SIBR** is a System for Image-Based Rendering.  
-It is built around the *sibr-core* in this repo and several *Projects* implementing published research papers.  
-For more complete documentation, see here: [SIBR Documentation](https://sibr.gitlabpages.inria.fr) 
-  
+**SIBR** is a System for Image-Based Rendering.
+It is built around the *sibr-core* in this repo and several *Projects* implementing published research papers.
+For more complete documentation, see here: [SIBR Documentation](https://sibr.gitlabpages.inria.fr)
+
 This **SIBR core** repository provides :
 - a basic Image-Based Renderer
 - a per-pixel implementation of Unstructured Lumigraph (ULR)
 - several dataset tools & pipelines do process input images
-  
-Details on how to run in the documentation and in the section below.  
+
+Details on how to run in the documentation and in the section below.
 If you use this code in a publication, please cite the system as follows:
 
 ```
@@ -22,44 +22,35 @@ If you use this code in a publication, please cite the system as follows:
 ```
 ## OpenXR
 
-This branch supports headed-mounted displays through [OpenXR](#use-a-vr-headset). 
+This branch supports headed-mounted displays through [OpenXR](#use-a-vr-headset).
 
 
 ## Setup
 
-**Note**: The current release is for *Windows 10* only. Please not that Visual Studio with c++20 standard is required to compile. We are planning a Linux release soon.
+**Note**: The current release is for *Windows 11* only. Please not that Visual Studio with c++23 standard is required to compile.
 
 #### Binary distribution
 
 The easiest way to use SIBR is to download the binary distribution. All steps described below, including all preprocessing for your datasets will work using this code.
 
-Download the distribution from the page: https://sibr.gitlabpages.inria.fr/download.html (Core, 57Mb); unzip the file and rename the directory "install".
+Download the distribution from the page: TODO: Add Link (Core, ???Mb); unzip the file and rename the directory "install".
 
 #### Install requirements
 
-- [**Visual Studio 2019**](https://visualstudio.microsoft.com/fr/downloads/)
-- [**Cmake 3.16+**](https://cmake.org/download)
+All version numbers are the version used in our testing. Other versions of the same software may work, but we cannot offer any support when using different versions.
+
+- [**Visual Studio 2022**](https://visualstudio.microsoft.com/downloads/)
+  (make sure to install the Desktop development with C++ workload as well as the recommended MSVC build tools)
+- [**Cmake 4.3.2**](https://cmake.org/download)
 - [**7zip**](https://www.7-zip.org)
-- [**Python 3.8+**](https://www.python.org/downloads/) for shaders installation scripts and dataset preprocess scripts
-- [**Doxygen 1.8.17+**](https://www.doxygen.nl/download.html#srcbin) for documentation
-- [**CUDA 10.1+**](https://developer.nvidia.com/cuda-downloads) and [**CUDnn**](https://developer.nvidia.com/cudnn) if projects requires it
+- [**CUDA 12.8**](https://developer.nvidia.com/cuda-downloads)
 
-Make sure Python, CUDA and Doxygen are in the PATH
-
-If you have Chocolatey, you can grab most of these with this command:
-
-```sh
-choco install cmake 7zip python3 doxygen.install cuda
-
-## Visual Studio is available on Chocolatey,
-## though we do advise to set it from Visual Studio Installer and to choose your licensing accordingly
-choco install visualstudio2019community
-```
+Make sure CUDA is in the PATH, and the `CUDA_HOME` and `CUDA_PATH` environment variables are set to the correct installation directory.
 
 #### Generation of the solution
+TODO: Update with the correct URLs & Build Instructions
 
 - Checkout this repository's master branch:
-  
   ```sh
   ## through HTTPS
   git clone https://gitlab.inria.fr/sibr/sibr_core.git -b master
@@ -77,30 +68,7 @@ choco install visualstudio2019community
 - The compiled executables will be put in `install/bin`
 - TODO: are the DLLs properly installed?
 
-#### Compilation of the documentation
-
-- Open the generated Visual Studio solution (`build/sibr_projects.sln`)
-- Build the `DOCUMENTATION` target
-- Run `install/docs/index.html` in a browser
-
-
-## Scripts
-
-Some scripts will require you to install `PIL`, and `convert` from `ImageMagick`.
-
-```sh
-## To install pillow
-python -m pip install pillow
-
-## If you have Chocolatey, you can install imagemagick from this command
-choco install imagemagick
-```
-
 ## Troubleshooting
-
-#### Bugs and Issues
-
-We will track bugs and issues through the Issues interface on gitlab. Inria gitlab does not allow creation of external accounts, so if you have an issue/bug please email <code>sibr@inria.fr</code> and we will either create a guest account or create the issue on our side.
 
 #### Cmake complaining about the version
 
@@ -110,73 +78,35 @@ if you are the first to use a very recent Cmake version, you will have to update
 
 you probably selected the 32-bits compiler in Cmake-gui.
 
-#### `Cmd.exe failed with error 009` or similar
-
-make sure Python is installed and in the path. 
-
 #### `BUILD_ALL` or `INSTALL` fail because of a project you don't really need
 
 build and install each project separately by selecting the proper targets.
 
-#### Error in CUDA headers under Visual Studio 2019
-
-make sure CUDA >= 10.1 (first version to support VS2019) is installed.
-
 ## To run an example
+TODO: Update this and the VR section with example usage
 
-For more details, please see the documentation: http://sibr.gitlabpages.inria.fr
-
-Download a dataset from: https://repo-sam.inria.fr/fungraph/sibr-datasets/
-
-e.g., the *sibr-museum-front* dataset in the *DATASETS_PATH* directory.
-
-```
-wget https://repo-sam.inria.fr/fungraph/sibr-datasets/museum_front27_ulr.zip
-```
-
-Once you have built the system or downloaded the binaries (see above), go to *install/bin* and you can run:
-```
-	sibr_ulrv2_app.exe --path DATASETS_PATH/sibr-museum-front
-```
-
-You will have an interactive viewer and you can navigate freely in the captured scene. 
-Our default interactive viewer has a main view running the algorithm and a top view to visualize the position of the calibrated cameras. By default you are in WASD mode, and can toggle to trackball using the "y" key. Please see the page [Interface](https://sibr.gitlabpages.inria.fr/docs/nightly/howto_sibr_useful_objects.html) for more details on the interface.
-
-Please see the documentation on how to create a dataset from your own scene, and the various other IBR algorithms available.
 
 ### Support for VR headsets using OpenXR (provided by Orange)
 
 
-* The new SIBR rendering mode `OpenXRRdrMode` supports Headed-Mounted dislay (HMD) OpenXR devices.
-* The GaussianViewer can use this rendering mode with `--rendering-mode 2` option to render 3D Gaussian Splatting scene to two-view headset display through OpenXR stack.
-* This mode works on Windows and Linux (through the SteamVR OpenXR runtime).
-
-_Note: `OpenXRRdrMode` does not (yet) support actions (aka controller buttons). But two VR experience modes are available:_
-* Free world standing: only the headset's displacement allows motion within the 3DGS scene
-* Seated: controls with keyboard or mouse are available in addition to headset's displacement
+* The new SIBR rendering mode `OpenXRRdrMode` supports head-mounted display (HMD) OpenXR devices.
+* The GaussianViewer can use this rendering mode with the `--rendering-mode 2` option to render a 3D Gaussian Splatting scene to a two-view headset display through the OpenXR stack.
+* This mode currently works on Windows only.
+* Further, we've only tested the eye-tracking support with a Meta Quest Pro using the Meta Horizon Link software. **Eye tracking may not work on other headsets using the current code base.**
 
 ---
 **How to test:**
 
-**Windows (Meta Quest 1/2/3/Pro):**
+**Windows (Meta Quest Pro):**
 
-1. Install the Desktop PC Oculus Application: https://www.meta.com/en-gb/help/quest/articles/headsets-and-accessories/oculus-rift-s/install-app-for-link/
-2. Setup Quest Link: https://www.meta.com/en-gb/help/quest/articles/headsets-and-accessories/oculus-link/set-up-link/
-3. The headset should be in the Oculus AirLink Home screen (white background)
-4. Run `gaussianViewer -m <dataset_path> --rendering-mode 2`
+1. Install the Desktop PC Meta Horizon Link App and connect your headset: https://www.meta.com/en-us/help/quest/1517439565442928
+2. For eye tracking support, you need to enable developer mode in *both* the headset settings *and* the Meta Horizon Link App. Under the developer settings in the Meta Horizon Link App, you should then be able to activate Eye-Tracking via Meta Horizon Link.
+3. We recommend connecting the headset with an official Meta Quest Link cable for stability, as eye tracking sometimes breaks when using AirLink.
+4. Make sure you've activated the link connection in the headset (The headset should be in the Oculus Link Home screen (white grid background)).
+5. Run `gaussianViewer -m <dataset_path> --rendering-mode 2`  TODO: Update command
 
+TODO: Update the remaining part of this section
 ![openxr gaussian viewer](./docs/img/openxr_gaussian_viewer.png)
 
 5. You can try `Free world standing` and `Seated` VR experiences
 6. If you are experiencing lags in the headset, try to lower the rendering resolution by changing the `Down scale factor` slider value.
-
-**Linux (through Steam):**
-
-1. Install Steam and SteamVR
-2. Make SteamVR the OpenXR default runtime (Settings > OpenXR > SET STEAMVR AS OPENXR RUNTIME)
-3. Restart SteamVR
-4. Run `gaussianViewer -m <dataset_path> --rendering-mode 2`
-
-Tested with an HTC Vive Pro with `beta - SteamVR Beta Update` on Ubuntu distribution and Meta Quest 2 with `Oculus` on Windows 11.
-
-
