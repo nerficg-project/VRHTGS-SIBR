@@ -351,6 +351,7 @@ namespace sibr
 		std::string appPath;
 		Arg<std::string> custom_app_path = { "appPath", "./", "define a custom app path" };
 		Arg<bool> showHelp = {"help", "display this help message"};
+		Arg<bool> showHelpShort = {"h", "display this help message"};
 
 		/// Helper to print the help message if the help argument was passed.
 		void displayHelpIfRequired() const;
@@ -367,8 +368,8 @@ namespace sibr
 	struct WindowArgs {
 		Arg<int> win_width = { "width", 720, "initial window width" };
 		Arg<int> win_height = { "height", 480, "initial window height" };
-		Arg<int> vsync = { "vsync", 1, "enable vertical sync" };
 		Arg<bool> fullscreen = { "fullscreen", "set the window to fullscreen" };
+		Arg<bool> vsync = { "vsync", "enable vertical sync" };
 		Arg<bool> hdpi = { "hd", "rescale UI elements for high-density screens" };
 		Arg<bool> no_gui = { "nogui", "do not use ImGui" };
 		Arg<bool> gl_debug = { "gldebug", "enable OpenGL error callback" };

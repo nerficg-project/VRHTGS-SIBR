@@ -326,7 +326,7 @@ namespace sibr
 		viewport(Viewport(0.f, 0.f, (float)width, (float)height));	/// \todo TODO: bind both
 
 		_useVSync = args.vsync;
-		glfwSwapInterval(args.vsync);
+		glfwSwapInterval(args.vsync ? 1 : 0);
 		glfwSetKeyCallback(_glfwWin.get(), glfwKeyboardCallback);
 		glfwSetScrollCallback(_glfwWin.get(), glfwMouseScrollCallback);
 		glfwSetMouseButtonCallback(_glfwWin.get(), glfwMouseButtonCallback);

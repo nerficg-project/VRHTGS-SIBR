@@ -139,7 +139,7 @@ namespace sibr
 	}
 
 	void AppArgs::displayHelpIfRequired() const {
-		if(showHelp.get()) {
+		if(showHelp.get() || showHelpShort.get()) {
 			getCommandLineArgs().displayHelp();
 		}
 	}
