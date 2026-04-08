@@ -213,6 +213,11 @@ namespace sibr
         const Eigen::Vector2i &getResolution() const;
 
         /**
+         * @brief Get the pose of the head in VR, i.e. not adjusted for eye position
+         */
+        Eigen::Matrix4f getHeadPose() const;
+
+        /**
          * @brief Return the yaw, roll, pich of the eye pose
          * @param eye: LEFT or RIGHT
          * @param unit: RADIAN or DEGREE (RADIAN by default)
@@ -230,6 +235,18 @@ namespace sibr
          * @param eye: LEFT or RIGHT
          */
         Eigen::Vector3f getPosePosition(Eye eye) const;
+
+        /**
+         * @brief Return the quaternion of the eye gaze (requires eye tracking capable headset and enabled eye tracking)
+         * @param eye: LEFT or RIGHT
+         */
+        Eigen::Quaternionf getEyeGazeQuaternion(Eye eye) const;
+
+        /**
+         * @brief Return the position of the eye gaze (in OpenXR world coordinates - +x is right, +y is down, +z is backward)
+         * @param eye: LEFT or RIGHT
+         */
+        Eigen::Vector3f getEyeGazePosition(Eye eye) const;
 
         /**
          * @brief Return the fields of view of each eye
@@ -282,6 +299,9 @@ namespace sibr
         }
 
     private:
+        // Log eye tracking info every 200 frames to assure the experimenter eye tracking is functional
+        static constexpr const int LOG_INTERVAL = 200;
+
         // Name of the application displayed in the headset
         std::string m_applicationName;
 
@@ -314,6 +334,11 @@ namespace sibr
         XrSystemId m_systemId = XR_NULL_SYSTEM_ID;
         // The session deals with the renderloop submitting frames to the runtime
         XrSession m_session = XR_NULL_HANDLE;
+
+        // Eye tracking extension handle
+        XrEyeTrackerFB m_eyeTracker = XR_NULL_HANDLE; // eye tracking
+        // Eye gazes state
+        XrEyeGazesFB m_eyeGazes = {XR_TYPE_EYE_GAZES_FB, nullptr, 0, 0, 0, 0, 0, 0}; // eye tracking
 
         // Each physical Display/Eye is described by a view.
         // Dynamically allocating all view related structs instead of assuming 2
@@ -357,6 +382,7 @@ namespace sibr
         bool createSession(const XrSessionCreateInfo &m_sessionCreateInfo);
         bool createReferenceSpace();
         bool createSwapchain();
+        bool initializeEyeTracking();
         bool synchronizeSession();
         void updateCurrentSessionState(const XrSessionState &state);
         void updateRefreshReport();

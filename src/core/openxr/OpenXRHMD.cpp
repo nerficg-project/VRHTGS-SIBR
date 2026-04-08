@@ -31,6 +31,12 @@ namespace sibr
     static PFN_xrConvertWin32PerformanceCounterToTimeKHR pfnConvertWin32PerformanceCounterToTimeKHR = NULL;
 #endif
 
+    // Eye tracking extension functions
+    static PFN_xrCreateEyeTrackerFB xrCreateEyeTrackerFB_ = nullptr;
+    static PFN_xrDestroyEyeTrackerFB xrDestroyEyeTrackerFB_ = nullptr;
+    static PFN_xrGetEyeGazesFB xrGetEyeGazesFB_ = nullptr;
+    static PFN_xrGetVisibilityMaskKHR xrGetVisibilityMaskKHR_ = nullptr;
+
     static bool
     load_extension_function_pointers(XrInstance instance)
     {
@@ -52,6 +58,22 @@ namespace sibr
         if (!xrCheck(instance, result, "Failed to get win32 time conversion function!"))
             return false;
 #endif
+
+        // Eye tracking
+        result = xrGetInstanceProcAddr(instance, "xrCreateEyeTrackerFB",
+                (PFN_xrVoidFunction *)&xrCreateEyeTrackerFB_);
+        if (!xrCheck(instance, result, "Failed to get Eye Tracking Create function!"))
+            return false;
+
+        result = xrGetInstanceProcAddr(instance, "xrDestroyEyeTrackerFB",
+                (PFN_xrVoidFunction *)&xrDestroyEyeTrackerFB_);
+        if (!xrCheck(instance, result, "Failed to get Eye Tracking Destroy function!"))
+            return false;
+
+        result = xrGetInstanceProcAddr(instance, "xrGetEyeGazesFB",
+                (PFN_xrVoidFunction *)&xrGetEyeGazesFB_);
+        if (!xrCheck(instance, result, "Failed to get Eye Tracking Get function!"))
+            return false;
 
         return true;
     }
@@ -131,6 +153,29 @@ namespace sibr
             cr * cp * sy - sr * sp * cy};
     }
 
+    Eigen::Matrix4f OpenXRHMD::getHeadPose() const
+    {
+        // Return the average pose between both eyes
+        if (m_viewCount < 2)
+        {
+            fprintf(stderr, "No view exists\n");
+            return Matrix4f::Identity();
+        }
+
+        Eigen::Vector3f posLeft = getPosePosition(Eye::LEFT);
+        Eigen::Vector3f posRight = getPosePosition(Eye::RIGHT);
+        Eigen::Vector3f avgPos = 0.5f * (posLeft + posRight);
+
+        Eigen::Quaternionf quatLeft = getPoseQuaternion(Eye::LEFT);
+        Eigen::Quaternionf quatRight = getPoseQuaternion(Eye::RIGHT);
+        Eigen::Quaternionf avgQuat = quatLeft.slerp(0.5f, quatRight);
+
+        Eigen::Matrix4f headPose = Eigen::Matrix4f::Identity();
+        headPose.block<3, 3>(0, 0) = avgQuat.toRotationMatrix();
+        headPose.block<3, 1>(0, 3) = avgPos;
+        return headPose;
+    }
+
     Eigen::Vector3f OpenXRHMD::getPoseOrientation(OpenXRHMD::Eye eye, AngleUnit unit) const
     {
         uint32_t viewIndex = eyeToViewIndex(eye);
@@ -171,6 +216,29 @@ namespace sibr
         return Vector3f(views[viewIndex].pose.position.x,
                         views[viewIndex].pose.position.y,
                         views[viewIndex].pose.position.z);
+    }
+
+    Eigen::Quaternionf OpenXRHMD::getEyeGazeQuaternion(OpenXRHMD::Eye eye) const
+    {
+        uint32_t viewIndex = eyeToViewIndex(eye);
+
+        // XrPoseOrientation is a unit quaternion
+        return Quaternionf {
+            m_eyeGazes.gaze[viewIndex].gazePose.orientation.w,
+            m_eyeGazes.gaze[viewIndex].gazePose.orientation.x,
+            m_eyeGazes.gaze[viewIndex].gazePose.orientation.y,
+            m_eyeGazes.gaze[viewIndex].gazePose.orientation.z
+        };
+    }
+
+    Eigen::Vector3f OpenXRHMD::getEyeGazePosition(OpenXRHMD::Eye eye) const
+    {
+        uint32_t viewIndex = eyeToViewIndex(eye);
+
+        // XrPosePosition are in world coordinates
+        return Vector3f(m_eyeGazes.gaze[viewIndex].gazePose.position.x,
+                        m_eyeGazes.gaze[viewIndex].gazePose.position.y,
+                        m_eyeGazes.gaze[viewIndex].gazePose.position.z);
     }
 
     Eigen::Vector4f OpenXRHMD::getFieldOfView(OpenXRHMD::Eye eye, AngleUnit unit) const
@@ -257,6 +325,7 @@ namespace sibr
 
         std::vector<const char *> expectedExtensions = {
             XR_KHR_OPENGL_ENABLE_EXTENSION_NAME,
+            XR_FB_EYE_TRACKING_SOCIAL_EXTENSION_NAME, // eye tracking
 #if defined(XR_USE_PLATFORM_WIN32)
             XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME,
 #elif defined(XR_USE_TIMESPEC)
@@ -376,6 +445,21 @@ namespace sibr
         return true;
     }
 
+    bool OpenXRHMD::initializeEyeTracking()
+    {
+        XrResult result;
+
+        XrEyeTrackerCreateInfoFB createInfo = {};
+        createInfo.type = XR_TYPE_EYE_TRACKER_CREATE_INFO_FB;
+        createInfo.next = nullptr;
+
+        result = xrCreateEyeTrackerFB_(m_session, &createInfo, &m_eyeTracker);
+        if (!xrCheck(m_instance, result, "Failed to create eye tracker"))
+            return false;
+
+        return true;
+    }
+
     Vector2i OpenXRHMD::getRecommendedResolution() const
     {
         return (m_viewCount > 0 ? Vector2i(m_viewConfigViews[0].recommendedImageRectWidth, m_viewConfigViews[0].recommendedImageRectHeight) : Vector2i::Zero());
@@ -406,7 +490,7 @@ namespace sibr
         GLenum err = glewInit();
         if (GLEW_OK != err)
         {
-            printf("Error initializing OpenGL: %u\n", err);
+            std::print("Error initializing OpenGL: %u\n", err);
             return false;
         }
 
@@ -416,6 +500,12 @@ namespace sibr
             .type = XR_TYPE_SESSION_CREATE_INFO, .next = &graphicsBindingGL, .systemId = m_systemId};
 
         return createSession(m_sessionCreateInfo) && createReferenceSpace() && createSwapchain() && synchronizeSession();
+        bool success = createSession(m_sessionCreateInfo) && createReferenceSpace() && createSwapchain() && initializeEyeTracking();
+        if (!success) {
+            std::cout << "ERROR: Failed to start XR session." << std::endl;
+            return false;
+        }
+        return true;
     }
 
 #ifdef XR_USE_PLATFORM_XLIB
@@ -755,7 +845,7 @@ namespace sibr
         m_lastFrameState.predictedDisplayTime = 0;
         XrFrameWaitInfo frame_wait_info = {.type = XR_TYPE_FRAME_WAIT_INFO, .next = NULL};
         XrResult result = xrWaitFrame(m_session, &frame_wait_info, &m_lastFrameState);
-        if (!xrCheck(m_instance, result, "xrWaitFrame() failed"))
+        if (!xrCheckSession(m_instance, result, "xrWaitFrame() failed"))
             return false;
 
         XrTime now_ns = 0;
@@ -788,11 +878,49 @@ namespace sibr
         if (!xrCheck(m_instance, result, "Could not locate views"))
             return false;
 
+        XrEyeGazesInfoFB eyeGazesInfo = {};
+        eyeGazesInfo.type = XR_TYPE_EYE_GAZES_INFO_FB;
+        eyeGazesInfo.time = m_lastFrameState.predictedDisplayTime;
+        eyeGazesInfo.baseSpace = m_playSpace;
+        eyeGazesInfo.next = nullptr;
+
+        result = xrGetEyeGazesFB_(
+            m_eyeTracker,
+            &eyeGazesInfo,
+            &m_eyeGazes
+        );
+        xrCheck(m_instance, result, "!!! Could not get eye gazes");
+
+        static int logIter = 0;
+        if (logIter++ > LOG_INTERVAL) {
+            logIter = 0;
+            std::cout << "Left eye gaze valid: " << (m_eyeGazes.gaze[0].isValid ? "yes" : "no")
+                      << ", origin: (" << m_eyeGazes.gaze[0].gazePose.position.x << ", "
+                      << m_eyeGazes.gaze[0].gazePose.position.y << ", "
+                      << m_eyeGazes.gaze[0].gazePose.position.z << "), direction: ("
+                      << m_eyeGazes.gaze[0].gazePose.orientation.x << ", "
+                      << m_eyeGazes.gaze[0].gazePose.orientation.y << ", "
+                      << m_eyeGazes.gaze[0].gazePose.orientation.z << ")\n";
+            std::cout << "Right eye gaze valid: " << (m_eyeGazes.gaze[1].isValid ? "yes" : "no")
+                      << ", origin: (" << m_eyeGazes.gaze[1].gazePose.position.x << ", "
+                      << m_eyeGazes.gaze[1].gazePose.position.y << ", "
+                      << m_eyeGazes.gaze[1].gazePose.position.z << "), direction: ("
+                      << m_eyeGazes.gaze[1].gazePose.orientation.x << ", "
+                      << m_eyeGazes.gaze[1].gazePose.orientation.y << ", "
+                      << m_eyeGazes.gaze[1].gazePose.orientation.z << ")" << std::endl;
+        }
+
         return true;
     }
 
     bool OpenXRHMD::closeSession()
     {
+        if (m_eyeTracker != XR_NULL_HANDLE) {
+            XrResult result = xrDestroyEyeTrackerFB_(m_eyeTracker);
+            xrCheck(m_instance, result, "Failed to destroy eye tracker");
+            m_eyeTracker = XR_NULL_HANDLE;
+        }
+
         // If session is already idle, just destroy it
         if (m_status == SessionStatus::IDLE)
         {

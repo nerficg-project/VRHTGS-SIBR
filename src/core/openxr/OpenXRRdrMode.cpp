@@ -77,6 +77,16 @@ namespace sibr
         m_openxrHmd->terminate();
     }
 
+    sibr::Matrix4f OpenXRRdrMode::getHeadPose() const {
+        sibr::Matrix4f headPose = m_openxrHmd->getHeadPose();
+        sibr::Matrix4f transform = sibr::Matrix4f::Identity();
+        transform << 1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, -1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, -1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f;
+        return transform * headPose;
+    }
+
     void OpenXRRdrMode::render(ViewBase &view, const sibr::Camera &camera, const sibr::Viewport &viewport, IRenderTarget *optDest)
     {
         // Render the UI with OpenXR infos
@@ -108,6 +118,10 @@ namespace sibr
                                      auto fov = this->m_openxrHmd->getFieldOfView(eye);
                                      auto q = this->m_openxrHmd->getPoseQuaternion(eye);
                                      auto pos = this->m_openxrHmd->getPosePosition(eye);
+
+                                     auto q_eye = this->m_openxrHmd->getEyeGazeQuaternion(eye);
+                                     auto pos_eye = this->m_openxrHmd->getEyeGazePosition(eye);
+
                                      // OpenXR eye position is in world coordinates system (+x: right, +y: up; +z: backward)
                                      // 3DGS reference scenes have the following coordinate system : +x: right, +y: down, +z: forward
                                      // Let's rotate the camera to have the right-side up scene
@@ -120,16 +134,25 @@ namespace sibr
                                          Eigen::Matrix3f rot = mat * q.matrix();
                                          q = Eigen::Quaternionf(rot);
                                          pos = mat * pos;
+
+                                         Eigen::Matrix3f rot_eye = mat * q_eye.matrix();
+                                         q_eye = Eigen::Quaternionf(rot_eye);
+                                         pos_eye = mat * pos_eye;
                                      }
 
                                      // Define camera from OpenXR eye view position/orientation/fov
                                      Camera cam;
+                                     cam.viewIndex(viewIndex);
                                      cam.rotate(q);
                                      cam.position(pos);
                                      cam.zfar(camera.zfar());
                                      cam.znear(camera.znear());
                                      cam.fovy(fov.w() - fov.z());
                                      cam.aspect((fov.y() - fov.x()) / (fov.w() - fov.z()));
+
+                                     // Set eye gaze position and rotation by transforming to camera space
+                                     cam.eyeGazePosition(pos_eye);
+                                     cam.eyeGazeRotation(q_eye);
 
                                      if (m_vrExperience == 1) { // 1: seated experience - used sibr_viewer current camera's position as default position
                                          cam.translate(camera.position());

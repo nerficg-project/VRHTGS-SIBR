@@ -37,6 +37,8 @@ namespace sibr
          */
         void render(ViewBase &view, const sibr::Camera &eye, const sibr::Viewport &viewport, IRenderTarget *optDest = nullptr);
 
+        sibr::Matrix4f getHeadPose() const;
+
         /** Get the current rendered image as a CPU image
          *\param current_img will contain the content of the RT */
         void destRT2img(sibr::ImageRGB &current_img)

@@ -19,6 +19,39 @@
 namespace sibr
 {
 
+    bool xrCheckSession(XrInstance instance, XrResult result, const char *format, ...)
+    {
+        static bool last_result = false;
+        if (XR_SUCCEEDED(result)) {
+            if (!last_result) {
+                SIBR_LOG << "XR session running." << std::endl;
+                last_result = true;
+            }
+            return true;
+        } else if (result == XR_ERROR_SESSION_NOT_RUNNING) {
+            if (last_result) {
+                SIBR_LOG << "XR session not running." << std::endl;
+                last_result = false;
+            }
+            // Not an error we want to log continually
+            return false;
+        }
+
+        char resultString[XR_MAX_RESULT_STRING_SIZE];
+        xrResultToString(instance, result, resultString);
+
+        char formatRes[XR_MAX_RESULT_STRING_SIZE + 1024];
+        snprintf(formatRes, XR_MAX_RESULT_STRING_SIZE + 1023, "%s [%s] (%d)\n", format, resultString,
+                 result);
+
+        va_list args;
+        va_start(args, format);
+        vprintf(formatRes, args); // TODO: inject in SIBR_WARN
+        va_end(args);
+
+        return false;
+    }
+
     bool xrCheck(XrInstance instance, XrResult result, const char *format, ...)
     {
         if (XR_SUCCEEDED(result))

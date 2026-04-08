@@ -105,6 +105,18 @@ namespace sibr
 		/** \return the camera transform. */
 		const Transform3f&		transform( void ) const;
 
+		void viewIndex(uint32_t index) { _viewIndex = index; }
+		uint32_t viewIndex() const { return _viewIndex; }
+
+		/////////////////////////////////////////////////////////////////
+		///// ================ Eye tracking poses  ================ /////
+		/////////////////////////////////////////////////////////////////
+		void eyeGazePosition(const Vector3f& pos);
+		inline Vector3f eyeGazePosition(void) const { return _eyeGazeTransform.position(); }
+
+		void eyeGazeRotation(const Quaternionf& rot);
+		inline Quaternionf eyeGazeRotation(void) const { return _eyeGazeTransform.rotation(); }
+
 		/////////////////////////////////////////////////////////////////
 		///// ==================== Projection  ==================== /////
 		/////////////////////////////////////////////////////////////////
@@ -222,6 +234,9 @@ namespace sibr
 		*/
 		void principalPoint(const sibr::Vector2f & p);
 
+		/** \return the camera principal point. */
+		sibr::Vector2f principalPoint( void ) const;
+
 		/** Interpolate between two cameras.
 		\param from start camera
 		\param to end camera
@@ -275,6 +290,8 @@ namespace sibr
 		mutable bool			_dirtyViewProj; ///< Does the camera matrix need an update.
 
 		Transform3f		_transform; ///< The camera pose.
+		Transform3f		_eyeGazeTransform; ///< The eye gaze transform.
+		uint32_t		_viewIndex; ///< The view index for multi-view rendering. LEFT=0, RIGHT=1
 		float			_fov; ///< The vertical field of view (radians)
 		float			_aspect; ///< Aspect ratio.
 		float			_znear; ///< Near plane.
@@ -357,6 +374,17 @@ namespace sibr
 		return _transform.rotation();
 	}
 
+	// Eye tracking poses
+	inline void Camera::eyeGazePosition(const Vector3f& pos) {
+		// Transform from world to camera space
+		_eyeGazeTransform.position( rotation().inverse() * (pos - position()) );
+	}
+    
+	inline void Camera::eyeGazeRotation(const Quaternionf& rot) {
+		// Transform from world to camera space
+		_eyeGazeTransform.rotate( rotation().inverse() * rot );
+	}
+
 	/////////////////////////////////////////////////////////////////
 
 	inline void	Camera::fovy( float value ) {
@@ -389,6 +417,10 @@ namespace sibr
 
 	inline void Camera::principalPoint(const sibr::Vector2f & p) {
 		_p = p; _dirtyViewProj = true;
+	}
+
+	inline sibr::Vector2f Camera::principalPoint( void ) const {
+		return _p;
 	}
 
 	inline void	Camera::orthoRight( float value ) {
