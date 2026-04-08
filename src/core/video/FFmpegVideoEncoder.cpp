@@ -43,7 +43,7 @@ namespace sibr {
 			SIBR_LOG << "[FFMPEG] Registering all." << std::endl;
 			// Ignore next line warning.
 #pragma warning(suppress : 4996)
-			av_register_all();
+			// av_register_all();  // Deprecated, no longer needed with modern ffmpeg.
 			ffmpegInitDone = true;
 		}
 		
@@ -79,7 +79,8 @@ namespace sibr {
 		}
 
 		if (video_st) {
-			avcodec_close(video_st->codec);
+			// avcodec_close(video_st->codec);
+			avcodec_free_context(&pCodecCtx);
 			av_free(frameYUV);
 		}
 		avio_close(pFormatCtx->pb);
@@ -136,7 +137,11 @@ namespace sibr {
 			return;
 		}
 
-		pCodecCtx = video_st->codec;
+		pCodecCtx = avcodec_alloc_context3(pCodec);
+		if (!pCodecCtx) {
+			SIBR_WRG << "[FFMPEG] Could not allocate codec context." << std::endl;
+			return;
+		}
 		pCodecCtx->codec_id = fmt->video_codec;
 		pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
 		pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -231,7 +236,7 @@ namespace sibr {
 	{
 		int got_picture = 0;
 
-		int ret = avcodec_encode_video2(pCodecCtx, pkt, frameYUV, &got_picture);
+		int ret = avcodec_send_frame(pCodecCtx, frame);
 		if (ret < 0) {
 			SIBR_WRG << "[FFMPEG] Failed to encode frame." << std::endl;
 			return false;
