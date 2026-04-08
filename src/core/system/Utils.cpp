@@ -387,15 +387,16 @@ namespace sibr
 
 		const FilePickerMode mode, const std::string & directoryPath, const std::string & extensionsAllowed) {
 
+		(void)extensionsAllowed;  // FIXME: Implement using the new NFD file extensions API
 		nfdchar_t *outPath = NULL;
 		nfdresult_t result = NFD_CANCEL;
 		
 		if (mode == Directory) {
-			result = NFD_PickFolder(directoryPath.c_str(), &outPath);
+			result = NFD_PickFolder(&outPath, directoryPath.c_str());
 		} else if (mode == Save) {
-			result = NFD_SaveDialog(extensionsAllowed.empty() ? NULL : extensionsAllowed.c_str(), directoryPath.c_str(), &outPath);
+			result = NFD_SaveDialog(&outPath, NULL, 0, directoryPath.c_str(), NULL);
 		} else {
-			result = NFD_OpenDialog(extensionsAllowed.empty() ? NULL : extensionsAllowed.c_str(), directoryPath.c_str(), &outPath);
+			result = NFD_OpenDialog(&outPath, NULL, 0, directoryPath.c_str());
 		}
 
 
