@@ -4,6 +4,8 @@ install/
 src/projects/*
 cmake-gui.exe.stackdump
 __pycache__/
+.vscode/
+.idea/
 
 # emacs garbage
 \#*
