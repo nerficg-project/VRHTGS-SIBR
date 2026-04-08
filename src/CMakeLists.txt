@@ -34,10 +34,6 @@ SUBDIRLIST(SUBDIRS ${SIBR_PROJECTS_FOLDER})
 
 list(APPEND PROJECT_SUBFOLDERS "apps" "preprocess" "renderer" "scripts" "library")
 
-# Moving ulr to the top of the list
-list(PREPEND SUBDIRS "dataset_tools" "ulr" "basic")
-list(REMOVE_DUPLICATES SUBDIRS)
-
 ## DEPS ##
 include(include_once)
 
@@ -84,7 +80,7 @@ if (BUILD_SIBR)
   add_subdirectory(core/openxr)
 endif()
 
-set(PROJECTS_ON_AT_FIRST_BUILD "basic" "gaussianviewer" "remote")
+set(PROJECTS_ON_AT_FIRST_BUILD "gaussianviewer")
 
 foreach(subdir ${SUBDIRS})
   message(STATUS "Adding ${subdir} project")
