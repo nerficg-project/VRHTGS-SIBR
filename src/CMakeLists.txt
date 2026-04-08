@@ -116,48 +116,6 @@ foreach(subdir ${SUBDIRS})
         endif()
       endforeach()
     endif()
-
-    if(EXISTS "${${subdir}_ROOT_DIR}/documentation/" AND BUILD_DOCUMENTATION)
-      unset(PROJECT_PAGE)
-      unset(PROJECT_LINK)
-      unset(PROJECT_DESCRIPTION)
-      unset(PROJECT_TYPE)
-      include("${${subdir}_ROOT_DIR}/documentation/${subdir}_doc.cmake" OPTIONAL)
-
-      if(NOT DEFINED PROJECT_PAGE)
-        set(PROJECT_PAGE "${subdir}Page")
-      endif()
-
-      if(NOT DEFINED PROJECT_TYPE)
-        set(PROJECT_TYPE "OTHERS")
-      endif()
-
-      set(PROJECT_SUBPAGE_REF "  - @subpage ${PROJECT_PAGE}")
-      set(PROJECT_REF_REF "  - @ref ${PROJECT_PAGE}")
-
-      if(DEFINED PROJECT_LINK)
-        string(APPEND PROJECT_SUBPAGE_REF " (${PROJECT_LINK})")
-        string(APPEND PROJECT_REF_REF " (${PROJECT_LINK})")
-      endif()
-
-      if(DEFINED PROJECT_DESCRIPTION)
-        string(APPEND PROJECT_SUBPAGE_REF ": ${PROJECT_DESCRIPTION}")
-        string(APPEND PROJECT_REF_REF " (${PROJECT_DESCRIPTION})")
-      endif()
-
-      string(APPEND SIBR_PROJECTS_${PROJECT_TYPE}_SUBPAGE_REF_LOCAL "${PROJECT_SUBPAGE_REF}\n")
-      string(APPEND SIBR_PROJECTS_${PROJECT_TYPE}_REF_REF_LOCAL "${PROJECT_REF_REF}\n")
-
-      if(EXISTS "${${subdir}_ROOT_DIR}/documentation/img")
-        set(DOXY_APP_SPECIFIC_IMG_PATH_LOCAL "${DOXY_APP_SPECIFIC_IMG_PATH_LOCAL} ${${subdir}_ROOT_DIR}/documentation/img")
-      endif()
-
-      if(EXISTS "${${subdir}_ROOT_DIR}/LICENSE.md")
-        set(DOXY_DOC_EXCLUDE_PATTERNS_DIRS_LOCAL "${DOXY_DOC_EXCLUDE_PATTERNS_DIRS_LOCAL} ${${subdir}_ROOT_DIR}/LICENSE.md")
-      endif()
-    endif()
-  else()
-    set(DOXY_DOC_EXCLUDE_PATTERNS_DIRS_LOCAL "${DOXY_DOC_EXCLUDE_PATTERNS_DIRS_LOCAL} ${${subdir}_ROOT_DIR}")
   endif()
 endforeach()
   
@@ -169,8 +127,6 @@ set(SIBR_PROJECTS_SAMPLES_REF_REF "${SIBR_PROJECTS_SAMPLES_REF_REF_LOCAL}" PAREN
 set(SIBR_PROJECTS_OURS_REF_REF "${SIBR_PROJECTS_OURS_REF_REF_LOCAL}" PARENT_SCOPE)
 set(SIBR_PROJECTS_TOOLBOX_REF_REF "${SIBR_PROJECTS_TOOLBOX_REF_REF_LOCAL}" PARENT_SCOPE)
 set(SIBR_PROJECTS_OTHERS_REF_REF "${SIBR_PROJECTS_OTHERS_REF_REF_LOCAL}" PARENT_SCOPE)
-set(DOXY_APP_SPECIFIC_IMG_PATH "${DOXY_APP_SPECIFIC_IMG_PATH_LOCAL}" PARENT_SCOPE)
-set(DOXY_DOC_EXCLUDE_PATTERNS_DIRS "${DOXY_DOC_EXCLUDE_PATTERNS_DIRS_LOCAL}" PARENT_SCOPE)
 
 if (BUILD_IBR_TFGL_INTEROP)
   add_subdirectory(projects/tfgl_interop/renderer/custom_ops)
