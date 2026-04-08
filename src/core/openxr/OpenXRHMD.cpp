@@ -9,6 +9,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <print>
 #include <stdio.h>
 #include <string>
 #include <chrono>
@@ -285,7 +286,7 @@ namespace sibr
         // A graphics extension like OpenGL is required to draw anything in VR
         if (!opengl_supported)
         {
-            printf("Runtime does not support OpenGL extension!\n");
+            std::print("Runtime does not support OpenGL extension!\n");
             return false;
         }
 

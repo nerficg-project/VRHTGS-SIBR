@@ -18,6 +18,7 @@
 #include "core/scene/ParseData.hpp"
 #include "core/scene/ProxyMesh.hpp"
 #include "core/scene/InputImages.hpp"
+#include "core/system/String.hpp"
 
 namespace sibr
 {

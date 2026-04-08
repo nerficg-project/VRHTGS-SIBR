@@ -12,6 +12,9 @@
 
 #pragma once
 
+#undef far
+#undef near
+
 #include "core/graphics/Config.hpp"
 #include "core/graphics/Camera.hpp"
 #include "core/assets/Config.hpp"

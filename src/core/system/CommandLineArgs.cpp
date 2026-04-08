@@ -10,6 +10,7 @@
  */
 
 
+#include <print>
 
 #include "core/system/CommandLineArgs.hpp"
 #include "core/system/Utils.hpp"
@@ -102,7 +103,7 @@ namespace sibr
 			bool tgreen = false;
 			if(sec.substr(sec.size()-req.size(), req.size()+1) == req) {
 				setupConsole();
-				printf("\x1b[32m");
+				std::print("\x1b[32m");
 				tgreen = true;
 			}
 			std::cout << "\t" << "--" << command.first;

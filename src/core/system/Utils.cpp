@@ -13,6 +13,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <print>
 #include <sstream>
 #include <vector>
 #include "core/system/Utils.hpp"
@@ -50,9 +51,9 @@ namespace sibr
 		}
 	}
 
-			printf("\x1b[0m");	
 	void restoreConsole(void) {
 		// Reset colors
+		std::print("\x1b[0m");
 
 		// Reset console mode
 		if(!SetConsoleMode(stdoutHandle, outModeInit)) {
