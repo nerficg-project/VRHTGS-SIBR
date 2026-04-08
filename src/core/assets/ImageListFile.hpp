@@ -23,7 +23,7 @@ namespace sibr
 	/** Represents a list of input images.
 	\ingroup sibr_assets
 	*/
-	class SIBR_ASSETS_EXPORT ImageListFile : public IFileLoader
+	class ImageListFile : public IFileLoader
 	{
 	public:
 

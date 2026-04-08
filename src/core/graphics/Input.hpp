@@ -182,7 +182,7 @@ namespace sibr
 	} // namespace Mouse
 
 	/** Helper keeping track of the number of keys currently pressed. */
-	struct SIBR_GRAPHICS_EXPORT KeyCombination 
+	struct KeyCombination 
 	{
 		/// Default constructor.
 		KeyCombination();
@@ -205,7 +205,7 @@ namespace sibr
 	\param combB second set
 	\return the union set
 	*/
-	KeyCombination SIBR_GRAPHICS_EXPORT operator&&( const KeyCombination & combA, const KeyCombination & combB);
+	KeyCombination operator&&( const KeyCombination & combA, const KeyCombination & combB);
 
 	/** Keep track of the pressed/active/released state of a set of keys/buttons.
 	\sa Key::Code, Mouse::Code
@@ -317,7 +317,7 @@ namespace sibr
 
 	\ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT Input
+	class Input
 	{
 	public:
 		typedef InputState<Key::count, Key::Code>		Keyboard;

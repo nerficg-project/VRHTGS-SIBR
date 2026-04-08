@@ -15,7 +15,7 @@
 
 namespace sibr
 {
-	/*static*/ SIBR_RAYCASTER_EXPORT const float	RayHit::InfinityDist = std::numeric_limits<float>::infinity();
+	/*static*/ const float	RayHit::InfinityDist = std::numeric_limits<float>::infinity();
 
 	Ray::Ray( const sibr::Vector3f& orig, const sibr::Vector3f& dir )
 		: _orig(orig), _dir(dir)

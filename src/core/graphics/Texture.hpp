@@ -538,7 +538,7 @@ namespace sibr
 	\warning If the mask contains the depth or stencil, filter must be GL_NEAREST
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blit(const ITexture2D& src, const ITexture2D& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
+	void			blit(const ITexture2D& src, const ITexture2D& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
 
 
 	/**
@@ -552,7 +552,7 @@ namespace sibr
 	\warning If the mask contains the depth or stencil, filter must be GL_NEAREST
 	 \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blit(const ITexture2D& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR, bool flip = false);
+	void			blit(const ITexture2D& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR, bool flip = false);
 
 	/**
 	Copy the content of a texture to a render target, resizing if needed and flipping the result.
@@ -564,7 +564,7 @@ namespace sibr
 	\warning If the mask contains the depth or stencil, filter must be GL_NEAREST
 	 \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blit_and_flip(const ITexture2D& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
+	void			blit_and_flip(const ITexture2D& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
 
 	/**
 	Copy the content of a texture to a specific color attachment of the destination render target, resizing if needed.
@@ -576,7 +576,7 @@ namespace sibr
 	\note No mask to specify, as this is assumed to be COLOR.
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blitToColorAttachment(const ITexture2D& src, IRenderTarget& dst, int location, GLenum filter = GL_LINEAR, bool flip = false);
+	void			blitToColorAttachment(const ITexture2D& src, IRenderTarget& dst, int location, GLenum filter = GL_LINEAR, bool flip = false);
 	
 	/**
 	Copy the content of a rendertarget first color attachment to a texture, resizing if needed.
@@ -588,7 +588,7 @@ namespace sibr
 	\warning If the mask contains the depth or stencil, filter must be GL_NEAREST
 	 \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blit(const IRenderTarget& src, const ITexture2D& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
+	void			blit(const IRenderTarget& src, const ITexture2D& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
 
 	/** Display a RenderTarget into a popup OpenCV window.
 	\param rt the rendertarget to display

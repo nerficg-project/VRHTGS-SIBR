@@ -30,7 +30,7 @@ namespace sibr
 	\note Soft shadowing require a lot of texture fetches that can impact performances.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT ShadowMapRenderer
+	class ShadowMapRenderer
 	{
 
 	public:

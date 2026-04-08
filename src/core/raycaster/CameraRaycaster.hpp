@@ -26,7 +26,7 @@ namespace sibr
 	 (e.g. see CameraRaycasterProcessor.hpp for built-in processor)
 	 \ingroup sibr_raycaster
 	*/
-	class SIBR_RAYCASTER_EXPORT ICameraRaycasterProcessor
+	class ICameraRaycasterProcessor
 	{
 	public:
 
@@ -45,7 +45,7 @@ namespace sibr
 	/**  Used for casting each pixel of an image into a raycaster scene.
 	 \ingroup sibr_raycaster
 	*/
-	class SIBR_RAYCASTER_EXPORT CameraRaycaster
+	class CameraRaycaster
 	{
 	public:
 
@@ -109,7 +109,7 @@ namespace sibr
 	/** A raycasting camera is an input camera augmented with additional casting and frustum helpers.
 	\ingroup sibr_raycaster
 	*/
-	class SIBR_RAYCASTER_EXPORT RaycastingCamera : public sibr::InputCamera {
+	class RaycastingCamera : public sibr::InputCamera {
 		SIBR_CLASS_PTR(RaycastingCamera);
 	public:
 		using HPlane = Eigen::Hyperplane<float, 3>;

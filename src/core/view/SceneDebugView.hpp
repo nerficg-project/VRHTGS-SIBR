@@ -36,7 +36,7 @@ namespace sibr
 		\param zfar far value to use for the frustum (if < 0, cam.far() will be used)
 		 \ingroup sibr_view
 		*/
-	Mesh::Ptr SIBR_VIEW_EXPORT generateCamFrustum(const InputCamera & cam, float znear = -1, float zfar = -1);
+	Mesh::Ptr generateCamFrustum(const InputCamera & cam, float znear = -1, float zfar = -1);
 
 	/** Generate an accurate camera frustum with a custom color.
 		\param cam camera to visualize as a stub
@@ -45,20 +45,20 @@ namespace sibr
 		\param zfar far value to use for the frustum (if < 0, cam.far() will be used)
 		 \ingroup sibr_view
 		*/
-	Mesh::Ptr SIBR_VIEW_EXPORT generateCamFrustumColored(const InputCamera & cam, const Vector3f & col, float znear = -1, float zfar = -1);
+	Mesh::Ptr generateCamFrustumColored(const InputCamera & cam, const Vector3f & col, float znear = -1, float zfar = -1);
 
 	/** Generate a quad representing a camera image plane.
 	 *\param cam the camera
 	 *\param dist the distance in world space from the camera position to the image plane
 	  \ingroup sibr_view
 	 **/
-	Mesh::Ptr SIBR_VIEW_EXPORT generateCamQuadWithUvs(const InputCamera & cam, float dist);
+	Mesh::Ptr generateCamQuadWithUvs(const InputCamera & cam, float dist);
 
 	/** Helper used to display camera labels on screen.
 	 * Internally use ImGui to generate labels data.
 	  \ingroup sibr_view
 	 * */
-	struct SIBR_VIEW_EXPORT LabelsManager {
+	struct LabelsManager {
 
 	protected:
 
@@ -114,7 +114,7 @@ namespace sibr
 	 * for both scenes storing 2D separate images or a texture array.
 	  \ingroup sibr_view
 	 */
-	struct SIBR_VIEW_EXPORT ImageCamViewer {
+	struct ImageCamViewer {
 
 	protected:
 
@@ -151,7 +151,7 @@ namespace sibr
 	 * It adds camera visualization options (labels, frusta, image planes) on top of the MeshManager.
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT SceneDebugView : public MultiMeshManager, public ImageCamViewer, public LabelsManager
+	class SceneDebugView : public MultiMeshManager, public ImageCamViewer, public LabelsManager
 	{
 		SIBR_CLASS_PTR(SceneDebugView);
 

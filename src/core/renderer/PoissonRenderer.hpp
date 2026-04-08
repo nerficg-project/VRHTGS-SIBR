@@ -32,7 +32,7 @@ namespace sibr {
 	* other pixels are treated at Dirichlet boundary conditions.
 	* \ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT PoissonRenderer
+	class PoissonRenderer
 	{
 	public:
 		typedef std::shared_ptr<PoissonRenderer>	Ptr;

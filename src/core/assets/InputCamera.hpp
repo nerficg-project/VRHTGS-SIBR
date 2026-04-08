@@ -24,7 +24,7 @@ namespace sibr
 	* \sa Camera, NovelCamera
 	* \ingroup sibr_assets
 	*/
-	class SIBR_ASSETS_EXPORT InputCamera : public Camera 
+	class InputCamera : public Camera 
 	{
 	public:
 		typedef std::shared_ptr<InputCamera> Ptr;

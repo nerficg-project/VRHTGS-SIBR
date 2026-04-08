@@ -21,7 +21,7 @@ namespace sibr
 	* \todo The system should be more robust for collision detection.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT UIShortcuts
+	class UIShortcuts
 	{
 	public:
 

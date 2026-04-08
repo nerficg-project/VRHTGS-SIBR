@@ -25,7 +25,7 @@ namespace sibr
 		\todo Clarify duplication with functionality in SceneDebugView.
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT RenderUtility
+	class RenderUtility
 	{
 	public:
 

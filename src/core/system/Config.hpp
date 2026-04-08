@@ -27,9 +27,7 @@
 # include <stdint.h>
 #include <boost/filesystem.hpp>
 
-//// Determine the operating system ////
-# if defined(_WIN32)
-#  define SIBR_OS_WINDOWS
+
 // Windows define macro for 'far' and 'near'...
 // http://stackoverflow.com/questions/118774/is-there-a-clean-way-to-prevent-windows-h-from-creating-a-near-far-macro
 // We could use other names than far and near but because we work in
@@ -56,18 +54,6 @@
 #   undef far
 #   undef near
 #  endif // SIBR_UNDEF_WINDOWMACROS
-# elif defined(__unix__)
-#  define SIBR_OS_UNIX
-# elif defined(__APPLE__) && defined(__MACH__)
-#  define SIBR_OS_MAC
-# else
-#  error This operating system might be not supported.
-# endif
-
-//# undef NDEBUG /// \todo By undefining NDEBUG, I enable the assert system definition. (TODO RELEASE: remove this)
-// (it certainly not a good pratice but it reveal previous assert already in the code)
-
-# ifdef SIBR_OS_WINDOWS
 
 #   pragma warning(disable:4503) // decorated name length exceeded, name was truncated
 //   The two following lines disable warning concerning 'inconsistent dll linkage'.
@@ -83,28 +69,6 @@
 //     2) Or provide msvc's dll (redistribuable) that contains the same stl implementation
 #   pragma warning(disable:4251)
 #   pragma warning(disable:4273)
-
-//// Export Macro (used for creating DLLs) ////
-#  ifdef SIBR_STATIC_DEFINE
-#    define SIBR_EXPORT
-#    define SIBR_NO_EXPORT
-#  else
-#    ifndef SIBR_SYSTEM_EXPORT
-#      ifdef SIBR_SYSTEM_EXPORTS
-          /* We are building this library */
-#        define SIBR_SYSTEM_EXPORT __declspec(dllexport)
-#      else
-          /* We are using this library */
-#        define SIBR_SYSTEM_EXPORT __declspec(dllimport)
-#      endif
-#    endif
-#    ifndef SIBR_NO_EXPORT
-#      define SIBR_NO_EXPORT
-#    endif
-#  endif
-# else
-#  define SIBR_SYSTEM_EXPORT
-# endif
 
 //// Deprecator Macro (used to flag as 'deprecated' some functionalities)  ////
 #ifndef SIBR_DEPRECATED
@@ -160,7 +124,7 @@ namespace sibr
 	/** Ensure that all logs are output before exiting when an error or exception is raised. 
 	\ingroup sibr_system
 	*/
-	struct SIBR_SYSTEM_EXPORT LogExit
+	struct LogExit
 	{
 		/// Constructor.
 		LogExit( void );
@@ -240,7 +204,7 @@ namespace sibr
 {
 	/// Used for quickly measuring time for completing a scope.
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT DebugScopeProfiler
+	struct DebugScopeProfiler
 	{
 		/** Constructor.
 		\param name the display name of the profiling session

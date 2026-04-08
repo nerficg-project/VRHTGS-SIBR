@@ -38,7 +38,7 @@ namespace sibr
 	/// \warning There is no backface culling applied.
 	/// \ingroup sibr_raycaster
 	///
-	class SIBR_RAYCASTER_EXPORT Raycaster
+	class Raycaster
 	{
 	public:
 		typedef std::shared_ptr<RTCDevice>	RTCDevicePtr;

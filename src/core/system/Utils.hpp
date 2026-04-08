@@ -12,6 +12,7 @@
 
 #pragma once
 
+# include <chrono>
 # include <vector>
 # include "core/system/Config.hpp"
 # include "core/system/String.hpp"
@@ -23,25 +24,22 @@ namespace sibr
 	* @{
 	*/
 
-#ifdef SIBR_OS_WINDOWS 
 	/** setup console to allow color printing in console
 	 */
-	SIBR_SYSTEM_EXPORT void			setupConsole(void) ;
+	void			setupConsole(void) ;
 	/** restore console to no colors
 	 */
-	SIBR_SYSTEM_EXPORT void			restoreConsole(void) ;
-
-#endif
+	void			restoreConsole(void) ;
 
 	/** Load the whole file into a std::string
 	 * \param filename the file path
 	 * \return the loaded content */
-	SIBR_SYSTEM_EXPORT std::string	loadFile( const std::string& filename );
+	std::string	loadFile( const std::string& filename );
 
 	/** Create directory (if it doesn't exist already) 
 	 * \param path the directory path
 	 */
-	SIBR_SYSTEM_EXPORT void			makeDirectory( const std::string& path );
+	void			makeDirectory( const std::string& path );
 
 	/** List content of directory, sorted alphabetically.
 	 * \param path directory path
@@ -51,7 +49,7 @@ namespace sibr
 	 * \return a list of file names/subpaths
 	 * \note To get each element full path, use path + "/" + itemPath
 	 */
-	SIBR_SYSTEM_EXPORT std::vector<std::string>	listFiles(const std::string & path, const bool listHidden = false, const bool includeSubdirectories = false, const std::vector<std::string> & allowedExtensions = {});
+	std::vector<std::string>	listFiles(const std::string & path, const bool listHidden = false, const bool includeSubdirectories = false, const std::vector<std::string> & allowedExtensions = {});
 
 	/** List content of directory, sorted alphabetically, including subdirectories. 
 	 * \param path directory path
@@ -59,14 +57,14 @@ namespace sibr
 	 * \return a list of directory names/subpaths
 	 * \note To get each element full path, use path + "/" + itemPath
 	 */
-	SIBR_SYSTEM_EXPORT std::vector<std::string>	listSubdirectories(const std::string& path, const bool listHidden = false);
+	std::vector<std::string>	listSubdirectories(const std::string& path, const bool listHidden = false);
 
 	/** Copy directory. 
 	 * \param src source path
 	 * \param dst destination path
 	 * \return success boolean
 	 */
-	SIBR_SYSTEM_EXPORT bool copyDirectory(const std::string& src, const std::string& dst);
+	bool copyDirectory(const std::string& src, const std::string& dst);
 
 	/** Copy file.
 	 * \param src source path
@@ -74,54 +72,54 @@ namespace sibr
 	 * \param overwrite if the file already exists, should it be overwritten
 	 * \return success boolean
 	 */
-	SIBR_SYSTEM_EXPORT bool copyFile(const std::string& src, const std::string& dst, const bool overwrite = false);
+	bool copyFile(const std::string& src, const std::string& dst, const bool overwrite = false);
 
 	/** Empty a directory (if it exist already) 
 	 * \param path the directory path
 	 */
-	SIBR_SYSTEM_EXPORT void			emptyDirectory(const std::string& path);
+	void			emptyDirectory(const std::string& path);
 
 	/** Test if a file exists.
 	 *\param path the file path
 	 *\return true if file exists
 	 */
-	SIBR_SYSTEM_EXPORT bool			fileExists( const std::string& path );
+	bool			fileExists( const std::string& path );
 
 	/** Test if a directory exists.
 	 *\param path the directory path
 	 *\return true if directory exists
 	 */
-	SIBR_SYSTEM_EXPORT bool			directoryExists( const std::string& path );
+	bool			directoryExists( const std::string& path );
 
 	/** \return the available memory on windows system in Ko*/
-	SIBR_SYSTEM_EXPORT size_t		getAvailableMem();
+	size_t		getAvailableMem();
 
 	/** \return the binary directory on windows system*/
-	SIBR_SYSTEM_EXPORT std::string	getInstallDirectory();
+	std::string	getInstallDirectory();
 
 	/** \return the binary directory on windows system*/
-	SIBR_SYSTEM_EXPORT std::string	getBinDirectory();
+	std::string	getBinDirectory();
 
 	/**
 	 * \param subfolder optional subfolder for subproject
 	 * \return the binary directory on windows system
 	 */
-	SIBR_SYSTEM_EXPORT std::string	getShadersDirectory(const std::string & subfolder = "");
+	std::string	getShadersDirectory(const std::string & subfolder = "");
 
 	/** \return the scripts directory on windows system*/
-	SIBR_SYSTEM_EXPORT std::string	getScriptsDirectory();
+	std::string	getScriptsDirectory();
 
 	/** \return the resources directory on windows system*/
-	SIBR_SYSTEM_EXPORT std::string	getResourcesDirectory();
+	std::string	getResourcesDirectory();
 
 	/** \return the user specific application directory */
-	SIBR_SYSTEM_EXPORT std::string	getAppDataDirectory();
+	std::string	getAppDataDirectory();
 
 	/** 
 	 * \param subfolder the subfolder to get
 	 * \return the provided subfolder path on windows system
 	 */
-	SIBR_SYSTEM_EXPORT std::string	getInstallSubDirectory(const std::string & subfolder);
+	std::string	getInstallSubDirectory(const std::string & subfolder);
 
 	/** Selection mode for the file picker. */
 	enum FilePickerMode {
@@ -137,7 +135,7 @@ namespace sibr
 	 * \return true if an element was selected, else false.
 	 * \warning '.' relative path is unsupported for directoryPath.
 	 */
-	SIBR_SYSTEM_EXPORT bool showFilePicker(std::string & selectedElement,
+	bool showFilePicker(std::string & selectedElement,
 		const FilePickerMode mode, const std::string & directoryPath = "", const std::string & extensionsAllowed = "");
 
 	/** Measure and print the timing of a task.
@@ -153,7 +151,7 @@ namespace sibr
 		std::cout << s << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
 	};
 
-	SIBR_SYSTEM_EXPORT std::istream& safeGetline(std::istream& is, std::string& t);
+	std::istream& safeGetline(std::istream& is, std::string& t);
 
 	/*** @} */
 } // namespace sibr

@@ -16,6 +16,9 @@
 # include "core/system/Vector.hpp"
 # include "core/graphics/Image.hpp"
 
+#undef min
+#undef max
+
 
 namespace sibr
 {
@@ -69,43 +72,43 @@ namespace sibr
 	\param gray the probability value
 	\return the associated jet color.
 	*/
-	SIBR_GRAPHICS_EXPORT cv::Scalar jetColor(float gray);
+	cv::Scalar jetColor(float gray);
 
 	/** Generate a color for a given scalar score, using a reversible mapping.
 	\param proba the probability value
 	\return the associated color
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::Vector3ub getLinearColorFromProbaV(double proba);
+	sibr::Vector3ub getLinearColorFromProbaV(double proba);
 
 	/** Convert a color to the associated scalar score, using a reversible mapping.
 	\param color the color
 	\return the probability value
 	*/
-	SIBR_GRAPHICS_EXPORT double getProbaFromLinearColor(const sibr::Vector3ub & color);
+	double getProbaFromLinearColor(const sibr::Vector3ub & color);
 
 	/** Convert a direction from cartesian to spherical coordinates.
 	\param dir a direction in cartesian 3D space
 	\return the spherical coordinates [phi,theta] in [-pi,pi]x[0,pi]
 	\warning dir is assumed to be normalized
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::Vector2d cartesianToSpherical(const sibr::Vector3d & dir); 
+	sibr::Vector2d cartesianToSpherical(const sibr::Vector3d & dir); 
 
 	/** Convert a direction from cartesian to spherical UVs.
 	\param dir a direction in cartesian 3D space
 	\return the spherical UVs [u,v] in [0,1]^2
 	\warning dir is assumed to be normalized
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::Vector2d cartesianToSphericalUVs(const sibr::Vector3d & dir);
+	sibr::Vector2d cartesianToSphericalUVs(const sibr::Vector3d & dir);
 
 	/**Inplace conversion of float image from sRGB space to linear.
 	\param img the image to convert
 	*/
-	SIBR_GRAPHICS_EXPORT void sRGB2Lin(sibr::ImageRGB32F& img);
+	void sRGB2Lin(sibr::ImageRGB32F& img);
 
 	/** Inplace conversion of a float image from linear space to sRGB.
 	\param img the image to convert
 	*/
-	SIBR_GRAPHICS_EXPORT void lin2sRGB(sibr::ImageRGB32F& img);
+	void lin2sRGB(sibr::ImageRGB32F& img);
 
 	/** Debug helper: wrap a rendering task in an openGL debug group (visible in Renderdoc).
 	\param s debug group name

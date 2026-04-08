@@ -40,7 +40,7 @@ namespace sibr {
 	 * \class RemotePointView
 	 * \brief Wrap a ULR renderer with additional parameters and information.
 	 */
-	class SIBR_EXP_ULR_EXPORT GaussianView : public sibr::ViewBase
+	class GaussianView : public sibr::ViewBase
 	{
 		SIBR_CLASS_PTR(GaussianView);
 

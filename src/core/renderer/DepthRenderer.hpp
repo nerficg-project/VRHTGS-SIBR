@@ -28,7 +28,7 @@ namespace sibr
 	/** Render a mesh to a depth rendertarget.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT DepthRenderer
+	class DepthRenderer
 	{
 	
 	public:

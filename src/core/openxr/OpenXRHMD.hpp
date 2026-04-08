@@ -15,12 +15,6 @@
 // Should be defined before Xlib.h which define SUCCESS preprocessor commands
 #include <Eigen/Dense>
 
-#ifdef _WIN32
-// #define GLEW_STATIC
-#pragma comment(lib, "glew32.lib")
-#pragma comment(lib, "opengl32.lib")
-#endif
-
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #ifdef __linux__

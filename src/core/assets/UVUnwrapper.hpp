@@ -25,7 +25,7 @@ namespace sibr
 	 * Internaly relies on xatlas for unwrapping.
 	\ingroup sibr_assets
 	*/
-	class SIBR_ASSETS_EXPORT UVUnwrapper {
+	class UVUnwrapper {
 	public:
 
 		/** Constructor.

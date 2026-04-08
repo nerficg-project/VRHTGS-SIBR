@@ -54,7 +54,7 @@ namespace sibr
 	 * Note: new IBR views don't have to implement this distinction.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MultiViewBase
+	class MultiViewBase
 	{
 		SIBR_CLASS_PTR(MultiViewBase);
 
@@ -389,7 +389,7 @@ namespace sibr
 	use it as a based for applications with multiple subviews.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MultiViewManager : public MultiViewBase
+	class MultiViewManager : public MultiViewBase
 	{
 	public:
 		/*

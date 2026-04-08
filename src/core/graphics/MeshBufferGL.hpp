@@ -36,7 +36,7 @@ namespace sibr
 	* (in reality there also a vertex array object and maybe other data).
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT MeshBufferGL
+	class MeshBufferGL
 	{
 	public:
 

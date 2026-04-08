@@ -14,15 +14,13 @@ file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
 source_group("Source Files" FILES ${SOURCES})
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${OpenXR_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}
     OpenXR::openxr_loader
     sibr_view
 )
-
-add_definitions(-DSIBR_OPENXR_EXPORTS -DBOOST_ALL_DYN_LINK)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
 

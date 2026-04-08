@@ -25,7 +25,7 @@ namespace sibr {
 	 * * interactive, where the user can pan/zoom, rescale the values, display some channels, via the mouse and GUI.
 	 * * fixed, where the image is displayed as is, without any modification possible.
 	 */
-	class SIBR_VIEW_EXPORT ImageView : public sibr::ViewBase
+	class ImageView : public sibr::ViewBase
 	{
 		SIBR_CLASS_PTR(ImageView);
 	public:

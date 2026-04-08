@@ -31,7 +31,7 @@ namespace sibr {
 	 * Contains an MVP matrix and an opacity value.
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT ShaderAlphaMVP {
+	class ShaderAlphaMVP {
 		SIBR_CLASS_PTR(ShaderAlphaMVP);
 	public:
 		/** Initialize the shader. 
@@ -64,7 +64,7 @@ namespace sibr {
 	 * Adds a user-defined color. \sa ShaderAlphaMVP
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT ColorMeshShader : public ShaderAlphaMVP {
+	class ColorMeshShader : public ShaderAlphaMVP {
 	public:
 		/** Initialize the shader.
 		 *\param name the shader name
@@ -88,7 +88,7 @@ namespace sibr {
 	 * Adds a point size. \sa ShaderAlphaMVP
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT PointShader : public ColorMeshShader {
+	class PointShader : public ColorMeshShader {
 	public:
 		/** Initialize the shader.
 		 *\param name the shader name
@@ -118,7 +118,7 @@ namespace sibr {
 	 * Adds shading parameters. \sa ShaderAlphaMVP
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT MeshShadingShader : public ColorMeshShader {
+	class MeshShadingShader : public ColorMeshShader {
 	public:
 		/** Initialize the shader.
 		 *\param name the shader name
@@ -143,7 +143,7 @@ namespace sibr {
 	 * Adds line length option. \sa ShaderAlphaMVP
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT NormalRenderingShader : public ColorMeshShader {
+	class NormalRenderingShader : public ColorMeshShader {
 	public:
 		/** Initialize the shader.
 		 *\param name the shader name
@@ -169,7 +169,7 @@ namespace sibr {
 	\sa MultiMeshManager
 	 \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MeshData {
+	class MeshData {
 		SIBR_CLASS_PTR(MeshData);
 
 	public:
@@ -295,7 +295,7 @@ namespace sibr {
 	 * manager.addMesh("my mesh", mesh).setDepthtest(true).setAlpha(0.5f); 
 	  \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MultiMeshManager : public ViewBase {
+	class MultiMeshManager : public ViewBase {
 		SIBR_CLASS_PTR(MultiMeshManager);
 
 	public:

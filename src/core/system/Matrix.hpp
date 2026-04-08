@@ -105,7 +105,7 @@ namespace sibr
 	 * \param zf far plane
 	 * \param p the principal point, expressed in [0,1]
 	 * \return the projection matrix */
-	Matrix4f SIBR_SYSTEM_EXPORT perspective( float fovRadian, float ratio, float zn, float zf, const ::sibr::Vector2f & p = {0.5f, 0.5f});
+	Matrix4f perspective( float fovRadian, float ratio, float zn, float zf, const ::sibr::Vector2f & p = {0.5f, 0.5f});
 
 	/** Generate an off-center perspective matrix.
 	 * Defined by giving the top/left/right/bottom extent in world units.
@@ -116,7 +116,7 @@ namespace sibr
 	 *	\param mynear near plane
 	 *	\param myfar dar plane
 	 *	\return the projection matrix */
-	Matrix4f SIBR_SYSTEM_EXPORT perspectiveOffCenter(
+	Matrix4f perspectiveOffCenter(
 			float left, float right, float bottom, float top, float mynear, float myfar );
 
 	/** Generate a perspective matrix for stereo rendering.
@@ -128,7 +128,7 @@ namespace sibr
 	 * \param eyeDistance the inter-eye distance
 	 * \param isLeftEye if true computes the left eye matrix, else the right eye
 	 * \return the projection matrix */
-	Matrix4f SIBR_SYSTEM_EXPORT perspectiveStereo( float fovRadian, float aspect, float zn, float zf, float focalDistance,
+	Matrix4f perspectiveStereo( float fovRadian, float aspect, float zn, float zf, float focalDistance,
 			float eyeDistance, bool isLeftEye ); 
 
 	/** Generate an orthographic matrix.
@@ -138,26 +138,26 @@ namespace sibr
 	 *	\param mynear near plane
 	 *	\param myfar dar plane
 	 *	\return the projection matrix */
-	Matrix4f SIBR_SYSTEM_EXPORT orthographic(float right, float top, float mynear, float myfar);
+	Matrix4f orthographic(float right, float top, float mynear, float myfar);
 
 	/** Generate a view matrix using the look at parameters.
 	 *	\param eye camera position
 	 *	\param center point the camera is looking at
 	 *	\param up up vector
 	 *	\return the projection matrix */
-	Matrix4f SIBR_SYSTEM_EXPORT lookAt( const Vector3f& eye, const Vector3f& center, const Vector3f& up );
+	Matrix4f lookAt( const Vector3f& eye, const Vector3f& center, const Vector3f& up );
 
 	/** Output a Matrix4f to a file stream.
 	 *\param outfile the output file
 	 *\param m the matrix
 	 */
-	void 	SIBR_SYSTEM_EXPORT operator<< (std::ofstream& outfile, const Matrix4f& m);
+	void 	operator<< (std::ofstream& outfile, const Matrix4f& m);
 
 	/** Read a Matrix4f from a file stream.
 	 *\param infile the input file
 	 *\param out the matrix
 	 */
-	void 	SIBR_SYSTEM_EXPORT operator>>( std::ifstream& infile, Matrix4f& out);
+	void 	operator>>( std::ifstream& infile, Matrix4f& out);
 
 	/** }@ */
 } // namespace sibr

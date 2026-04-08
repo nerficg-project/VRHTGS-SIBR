@@ -49,7 +49,7 @@ namespace sibr {
 		return volume;
 	}
 
-	SIBR_VIDEO_EXPORT uint optimal_num_levels(uint length)
+	uint optimal_num_levels(uint length)
 	{
 		uint num_levels = 1;
 		while (length != 1) {
@@ -59,7 +59,7 @@ namespace sibr {
 		return num_levels;
 	}
 
-	SIBR_VIDEO_EXPORT std::vector<sibr::Volume3u> gaussianPyramid(const sibr::Volume3u & vid, uint num_levels)
+	std::vector<sibr::Volume3u> gaussianPyramid(const sibr::Volume3u & vid, uint num_levels)
 	{
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
@@ -72,7 +72,7 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT std::vector<sibr::Volume3u> gaussianPyramidTemporal(const sibr::Volume3u & vid, uint num_levels)
+	std::vector<sibr::Volume3u> gaussianPyramidTemporal(const sibr::Volume3u & vid, uint num_levels)
 	{
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
@@ -137,7 +137,7 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT sibr::Volume3u collapseLaplacianPyramid(const std::vector<sibr::Volume3u>& pyr, double shift)
+	sibr::Volume3u collapseLaplacianPyramid(const std::vector<sibr::Volume3u>& pyr, double shift)
 	{
 		sibr::Volume3f v = pyr.back().convertTo<float>();
 		for (int i = (int)pyr.size() - 2; i >= 0; --i) {
@@ -150,7 +150,7 @@ namespace sibr {
 		return v.convertTo<uchar>();
 	}
 
-	SIBR_VIDEO_EXPORT sibr::Volume3u laplacianBlending(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u>& pyrM)
+	sibr::Volume3u laplacianBlending(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u>& pyrM)
 	{
 		auto pyrA = laplacianPyramid(vA);
 		auto pyrB = laplacianPyramid(vB);
@@ -1625,7 +1625,7 @@ namespace sibr {
 		return buildVideoGaussianPyramid(vid.getVolume(), vid.getResolution()[0], vid.getResolution()[1], nLevels, params, show);
 	}
 
-	SIBR_VIDEO_EXPORT VideoLaplacianPyramid buildVideoLaplacianPyramid(PyramidLayer vid, int nLevels, const PyramidParameters & params, bool show)
+	VideoLaplacianPyramid buildVideoLaplacianPyramid(PyramidLayer vid, int nLevels, const PyramidParameters & params, bool show)
 	{
 		VideoLaplacianPyramid out;
 		out.params = params;
@@ -1676,7 +1676,7 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT void convertReducedVideoPyramidTo128(VideoLaplacianPyramid & vid)
+	void convertReducedVideoPyramidTo128(VideoLaplacianPyramid & vid)
 	{
 		int nLayers = (int)vid.layers.size();
 		for (int l = 0; l < nLayers - 1; ++l) {

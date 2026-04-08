@@ -15,7 +15,7 @@
 #include <boost/algorithm/string.hpp>
 #include <map>
 #include "core/system/String.hpp"
-#include "picojson/picojson.hpp"
+#include "picojson/picojson.h"
 
 
 // Colmap binary stuff

@@ -29,7 +29,7 @@ namespace sibr {
 	/** \brief Helpers for cropping undistorted dataset images so that margins are removed, while keeping the dataset consistent.
 	* \ingroup sibr_imgproc
 	*/
-	class SIBR_IMGPROC_EXPORT DistordCropUtility
+	class DistordCropUtility
 	{
 	public:
 

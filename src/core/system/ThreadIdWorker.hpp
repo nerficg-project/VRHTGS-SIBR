@@ -46,7 +46,7 @@ namespace sibr
 
 	 \ingroup sibr_system
 	*/
-	class /*SIBR_SYSTEM_EXPORT*/ ThreadIdWorker : public std::thread
+	class ThreadIdWorker : public std::thread
 	{
 	public:
 		typedef	std::queue<uint>	TaskIds;
@@ -82,7 +82,7 @@ namespace sibr
 		 */
 		void		taskPuller( TaskIds& ids, std::function<bool(uint)> func );
 
-		SIBR_SYSTEM_EXPORT static std::mutex	g_mutex;	///< used to protect the common shared TaskIds list
+		static std::mutex	g_mutex;	///< used to protect the common shared TaskIds list
 	};
 
 	///// INLINES /////

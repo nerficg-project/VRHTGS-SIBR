@@ -24,7 +24,7 @@ namespace sibr
 	/// Represents a simple ray
 	/// \ingroup sibr_raycaster
 	///
-	class SIBR_RAYCASTER_EXPORT Ray
+	class Ray
 	{
 	public:
 		/** Construct a ray from parameters.
@@ -69,7 +69,7 @@ namespace sibr
 	/// Contains information about a ray hit
 	/// \ingroup sibr_raycaster
 	///
-	class SIBR_RAYCASTER_EXPORT RayHit
+	class RayHit
 	{
 	public:
 		static const float	InfinityDist;

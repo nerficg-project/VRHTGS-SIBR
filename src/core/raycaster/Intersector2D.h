@@ -62,7 +62,7 @@ namespace sibr {
 	/** This class provides utilities to compute point/line/triangle/quad intersections.
 	\ingroup sibr_raycaster
 	*/
-	class SIBR_RAYCASTER_EXPORT Intersector2D
+	class Intersector2D
 	{
 
 	public:

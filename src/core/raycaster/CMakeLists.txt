@@ -14,7 +14,7 @@ file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
 source_group("Source Files" FILES ${SOURCES})
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES} ${LIBS_SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES} ${LIBS_SOURCES})
 
 include_directories(
 	${Boost_INCLUDE_DIRS}
@@ -23,10 +23,9 @@ include_directories(
 if(WIN32)
 target_link_libraries(${PROJECT_NAME}
 	OpenMP::OpenMP_CXX
-	embree3
+	embree
 	sibr_graphics
 	sibr_assets
-	nanoflann
 )
 else()
 target_link_libraries(${PROJECT_NAME}
@@ -39,8 +38,6 @@ target_link_libraries(${PROJECT_NAME}
 	nanoflann
 )
 endif()
-
-add_definitions( -DSIBR_RAYCASTER_EXPORTS -DBOOST_ALL_DYN_LINK  )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
 

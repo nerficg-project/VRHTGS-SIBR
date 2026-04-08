@@ -39,7 +39,7 @@ namespace sibr {
 		It can also perform camera interpolation along a path.
 		\ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT InteractiveCameraHandler : public ICameraHandler
+	class InteractiveCameraHandler : public ICameraHandler
 	{
 
 	public:

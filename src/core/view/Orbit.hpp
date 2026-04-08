@@ -49,7 +49,7 @@ namespace sibr {
 		. to switch back to static mode with current camera
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT Orbit : public ICameraHandler
+	class Orbit : public ICameraHandler
 	{
 	
 	public:

@@ -22,7 +22,7 @@ namespace sibr {
 	 * See the constructor for additional details.
 	 * \ingroup sibr_imgproc
 	 */
-	class SIBR_IMGPROC_EXPORT PoissonReconstruction
+	class PoissonReconstruction
 	{
 	public:
 

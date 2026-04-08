@@ -55,21 +55,21 @@ namespace sibr
 	{
 		/** \return the OpenCV type corresponding to a C type. */
 		template <typename T_Type>
-		SIBR_GRAPHICS_EXPORT int		imageType(void);// { return -1; } // default, unknown
+		int		imageType(void);// { return -1; } // default, unknown
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< uint8 >(void) { return CV_8U; }
+		template <> inline int		imageType< uint8 >(void) { return CV_8U; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< int8  >(void) { return CV_8S; }
+		template <> inline int		imageType< int8  >(void) { return CV_8S; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< uint16>(void) { return CV_16U; }
+		template <> inline int		imageType< uint16>(void) { return CV_16U; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< int16 >(void) { return CV_16S; }
+		template <> inline int		imageType< int16 >(void) { return CV_16S; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< int32 >(void) { return CV_32S; }
+		template <> inline int		imageType< int32 >(void) { return CV_32S; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< float >(void) { return CV_32F; }
+		template <> inline int		imageType< float >(void) { return CV_32F; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> SIBR_GRAPHICS_EXPORT inline int		imageType< double>(void) { return CV_64F; }
+		template <> inline int		imageType< double>(void) { return CV_64F; }
 
 		/** \return the size of the range of values a type can take when used in OpenCV. */
 		template <typename T_Type>
@@ -77,25 +77,25 @@ namespace sibr
 			return (float)std::numeric_limits<T_Type>::max();//-std::numeric_limits<T_Type>::min();
 		}
 		/** \return the size of the range of values a type can take when used in OpenCV. */
-		template <> SIBR_GRAPHICS_EXPORT inline float			imageTypeRange< float >(void) { return 1.f; }
+		template <> inline float			imageTypeRange< float >(void) { return 1.f; }
 		/** \return the size of the range of values a type can take when used in OpenCV. */
-		template <> SIBR_GRAPHICS_EXPORT inline float			imageTypeRange< double>(void) { return 1.f; }
+		template <> inline float			imageTypeRange< double>(void) { return 1.f; }
 
 		/** Get the size of the range of values an OpenCV type can take.
 		\param cvDepth the OpenCV type depth
 		\return the size of the range
 		*/
-		SIBR_GRAPHICS_EXPORT float			imageTypeCVRange(int cvDepth);
+		float			imageTypeCVRange(int cvDepth);
 
 		/** Convert a BGR cv::Mat into a RGB cv::Mat, in-place.
 		\param dst the matrix to convert
 		*/
-		SIBR_GRAPHICS_EXPORT void			convertBGR2RGB(cv::Mat& dst);
+		void			convertBGR2RGB(cv::Mat& dst);
 
 		/** Convert a BGR cv::Mat into a RGB cv::Mat, in-place.
 		\param dst the matrix to convert
 		*/
-		SIBR_GRAPHICS_EXPORT void			convertRGB2BGR(cv::Mat& dst);
+		void			convertRGB2BGR(cv::Mat& dst);
 	}
 
 	typedef	Vector4f ColorRGBA;
@@ -108,7 +108,7 @@ namespace sibr
 	* \sa Image
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT IImage {
+	class IImage {
 	public:
 		SIBR_CLASS_PTR(IImage);
 
@@ -645,13 +645,13 @@ namespace sibr
 	\param imClass the ID map
 	\return a color coded map
 	*/
-	SIBR_GRAPHICS_EXPORT Image<unsigned char, 3> coloredClass(const Image<unsigned char, 1>::Ptr imClass);
+	Image<unsigned char, 3> coloredClass(const Image<unsigned char, 1>::Ptr imClass);
 
 	/** Convert an integer ID map to a colored image using a different random color for each ID. Note that 255 is black.
 	\param imClass the ID map
 	\return a color coded map
 	*/
-	SIBR_GRAPHICS_EXPORT Image<unsigned char, 3> coloredClass(const Image<int, 1>::Ptr imClass);
+	Image<unsigned char, 3> coloredClass(const Image<int, 1>::Ptr imClass);
 
 	/** Display a 32F image in a debug window, using the Parula colormap after normalizing the values.
 	\param im the float image to display
@@ -659,53 +659,53 @@ namespace sibr
 	\param min optional lower bound for the normalization
 	\param max optional upper bound for the normalization
 	*/
-	SIBR_GRAPHICS_EXPORT void showFloat(const Image<float, 1> & im, bool logScale = false, double min = -DBL_MAX, double max = DBL_MAX);
+	void showFloat(const Image<float, 1> & im, bool logScale = false, double min = -DBL_MAX, double max = DBL_MAX);
 
 	/** Convert a L32F into a RGBA image while preserving bit-level representation.
 	Useful to save float maps as PNG, and benefit from PNG compression on disk.
 	\param imgF the image to convert
 	\return the packed RGBA image 
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::ImageRGBA convertL32FtoRGBA(const sibr::ImageL32F & imgF);
+	sibr::ImageRGBA convertL32FtoRGBA(const sibr::ImageL32F & imgF);
 
 	/** Convert a RGBA into a L32F image while preserving bit-level representation.
 	Useful to decode float maps stored as as PNG.
 	\param imgRGBA the image to convert
 	\return the unpacked float image 
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::ImageL32F convertRGBAtoL32F(const sibr::ImageRGBA  & imgRGBA);
+	sibr::ImageL32F convertRGBAtoL32F(const sibr::ImageRGBA  & imgRGBA);
 
 	/** Convert a RGB32F into a RGBA image (3 times wider) while preserving bit-level representation.
 	Useful to save float maps as PNG, and benefit from PNG compression on disk.
 	\param imgF the image to convert
 	\return the packed RGBA image 
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::ImageRGBA convertRGB32FtoRGBA(const sibr::ImageRGB32F & imgF);
+	sibr::ImageRGBA convertRGB32FtoRGBA(const sibr::ImageRGB32F & imgF);
 
 	/** Convert a RGBA into a RGB32F image while preserving bit-level representation.
 	Useful to decode float maps stored as as PNG.
 	\param imgRGBA the image to convert
 	\return the unpacked float image 
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::ImageRGB32F convertRGBAtoRGB32F(const sibr::ImageRGBA & imgRGBA);
+	sibr::ImageRGB32F convertRGBAtoRGB32F(const sibr::ImageRGBA & imgRGBA);
 
 	/** Convert a RGB32 normal map into a UV16 map storing theta and phi as half floats, packed into a RGBA8.
 	\param imgF the XYZ normal map
 	\return the packed theta,phi normal map
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::ImageRGBA convertNormalMapToSphericalHalf(const sibr::ImageRGB32F & imgF);
+	sibr::ImageRGBA convertNormalMapToSphericalHalf(const sibr::ImageRGB32F & imgF);
 
 	/** Convert a RGBA map, packing theta and phi as half floats, into a RGB32 normal map.
 	\param imgF packed theta,phi normal map
 	\return the XYZ normal map
 	*/
-	SIBR_GRAPHICS_EXPORT sibr::ImageRGB32F convertSphericalHalfToNormalMap(const sibr::ImageRGBA & imgF);
+	sibr::ImageRGB32F convertSphericalHalfToNormalMap(const sibr::ImageRGBA & imgF);
 
 	/** Create a three channels cv::Mat by repeating a single channel cv::Mat.
 	\param c the input cv::Mat
 	\return a three channels cv::Mat
 	*/
-	SIBR_GRAPHICS_EXPORT cv::Mat duplicate3(cv::Mat c);
+	cv::Mat duplicate3(cv::Mat c);
 
 	/** Display an image into a popup OpenCV window.
 	\param img the image to display

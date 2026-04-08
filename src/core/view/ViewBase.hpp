@@ -29,7 +29,7 @@ namespace sibr
 	* \sa MultiViewBase
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT ViewBase
+	class ViewBase
 	{
 	public:
 

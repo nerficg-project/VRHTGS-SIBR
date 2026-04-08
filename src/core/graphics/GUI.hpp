@@ -34,7 +34,7 @@ namespace sibr
 	\return true if window is focused (useful for managing interactions).
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT bool		showImGuiWindow(const std::string& windowTitle, const IRenderTarget& rt, ImGuiWindowFlags flags, Viewport & viewport,  bool invalidTexture,  bool updateLayout, int handle = 0);
+	bool		showImGuiWindow(const std::string& windowTitle, const IRenderTarget& rt, ImGuiWindowFlags flags, Viewport & viewport,  bool invalidTexture,  bool updateLayout, int handle = 0);
 
 	/**
 	Helper that compute the location and extent to display an image in a given region without cropping or distorting it
@@ -44,7 +44,7 @@ namespace sibr
 	\param size will contain the size to use
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void 		fitImageToDisplayRegion(const Vector2f & imgSize, const Vector2i & regionSize, Vector2f& offset, Vector2f& size);
+	void 		fitImageToDisplayRegion(const Vector2f & imgSize, const Vector2i & regionSize, Vector2f& offset, Vector2f& size);
 	
 	/** Generate a mesh for a given label, using ImGui internally. This will generate a mesh that contain both the background and foreground geometry packed together sequentially.
 	\param text the text to generate the label of
@@ -52,7 +52,7 @@ namespace sibr
 	\return the mesh containing first the background triangles then the foreground triangles
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT Mesh::Ptr generateMeshForText(const std::string & text, unsigned int & separationIndex);
+	Mesh::Ptr generateMeshForText(const std::string & text, unsigned int & separationIndex);
 
 } // namespace sibr
 
@@ -61,14 +61,14 @@ namespace ImGui {
 	/** \return the height of the title bar (for layout)
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT const float GetTitleBarHeight();
+	const float GetTitleBarHeight();
 	
 	/**
 	* Push a width for item which is HiDPI aware.
 	* \param item_width The with to push, in regular pixels.
 	* \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void PushScaledItemWidth(float item_width);
+	void PushScaledItemWidth(float item_width);
 
 	/** Helper to create a tab button item.
 	\param label the button text
@@ -77,7 +77,7 @@ namespace ImGui {
 	\return true if the tab is active
 	* \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT bool TabButton(const char* label, bool highlight, const ImVec2& size = ImVec2(0, 0));
+	bool TabButton(const char* label, bool highlight, const ImVec2& size = ImVec2(0, 0));
 
 	/** Plot multiple curves on a graph. All curves should have the same number of samples.
 		Only lines are supported, code is based on internal ImGui implementation for one curve.
@@ -89,7 +89,7 @@ namespace ImGui {
 		\param scale_max the value corresponding to the top of the graph
 		\param graph_size size of the graph widget
 	*/
-	SIBR_GRAPHICS_EXPORT void PlotMultiLines(const char* label, std::vector<float*> values, int values_count, const std::vector<ImVec4>& colors, float scale_min = FLT_MAX, float scale_max = FLT_MAX, ImVec2 graph_size = ImVec2(0.0f, 0.0f));
+	void PlotMultiLines(const char* label, std::vector<float*> values, int values_count, const std::vector<ImVec4>& colors, float scale_min = FLT_MAX, float scale_max = FLT_MAX, ImVec2 graph_size = ImVec2(0.0f, 0.0f));
 }
 
 namespace sibr {
@@ -100,7 +100,7 @@ namespace sibr {
 	\param uv0 bottom-left corner of the image to display
 	\param uv1 top-right corner of the image to display
 	*/
-	SIBR_GRAPHICS_EXPORT void DisplayImageGui(
+	void DisplayImageGui(
 		GLuint texture,
 		const sibr::Vector2i & displaySize,
 		const sibr::Vector2f& uv0 = { 0, 0 },
@@ -108,7 +108,7 @@ namespace sibr {
 	);
 
 	/** Store user interaction information to be returned when displaying an image. */
-	struct SIBR_GRAPHICS_EXPORT CallBackData {
+	struct CallBackData {
 		sibr::Vector2f positionRatio; ///< Position ratio.
 		sibr::Vector2f itemPos, itemSize, mousePos; ///< Mouse information.
 		float scroll = 0.0f; ///< Scroll amount.
@@ -123,7 +123,7 @@ namespace sibr {
 	\param uv0 bottom-left corner of the image to display
 	\param uv1 top-right corner of the image to display
 	*/
-	SIBR_GRAPHICS_EXPORT void ImageWithCallback(
+	void ImageWithCallback(
 		GLuint texture,
 		const sibr::Vector2i & displaySize,
 		CallBackData & callbackDataOut,
@@ -132,7 +132,7 @@ namespace sibr {
 	);
 
 	/** Store additional user zoom information to be returned when displaying an image. */
-	struct SIBR_GRAPHICS_EXPORT ZoomData {
+	struct ZoomData {
 
 		/** \return the zoomed region top left corner in image space. */
 		sibr::Vector2f topLeft()		const;
@@ -158,7 +158,7 @@ namespace sibr {
 	};
 
 	/** Store user interaction and zooming information to be returned when displaying an image. */
-	struct SIBR_GRAPHICS_EXPORT ZoomInterraction {
+	struct ZoomInterraction {
 		/** Update zoom information.
 		\param canvasSize size ot the displayed region of the image
 		*/
@@ -173,14 +173,14 @@ namespace sibr {
 	\param displaySize the target size
 	\param zoom will contain zoom information for the current frame
 	*/
-	SIBR_GRAPHICS_EXPORT void ImageWithZoom(
+	void ImageWithZoom(
 		GLuint texture,
 		const sibr::Vector2i & displaySize,
 		ZoomInterraction & zoom
 	);
 
 	/** Represent a segment defined by the user by clicking on screen.  */
-	struct SIBR_GRAPHICS_EXPORT SegmentSelection {
+	struct SegmentSelection {
 
 		/** Update based on user interaction data.
 		\param callback user interaction data

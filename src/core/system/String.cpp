@@ -66,7 +66,7 @@ namespace sibr
 		return str.substr(0, pos1);
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getFileName(const std::string & str)
+	std::string getFileName(const std::string & str)
 	{
 		const std::string::size_type pos = str.find_last_of("/\\");
 		if (pos == std::string::npos) {
@@ -128,7 +128,7 @@ namespace sibr
 		return ret;
 	}
 
-	SIBR_SYSTEM_EXPORT std::string to_lower(const std::string& str)
+	std::string to_lower(const std::string& str)
 	{
 		std::string out;
 		out.reserve(str.length());
@@ -140,7 +140,7 @@ namespace sibr
 	}
 
 
-	SIBR_SYSTEM_EXPORT bool find_any(const std::vector<std::string>& needles, const std::string& haystack)
+	bool find_any(const std::vector<std::string>& needles, const std::string& haystack)
 	{
 		for (std::string needle : needles)
 		{
@@ -153,12 +153,8 @@ namespace sibr
 
 	std::string timestamp(const std::string & format) {
 		auto now = std::time(nullptr);
-#ifdef SIBR_OS_WINDOWS
 		tm ltm = { 0,0,0,0,0,0,0,0,0 };
 		localtime_s(&ltm, &now);
-#else
-		tm ltm = *(std::localtime(&now));
-#endif
 		std::stringstream buffer;
 		buffer << std::put_time(&ltm, format.c_str());
 		return buffer.str();

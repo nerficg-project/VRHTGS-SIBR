@@ -24,7 +24,7 @@ namespace sibr {
 	/** Render a textured mesh, using per-vertex texture coordinates.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT TexturedMeshRenderer
+	class TexturedMeshRenderer
 	{
 	public:
 		typedef std::shared_ptr<TexturedMeshRenderer>	Ptr;

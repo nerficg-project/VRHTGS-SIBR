@@ -22,8 +22,7 @@ namespace sibr {
 	/** Blur on color edges present in a texture.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT BlurRenderer
-	{
+	class BlurRenderer	{
 	public:
 		typedef std::shared_ptr<BlurRenderer>	Ptr;
 

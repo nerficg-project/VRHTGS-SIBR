@@ -19,7 +19,7 @@ source_group("Source Files\\shaders" FILES ${SHADERS})
 file(GLOB SOURCES "*.cpp" "*.h" "*.hpp" "shaders/*.frag" "shaders/*.vert" "shaders/*.geom" "shaders/*.fp" "shaders/*.gp" "shaders/*.vp")
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(${Boost_INCLUDE_DIRS} .)
 if(WIN32)
@@ -29,7 +29,7 @@ target_link_libraries(${PROJECT_NAME}
 	${GLEW_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${OpenCV_LIBRARIES}
-	glfw3
+	glfw
 	sibr_system
 	sibr_view
 	sibr_assets
@@ -49,8 +49,6 @@ target_link_libraries(${PROJECT_NAME}
 	sibr_scene
 )
 endif()
-
-add_definitions( -DSIBR_EXP_RENDERER_EXPORTS -DBOOST_ALL_DYN_LINK  )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
 

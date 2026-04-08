@@ -176,13 +176,13 @@ namespace sibr
 	 *\param colorUB the color vector
 	 *\return the [0,1] float vector
 	 */
-	SIBR_SYSTEM_EXPORT Eigen::Matrix<float, 3,	1, Eigen::DontAlign>  toColorFloat( Vector<unsigned char, 3> & colorUB );
+	Eigen::Matrix<float, 3,	1, Eigen::DontAlign>  toColorFloat( Vector<unsigned char, 3> & colorUB );
 
 	/** Convert a float color in [0,1] to an unsigned char color in [0,255].
 	 *\param colorFloat the color vector
 	 *\return the [0,255] float vector
 	 */
-	SIBR_SYSTEM_EXPORT Eigen::Matrix<unsigned char, 3,1,Eigen::DontAlign> toColorUB( Vector<float,3> & colorFloat );
+	Eigen::Matrix<unsigned char, 3,1,Eigen::DontAlign> toColorUB( Vector<float,3> & colorFloat );
 
 	// Typedefs.
 
@@ -214,7 +214,7 @@ namespace sibr
 		\param to destination vector, target direction
 		\return the rotation matrix
 	*/
-	SIBR_SYSTEM_EXPORT Eigen::Matrix<float, 4, 4, Eigen::DontAlign> alignRotationMatrix(const sibr::Vector3f & from, const sibr::Vector3f & to);
+	Eigen::Matrix<float, 4, 4, Eigen::DontAlign> alignRotationMatrix(const sibr::Vector3f & from, const sibr::Vector3f & to);
 
 	/** @} */
 } // namespace sibr

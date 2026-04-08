@@ -24,7 +24,7 @@ namespace sibr
 	/** System window backed by an internal framebuffer.
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT Window : public IRenderTarget
+	class Window : public IRenderTarget
 	{
 	public:
 		typedef std::shared_ptr<Window>		Ptr;

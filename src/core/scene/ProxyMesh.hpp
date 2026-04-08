@@ -18,7 +18,7 @@ namespace sibr {
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT ProxyMesh : public IProxyMesh {
+	class ProxyMesh : public IProxyMesh {
 		SIBR_DISALLOW_COPY(ProxyMesh);
 	public:
 		typedef std::shared_ptr<ProxyMesh>					Ptr;

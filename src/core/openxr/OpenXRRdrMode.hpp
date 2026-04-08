@@ -22,7 +22,7 @@ namespace sibr
     *   It also renders both views to a SIBR view.
     *   \ingroup sibr_openxr
     */
-    class SIBR_OPENXR_EXPORT OpenXRRdrMode : public IRenderingMode
+    class OpenXRRdrMode : public IRenderingMode
     {
     public:
         /// Constructor.

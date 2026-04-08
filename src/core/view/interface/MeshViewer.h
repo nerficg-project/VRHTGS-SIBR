@@ -32,7 +32,7 @@ namespace sibr {
 	/**
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MeshRenderer {
+	class MeshRenderer {
 
 		SIBR_CLASS_PTR(MeshRenderer);
 
@@ -110,7 +110,7 @@ namespace sibr {
 	/**
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MeshViewer {
+	class MeshViewer {
 		
 		SIBR_CLASS_PTR(MeshViewer);
 

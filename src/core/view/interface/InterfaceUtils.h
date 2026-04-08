@@ -80,7 +80,7 @@ namespace sibr {
 	/**
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT InterfaceUtilities
+	class InterfaceUtilities
 	{
 	public:
 		InterfaceUtilities();

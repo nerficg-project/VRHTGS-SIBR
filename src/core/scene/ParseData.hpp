@@ -34,7 +34,7 @@ namespace sibr{
 	* \ingroup sibr_scene
 	*/
 
-	class SIBR_SCENE_EXPORT ParseData: public IParseData {
+	class ParseData: public IParseData {
 		
 	public:
 

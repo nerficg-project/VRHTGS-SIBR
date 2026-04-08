@@ -26,7 +26,7 @@ source_group("Source Files\\shaders" FILES ${SHADERS})
 file(GLOB SOURCES "*.cpp" "*.h" "*.hpp" "shaders/*.frag" "shaders/*.vert" "shaders/*.geom")
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(${Boost_INCLUDE_DIRS} .)
 if (WIN32)
@@ -36,12 +36,11 @@ target_link_libraries(${PROJECT_NAME}
 	${GLEW_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${OpenCV_LIBRARIES}
-	glfw3
+	glfw
 	sibr_system
 	sibr_view
 	sibr_assets
 	sibr_renderer
-	sibr_basic
 	CUDA::cudart
 	CudaRasterizer
 )
@@ -57,13 +56,10 @@ target_link_libraries(${PROJECT_NAME}
 	sibr_view
 	sibr_assets
 	sibr_renderer
-	sibr_basic
 	CUDA::cudart
 	CudaRasterizer
 )
 endif()
-
-add_definitions( -DSIBR_EXP_ULR_EXPORTS -DBOOST_ALL_DYN_LINK  )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "projects/${SIBR_PROJECT}/renderer")
 

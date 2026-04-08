@@ -42,12 +42,8 @@ namespace sibr {
 
 		time_t now = std::time(nullptr);
 		
-#ifdef SIBR_OS_WINDOWS
 		tm ltm = {0,0,0,0,0,0,0,0,0};
 		localtime_s(&ltm, &now);
-#else
-		tm ltm = *(std::localtime(&now));
-#endif
 		
 		std::stringstream dateSS;
 		dateSS << "[" << 1900 + ltm.tm_year << "/" << 1 + ltm.tm_mon << "/" << ltm.tm_mday << "] "

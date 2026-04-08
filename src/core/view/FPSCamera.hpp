@@ -30,7 +30,7 @@ namespace sibr {
 	/** Interactive camera that can be moved using WASD keys.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT FPSCamera : public ICameraHandler
+	class FPSCamera : public ICameraHandler
 	{
 	
 	public:

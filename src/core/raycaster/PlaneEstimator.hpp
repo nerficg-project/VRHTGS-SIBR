@@ -26,7 +26,7 @@
 	Fit a plane to a point cloud using an improved RANSAC approach.
 	\ingroup sibr_raycaster
 */
-class SIBR_RAYCASTER_EXPORT PlaneEstimator {
+class PlaneEstimator {
 
 public:
 

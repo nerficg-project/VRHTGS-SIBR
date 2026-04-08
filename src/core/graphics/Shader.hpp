@@ -25,7 +25,7 @@ namespace sibr
 	  OpenGL shader wrapper.
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT GLShader
+	class GLShader
 	{
 		SIBR_DISALLOW_COPY( GLShader );
 		SIBR_CLASS_PTR(GLShader);
@@ -155,7 +155,7 @@ namespace sibr
 	  \sa GLuniform
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT GLParameter
+	class GLParameter
 	{
 	public:
 
@@ -290,7 +290,7 @@ namespace sibr
 	\return the loaded string
 	\ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT std::string	loadFile( const std::string& filename, const GLShader::Define::List& defines );
+	std::string	loadFile( const std::string& filename, const GLShader::Define::List& defines );
 
 	/**
 	  OpenGL shader uniform wrapper with additional update/storage functions.

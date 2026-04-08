@@ -23,7 +23,7 @@ namespace sibr {
 	Allow reprojections between one of the input images, scene geometry and other images.
 	 \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT DatasetView 
+	class DatasetView 
 		: public MultiViewBase
 	{
 		SIBR_CLASS_PTR(DatasetView);

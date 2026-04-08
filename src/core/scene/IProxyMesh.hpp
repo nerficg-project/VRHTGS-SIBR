@@ -20,7 +20,7 @@ namespace sibr {
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT IProxyMesh {
+	class IProxyMesh {
 		SIBR_DISALLOW_COPY(IProxyMesh);
 	public:
 		typedef std::shared_ptr<IProxyMesh>					Ptr;

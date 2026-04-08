@@ -24,7 +24,7 @@ namespace sibr
 	/** Provde a small GUI panel to display the current framerate, smoothed over multiple frames.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT FPSCounter
+	class FPSCounter
 	{
 	public:
 		typedef std::chrono::time_point<std::chrono::high_resolution_clock> time_point; ///< Time type.

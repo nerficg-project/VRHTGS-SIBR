@@ -63,13 +63,9 @@ namespace sibr
 				std::string currentEnv;
 				if(curEnv!=NULL)
 					currentEnv = std::string(curEnv);
-#ifdef SIBR_OS_WINDOWS
 				std::replace(value.begin(), value.end(), '/', '\\'); // linux to windows path
 				char delimiter = ';';
-#else
-				std::replace(value.begin(), value.end(), '\\', '/'); // windows to linux path
-				char delimiter = ':';
-#endif
+
 				std::stringstream ss;
 				ss << delimiter;
 				if(!currentEnv.empty())

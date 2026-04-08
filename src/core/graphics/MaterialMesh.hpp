@@ -32,7 +32,7 @@ namespace sibr
 		Provide many processing and display methods.
 	\ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT MaterialMesh : public sibr::Mesh
+	class MaterialMesh : public sibr::Mesh
 	{
 	public:
 		typedef std::vector<int>								MatIds;

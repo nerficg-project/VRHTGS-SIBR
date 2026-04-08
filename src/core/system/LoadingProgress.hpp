@@ -31,7 +31,7 @@ namespace sibr
 	/// 2) Call walk() once in a the loop.
 	/// \ingroup sibr_system
 	///
-	class SIBR_SYSTEM_EXPORT LoadingProgress
+	class LoadingProgress
 	{
 	public:
 		typedef std::chrono::steady_clock						clock;

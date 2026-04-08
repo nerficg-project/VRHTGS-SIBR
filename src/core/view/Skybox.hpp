@@ -22,7 +22,7 @@ namespace sibr
 	/** A skybox object for rendering a cubemap texture.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT Skybox
+	class Skybox
 	{
 		SIBR_CLASS_PTR(Skybox);
 

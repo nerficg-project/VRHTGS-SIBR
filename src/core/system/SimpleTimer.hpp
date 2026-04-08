@@ -71,6 +71,8 @@ namespace sibr
 			tocs.push_back(toc);
 		}
 
+#undef max
+
 		/** Get the time elapsed since the last tic, with a precisiond etemrined by the tempalte argument.
 			\return the measured time (default: in ms)
 		*/

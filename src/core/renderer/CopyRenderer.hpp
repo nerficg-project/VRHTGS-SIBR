@@ -25,7 +25,7 @@ namespace sibr {
 	\sa sibr::blit
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT CopyRenderer
+	class CopyRenderer
 	{
 	public:
 		typedef std::shared_ptr<CopyRenderer>	Ptr;

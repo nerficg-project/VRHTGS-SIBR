@@ -14,19 +14,17 @@ file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
 source_group("Source Files" FILES ${SOURCES})
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(
 	${Boost_INCLUDE_DIRS}
-	${picojson_INCLUDE_DIRS}
-	${rapidxml_INCLUDE_DIRS}
+	${PICOJSON_INCLUDE_DIRS}
+	${RAPIDXML_INCLUDE_DIRS}
 )
 if (WIN32)
 target_link_libraries(${PROJECT_NAME}
 	${Boost_LIBRARIES}
-	picojson
-	rapidxml
-	nfd
+	nfd::nfd
 )
 else()
 target_link_libraries(${PROJECT_NAME}
@@ -36,8 +34,6 @@ target_link_libraries(${PROJECT_NAME}
 	nativefiledialog
 )
 endif()
-
-add_definitions( -DSIBR_SYSTEM_EXPORTS -DBOOST_ALL_DYN_LINK  )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
 

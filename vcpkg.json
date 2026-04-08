@@ -1,0 +1,30 @@
+{
+  "dependencies": [
+    "assimp",
+    "boost",
+    "eigen3",
+    "embree3",
+    "ffmpeg",
+    "glew",
+    "glfw3",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    },
+    "nanoflann",
+    "nativefiledialog-extended",
+    {
+      "name": "opencv",
+      "features": [
+        "contrib"
+      ]
+    },
+    "openxr-loader",
+    "picojson",
+    "rapidxml",
+    "yaml-cpp"
+  ]
+}

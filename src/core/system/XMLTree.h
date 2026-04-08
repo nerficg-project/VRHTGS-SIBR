@@ -22,7 +22,7 @@ namespace sibr {
 	Needed to access nodes by their names.
 	* \ingroup sibr_system
 	*/
-	class SIBR_SYSTEM_EXPORT XMLTree : public rapidxml::xml_document<>
+	class XMLTree : public rapidxml::xml_document<>
 	{
 	public:
 		/** Construct an XML structure from the content of a file.

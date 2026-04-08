@@ -46,7 +46,7 @@ namespace sibr
 
 	/** Basic voxel grid interface provinding cell manipulation and query helpers. 
 	It doesn't store any voxel data. */
-	class SIBR_RAYCASTER_EXPORT VoxelGridBase {
+	class VoxelGridBase {
 		SIBR_CLASS_PTR(VoxelGridBase);
 
 	public:

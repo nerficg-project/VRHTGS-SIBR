@@ -15,9 +15,7 @@
 #include <iomanip>
 #include <fstream>
 
-#ifndef SIBR_OS_WINDOWS
-# include <string.h>
-#endif
+#include <string.h>
 
 #include "core/system/ByteStream.hpp"
 

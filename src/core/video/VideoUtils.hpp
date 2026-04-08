@@ -18,8 +18,8 @@
 #include "FFmpegVideoEncoder.hpp"
 
 namespace sibr {
-	
-	SIBR_VIDEO_EXPORT std::vector<cv::Mat> cvSplitChannels(cv::Mat mat);
+
+	std::vector<cv::Mat> cvSplitChannels(cv::Mat mat);
 
 	template<typename T, uint N>
 	struct CV_Assign {
@@ -544,10 +544,10 @@ namespace sibr {
 
 	};
 
-	SIBR_VIDEO_EXPORT Volume3u loadVideoVolume(const std::string & filepath);
-	SIBR_VIDEO_EXPORT Volume3u loadVideoVolume(sibr::Video & vid);
-	
-	template<typename T, uint N, uint M> 
+	Volume3u loadVideoVolume(const std::string & filepath);
+	Volume3u loadVideoVolume(sibr::Video & vid);
+
+	template<typename T, uint32_t N, uint32_t M>
 	VideoVolume<T, N + M>  concatVolumesChannels(const sibr::VideoVolume<T, N> & A, const sibr::VideoVolume<T, M> & B) {
 		VideoVolume<T, N + M> out(A.l, A.w, A.h);
 
@@ -616,9 +616,9 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT std::vector<sibr::Volume3u> laplacianPyramid(const sibr::Volume3u & vid, uint num_levels = 0);
-	//SIBR_VIDEO_EXPORT std::vector<sibr::Volume3u> laplacianPyramidTemporal(const sibr::Volume3u & vid, uint num_levels = 0);
-	SIBR_VIDEO_EXPORT std::vector<sibr::Volume3u> laplacianPyramidTemporalDouble(const sibr::Volume3u & vid, uint num_levels = 0);
+	std::vector<sibr::Volume3u> laplacianPyramid(const sibr::Volume3u & vid, uint num_levels = 0);
+	//std::vector<sibr::Volume3u> laplacianPyramidTemporal(const sibr::Volume3u & vid, uint num_levels = 0);
+	std::vector<sibr::Volume3u> laplacianPyramidTemporalDouble(const sibr::Volume3u & vid, uint num_levels = 0);
 
 
 	template< typename U, typename T = U>
@@ -646,7 +646,7 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT sibr::Volume3u collapseLaplacianPyramid(const std::vector<sibr::Volume3u> & pyr, double shift = 0);
+	sibr::Volume3u collapseLaplacianPyramid(const std::vector<sibr::Volume3u> & pyr, double shift = 0);
 
 	template<typename T>
 	sibr::VideoVolume<T,3> collapseLaplacianPyramidTemporal(const std::vector<sibr::VideoVolume<T, 3>>& pyr, double shift,
@@ -672,10 +672,10 @@ namespace sibr {
 		return v.convertTo<T>();
 	}
 
-	//SIBR_VIDEO_EXPORT sibr::Volume3u collapseLaplacianPyramidTemporal(const std::vector<sibr::Volume3u> & pyr, double shift = 0);
+	//sibr::Volume3u collapseLaplacianPyramidTemporal(const std::vector<sibr::Volume3u> & pyr, double shift = 0);
 
-	//SIBR_VIDEO_EXPORT sibr::Volume3u laplacianBlendingTemporal(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u> & pyrM);
-	SIBR_VIDEO_EXPORT sibr::Volume3u laplacianBlending(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u> & pyrM);
+	//sibr::Volume3u laplacianBlendingTemporal(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u> & pyrM);
+	sibr::Volume3u laplacianBlending(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u> & pyrM);
 
 	template<typename T_V, typename T_M>
 	sibr::VideoVolume<T_V, 3> laplacianBlendingTemporal(
@@ -733,7 +733,7 @@ namespace sibr {
 		return total_vars;
 	}
 
-	struct SIBR_VIDEO_EXPORT PyramidLayer {
+	struct PyramidLayer {
 		PyramidLayer() {}
 		PyramidLayer(int _w, int _h, int _l, int cv_type = CV_32FC1) : l(_l), w(_w), h(_h) {
 			volume = cv::Mat(l, 3 * w*h, cv_type);
@@ -776,7 +776,7 @@ namespace sibr {
 	};
 
 
-	struct SIBR_VIDEO_EXPORT PyramidParameters {
+	struct PyramidParameters {
 		PyramidParameters(int nlevels = 5, int temporal = 3, int spatial = 2, bool spatial_ds = true) :
 			num_levels(nlevels), temporal_radius(temporal), spatial_radius(spatial), splacialDS(spatial_ds) {}
 		int num_levels; 
@@ -785,25 +785,25 @@ namespace sibr {
 		bool splacialDS = true;
 	};
 
-	SIBR_VIDEO_EXPORT PyramidLayer blur(const PyramidLayer & layer, const PyramidParameters &  params );
-	SIBR_VIDEO_EXPORT PyramidLayer temporalBlur(const PyramidLayer & volume, const PyramidParameters & params, float scaling = 1);
-	SIBR_VIDEO_EXPORT void temporalBlurInPlace(PyramidLayer & volume, const PyramidParameters & params, float scaling = 1);
+	PyramidLayer blur(const PyramidLayer & layer, const PyramidParameters &  params );
+	PyramidLayer temporalBlur(const PyramidLayer & volume, const PyramidParameters & params, float scaling = 1);
+	void temporalBlurInPlace(PyramidLayer & volume, const PyramidParameters & params, float scaling = 1);
 
-	SIBR_VIDEO_EXPORT PyramidLayer decimate(const PyramidLayer & layer, const PyramidParameters &  params);
-	SIBR_VIDEO_EXPORT PyramidLayer upscale(const PyramidLayer & layerUp, const PyramidLayer & layerDown, const PyramidParameters &  params);
-	SIBR_VIDEO_EXPORT PyramidLayer downscale(const PyramidLayer & layer, const PyramidParameters &  params);
+	PyramidLayer decimate(const PyramidLayer & layer, const PyramidParameters &  params);
+	PyramidLayer upscale(const PyramidLayer & layerUp, const PyramidLayer & layerDown, const PyramidParameters &  params);
+	PyramidLayer downscale(const PyramidLayer & layer, const PyramidParameters &  params);
 
-	SIBR_VIDEO_EXPORT cv::Mat slice(const PyramidLayer & layer, int i, int j, bool vertical = true, bool center = false);
+	cv::Mat slice(const PyramidLayer & layer, int i, int j, bool vertical = true, bool center = false);
 
-	
-	class SIBR_VIDEO_EXPORT VideoGaussianPyramid {
+
+	class VideoGaussianPyramid {
 	public:
 		PyramidParameters params;
 		std::vector<PyramidLayer> layers;
 
 	};
 
-	class SIBR_VIDEO_EXPORT VideoLaplacianPyramid {
+	class VideoLaplacianPyramid {
 	public:
 
 	public:
@@ -819,32 +819,32 @@ namespace sibr {
 		
 	};
 
-	
-	SIBR_VIDEO_EXPORT VideoGaussianPyramid buildVideoGaussianPyramid(sibr::Video & vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
-	SIBR_VIDEO_EXPORT VideoGaussianPyramid buildVideoGaussianPyramid(const cv::Mat & volume, int w, int h, int nLevels, const PyramidParameters & params = {}, bool show = false);
 
-	SIBR_VIDEO_EXPORT VideoLaplacianPyramid buildVideoLaplacianPyramid(PyramidLayer vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
-	SIBR_VIDEO_EXPORT VideoLaplacianPyramid buildVideoLaplacianPyramid(sibr::Video & vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
+	VideoGaussianPyramid buildVideoGaussianPyramid(sibr::Video & vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
+	VideoGaussianPyramid buildVideoGaussianPyramid(const cv::Mat & volume, int w, int h, int nLevels, const PyramidParameters & params = {}, bool show = false);
 
-	SIBR_VIDEO_EXPORT VideoLaplacianPyramid buildVideoLaplacianPyramidFullyReduced(PyramidLayer vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
-	SIBR_VIDEO_EXPORT void convertReducedVideoPyramidTo128(VideoLaplacianPyramid & vid);
+	VideoLaplacianPyramid buildVideoLaplacianPyramid(PyramidLayer vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
+	VideoLaplacianPyramid buildVideoLaplacianPyramid(sibr::Video & vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
 
-	SIBR_VIDEO_EXPORT PyramidLayer videoLaplacianBlending(sibr::Video & vidA, sibr::Video & vidB, PyramidLayer mask_volume );
-	SIBR_VIDEO_EXPORT PyramidLayer videoLaplacianBlending(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {}, bool show = false);
+	VideoLaplacianPyramid buildVideoLaplacianPyramidFullyReduced(PyramidLayer vid, int nLevels, const PyramidParameters & params = {}, bool show = false);
+	void convertReducedVideoPyramidTo128(VideoLaplacianPyramid & vid);
 
-	struct SIBR_VIDEO_EXPORT ContribData {
+	PyramidLayer videoLaplacianBlending(sibr::Video & vidA, sibr::Video & vidB, PyramidLayer mask_volume );
+	PyramidLayer videoLaplacianBlending(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {}, bool show = false);
+
+	struct ContribData {
 		PyramidLayer contrib, mask, partA, partB;
 	};
 
-	struct SIBR_VIDEO_EXPORT FullContribData {
+	struct FullContribData {
 		ContribData scaled;
 		ContribData notScaled;
 		PyramidLayer result, inputA, inputB;
 	};
 
-	SIBR_VIDEO_EXPORT std::vector<FullContribData> videoLaplacianBlendingContrib(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {});
+	std::vector<FullContribData> videoLaplacianBlendingContrib(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {});
 
-	SIBR_VIDEO_EXPORT void videoLaplacianBlendingDebug(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {});
+	void videoLaplacianBlendingDebug(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {});
 
 	template<typename T, uint N> 
 	class Histogram {
@@ -1041,7 +1041,7 @@ namespace sibr {
 		int numBins = 50;
 	};
 
-	class SIBR_VIDEO_EXPORT VideoUtils {
+	class VideoUtils {
 
 	public:
 		static void simpleFlowViz(cv::VideoCapture & cap, float ratio);

@@ -27,7 +27,7 @@ namespace sibr
 	/** Render the world space positions of a mesh surface.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT PositionRenderer
+	class PositionRenderer
 	{
 		SIBR_CLASS_PTR(PositionRenderer);
 

@@ -28,7 +28,7 @@ namespace sibr
 	/** Video loaded from a file using OpenCV VideoCapture and FFMPEG.
 	* \ingroup sibr_video
 	*/
-	class SIBR_VIDEO_EXPORT Video
+	class Video
 	{
 		SIBR_CLASS_PTR(Video);
 		
@@ -122,7 +122,7 @@ namespace sibr
 	/** Load and display a video in a view, with playback options.
 	* \ingroup sibr_video
 	*/
-	class SIBR_VIDEO_EXPORT VideoPlayer : public Video, public ZoomInterraction
+	class VideoPlayer : public Video, public ZoomInterraction
 	{
 
 		SIBR_CLASS_PTR(VideoPlayer);

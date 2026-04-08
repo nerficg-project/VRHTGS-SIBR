@@ -22,8 +22,8 @@
 # include "core/graphics/Image.hpp"
 
 // Be sure to use STL objects from client's dll version by exporting this declaration (see warning C4251)
-//template class SIBR_GRAPHICS_EXPORT std::vector<Vector3f>;
-//template class SIBR_GRAPHICS_EXPORT std::vector<Vector3u>;
+//template class std::vector<Vector3f>;
+//template class std::vector<Vector3u>;
 
 namespace sibr
 {
@@ -31,7 +31,7 @@ namespace sibr
 		Provide many processing and display methods.
 	\ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT Mesh
+	class Mesh
 	{
 		SIBR_CLASS_PTR(Mesh);
 

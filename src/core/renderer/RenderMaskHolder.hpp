@@ -26,7 +26,7 @@ namespace sibr {
 	\note Might want to use textures instead of RTs here.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT RenderMaskHolder
+	class RenderMaskHolder
 	{
 		typedef	RenderTargetLum::Ptr	MaskPtr;
 	public:
@@ -73,7 +73,7 @@ namespace sibr {
 	This version uses a R8 texture array.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT RenderMaskHolderArray
+	class RenderMaskHolderArray
 	{
 		using MaskArray = sibr::Texture2DArrayLum;
 		using MaskArrayPtr = MaskArray::Ptr;

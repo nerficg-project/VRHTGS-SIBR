@@ -22,7 +22,7 @@ namespace sibr {
 	* 
 	* \ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT BasicIBRScene: public IIBRScene
+	class BasicIBRScene: public IIBRScene
 	{
 		
 	public:

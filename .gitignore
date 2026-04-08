@@ -2,6 +2,7 @@ extlibs/
 build/
 install/
 src/projects/*
+CMakeUserPresets.json
 cmake-gui.exe.stackdump
 __pycache__/
 .vscode/

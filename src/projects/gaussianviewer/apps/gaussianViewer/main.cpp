@@ -195,6 +195,8 @@ int main(int ac, char** av)
 	float scene_aspect_ratio = scene_width * 1.0f / scene_height;
 	float rendering_aspect_ratio = rendering_width * 1.0f / rendering_height;
 
+#undef min
+
 	rendering_width = (rendering_width <= 0) ? std::min(1200U, scene_width) : rendering_width;
 	rendering_height = (rendering_height <= 0) ? std::min(1200U, scene_width) / scene_aspect_ratio : rendering_height;
 	if ((rendering_width > 0) && !myArgs.force_aspect_ratio ) {

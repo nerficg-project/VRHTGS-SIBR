@@ -96,7 +96,7 @@ namespace sibr
 		SIBR_LOG << "Help for " << path.filename().string() << ":" << std::endl;
 		for(const auto & command : commands) {
 			// Pad to align everything.
-#ifdef WIN32 // green
+			// green
 			std::string req = "[required]";
 			std::string sec = command.second, xx;
 			bool tgreen = false;
@@ -105,15 +105,12 @@ namespace sibr
 				printf("\x1b[32m");
 				tgreen = true;
 			}
-#endif
 			std::cout << "\t" << "--" << command.first;
 			std::cout << std::string(int(maxLength) - command.first.size() + 1, ' ');
 			std::cout << command.second << std::endl;
 
-#ifdef WIN32
 			if( tgreen )
 				restoreConsole();
-#endif
 		}
 		std::cout << std::endl;
 	}

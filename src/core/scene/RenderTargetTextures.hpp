@@ -30,7 +30,7 @@ namespace sibr{
 	/** 
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT RTTextureSize {
+	class RTTextureSize {
 
 	public:
 		RTTextureSize(uint w = 0) : _width(w) {}
@@ -50,7 +50,7 @@ namespace sibr{
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT RGBDInputTextures : public virtual RTTextureSize {
+	class RGBDInputTextures : public virtual RTTextureSize {
 		SIBR_CLASS_PTR(RGBDInputTextures)
 	public:
 		const std::vector<RenderTargetRGBA32F::Ptr> & inputImagesRT() const;
@@ -66,7 +66,7 @@ namespace sibr{
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT DepthInputTextureArray : public virtual RTTextureSize {
+	class DepthInputTextureArray : public virtual RTTextureSize {
 		SIBR_CLASS_PTR(DepthInputTextureArray)
 	public:
 		virtual void initDepthTextureArrays(ICalibratedCameras::Ptr cams, IProxyMesh::Ptr proxies, bool facecull, int flags = SIBR_GPU_LINEAR_SAMPLING);
@@ -79,7 +79,7 @@ namespace sibr{
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT RGBInputTextureArray : public virtual RTTextureSize {
+	class RGBInputTextureArray : public virtual RTTextureSize {
 
 		SIBR_CLASS_PTR(RGBInputTextureArray)
 
@@ -95,7 +95,7 @@ namespace sibr{
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT RenderTargetTextures :
+	class RenderTargetTextures :
 		public virtual RGBDInputTextures,
 		public virtual DepthInputTextureArray,
 		public virtual RGBInputTextureArray 

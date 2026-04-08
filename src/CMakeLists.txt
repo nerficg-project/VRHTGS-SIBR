@@ -1,10 +1,10 @@
 # Copyright (C) 2020, Inria
 # GRAPHDECO research group, https://team.inria.fr/graphdeco
 # All rights reserved.
-# 
-# This software is free for non-commercial, research and evaluation use 
+#
+# This software is free for non-commercial, research and evaluation use
 # under the terms of the LICENSE.md file.
-# 
+#
 # For inquiries contact sibr@inria.fr and/or George.Drettakis@inria.fr
 
 
@@ -127,7 +127,3 @@ set(SIBR_PROJECTS_SAMPLES_REF_REF "${SIBR_PROJECTS_SAMPLES_REF_REF_LOCAL}" PAREN
 set(SIBR_PROJECTS_OURS_REF_REF "${SIBR_PROJECTS_OURS_REF_REF_LOCAL}" PARENT_SCOPE)
 set(SIBR_PROJECTS_TOOLBOX_REF_REF "${SIBR_PROJECTS_TOOLBOX_REF_REF_LOCAL}" PARENT_SCOPE)
 set(SIBR_PROJECTS_OTHERS_REF_REF "${SIBR_PROJECTS_OTHERS_REF_REF_LOCAL}" PARENT_SCOPE)
-
-if (BUILD_IBR_TFGL_INTEROP)
-  add_subdirectory(projects/tfgl_interop/renderer/custom_ops)
-endif()

@@ -19,7 +19,7 @@ namespace sibr
 	/**
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT ICalibratedCameras {
+	class ICalibratedCameras {
 	public:
 
 		/**

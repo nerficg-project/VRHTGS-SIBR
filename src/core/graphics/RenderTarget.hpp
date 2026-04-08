@@ -32,7 +32,7 @@ namespace sibr
 	* This generic interface is typeless, \sa RenderTarget.
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT IRenderTarget
+	class IRenderTarget
 	{
 	public:
 		typedef std::shared_ptr<IRenderTarget>	Ptr;
@@ -208,7 +208,7 @@ namespace sibr
 	\warning If the mask contains the depth or stencil, filter must be GL_NEAREST
 	 \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blit(const IRenderTarget& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
+	void			blit(const IRenderTarget& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
 
 	/**
 	Copy the content of a render target to another render target, resizing if needed and flipping the result.
@@ -220,7 +220,7 @@ namespace sibr
 	\warning If the mask contains the depth or stencil, filter must be GL_NEAREST
 	 \ingroup sibr_graphics
 	*/
-	SIBR_GRAPHICS_EXPORT void			blit_and_flip(const IRenderTarget& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
+	void			blit_and_flip(const IRenderTarget& src, const IRenderTarget& dst, GLbitfield mask = GL_COLOR_BUFFER_BIT, GLenum filter = GL_LINEAR);
 
 	/** Display a rendertarget color content in a popup window (backed by OpenCV).
 	\param rt the rendertarget to display

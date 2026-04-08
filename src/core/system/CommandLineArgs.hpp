@@ -75,7 +75,7 @@ namespace sibr
 	* Parses -key or --key with any number of value.
 	* \ingroup sibr_system
 	*/
-	class SIBR_SYSTEM_EXPORT CommandLineArgs {
+	class CommandLineArgs {
 
 	public:
 
@@ -173,7 +173,7 @@ namespace sibr
 	/** Getter for the command line args manager singleton.
 	* \ingroup sibr_system
 	 */
-	SIBR_SYSTEM_EXPORT const CommandLineArgs & getCommandLineArgs();
+	const CommandLineArgs & getCommandLineArgs();
 
 	/** Internal argument based interface.
 	* \ingroup sibr_system*/
@@ -338,12 +338,12 @@ namespace sibr
 	/// To add a new argument like --my-arg 5 on top of existing arguments and
 	/// to add a new required argument like --important-param "on" on top of existing arguments, do the following:
 	///
-	/// struct SIBR_SYSTEM_EXPORT MyArgs : virtual ExistingArg1, virtual ExistingArgs2, ... {
+	/// struct MyArgs : virtual ExistingArg1, virtual ExistingArgs2, ... {
 	///		Arg<int> myParameter = { "my-arg", some_default_value };
 	///		RequiredArg<std::string> myRequiredParameter = { "important-param" };
 	/// }
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT AppArgs {
+	struct AppArgs {
 		/// Constructor
 		AppArgs();
 
@@ -364,7 +364,7 @@ namespace sibr
 
 	/// Arguments related to a window.
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT WindowArgs {
+	struct WindowArgs {
 		Arg<int> win_width = { "width", 720, "initial window width" };
 		Arg<int> win_height = { "height", 480, "initial window height" };
 		Arg<int> vsync = { "vsync", 1, "enable vertical sync" };
@@ -377,13 +377,13 @@ namespace sibr
 
 	/// Combination of window and application arguments.
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT WindowAppArgs :
+	struct WindowAppArgs :
 		virtual AppArgs, virtual WindowArgs {
 	};
 
 	/// Common rendering settings.
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT RenderingArgs {
+	struct RenderingArgs {
 		Arg<std::string> scene_metadata_filename = { "scene", "scene_metadata.txt", "scene metadata file" };
 		Arg<Vector2i> rendering_size = { "rendering-size", { 0, 0 }, "size at which rendering is performed" };
 		Arg<int> texture_width = { "texture-width", 0 , "size of the input data in memory"};
@@ -396,14 +396,14 @@ namespace sibr
 
 	/// Dataset related arguments.
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT BasicDatasetArgs {
+	struct BasicDatasetArgs {
 		RequiredArg<std::string> dataset_path = { "path", "path to the dataset root" };
 		Arg<std::string> dataset_type = { "dataset_type", "", "type of dataset" };
 	};
 
 	/// "Default" set of arguments.
 	/// \ingroup sibr_system
-	struct SIBR_SYSTEM_EXPORT BasicIBRAppArgs :
+	struct BasicIBRAppArgs :
 		virtual WindowAppArgs, virtual BasicDatasetArgs, virtual RenderingArgs {
 	};
 

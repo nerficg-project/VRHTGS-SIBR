@@ -24,7 +24,7 @@ namespace sibr
 	* \warning This class has not been strongly tested!
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT Frustum
+	class Frustum
 	{
 	public:
 

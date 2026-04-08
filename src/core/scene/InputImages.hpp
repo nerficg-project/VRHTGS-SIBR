@@ -20,7 +20,7 @@ namespace sibr
 	/** 
 	\ingroup sibr_scene
 	*/
-	class SIBR_SCENE_EXPORT InputImages : public IInputImages {
+	class InputImages : public IInputImages {
 		SIBR_DISALLOW_COPY(InputImages);
 	public:
 

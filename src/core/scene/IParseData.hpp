@@ -11,7 +11,7 @@
 
 
 #pragma once
-#include "picojson/picojson.hpp"
+#include "picojson/picojson.h"
 #include "core/scene/Config.hpp"
 #include "core/system/CommandLineArgs.hpp"
 #
@@ -44,7 +44,7 @@ namespace sibr{
 	* \ingroup sibr_scene
 	*/
 
-	class SIBR_SCENE_EXPORT IParseData {
+	class IParseData {
 		
 	public:
 

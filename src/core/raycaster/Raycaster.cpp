@@ -15,7 +15,7 @@
 
 namespace sibr
 {
-	/*static*/ SIBR_RAYCASTER_EXPORT const Raycaster::geomId		Raycaster::InvalidGeomId = RTC_INVALID_GEOMETRY_ID;
+	/*static*/ const Raycaster::geomId		Raycaster::InvalidGeomId = RTC_INVALID_GEOMETRY_ID;
 	/*static*/ bool													Raycaster::g_initRegisterFlag = false;
 	/*static*/ Raycaster::RTCDevicePtr								Raycaster::g_device = nullptr;
 
@@ -335,13 +335,7 @@ namespace sibr
 					},
 					sibr::Vector3f(rh.hit.Ng_x[r], rh.hit.Ng_y[r], rh.hit.Ng_z[r]),
 					RayHit::Primitive{
-#ifdef SIBR_OS_WINDOWS
 						(uint)rh.hit.primID[r] ,(uint)rh.hit.geomID[r],(uint)rh.hit.instID[r]
-#else
-						// Considering RTC_MAX_INSTANCE_LEVEL_COUNT to be 1 (Single-level instancing); see https://www.embree.org/api.html#rtchit
-						(uint)rh.hit.primID[r] ,(uint)rh.hit.geomID[r],(uint)rh.hit.instID[0][r]
-#endif
-					
 					}
 				};
 		}

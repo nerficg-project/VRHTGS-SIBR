@@ -22,7 +22,7 @@ namespace sibr
 	\note In practice, InputCamera is used most of the time
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT Camera
+	class Camera
 	{
 	public:
 		SIBR_CLASS_PTR(Camera);
@@ -290,14 +290,14 @@ namespace sibr
 	\param c the camera
 	\return the stream (for chaining).
 	*/
-	SIBR_GRAPHICS_EXPORT ByteStream&		operator << (ByteStream& stream, const Camera& c );
+	ByteStream&				operator << (ByteStream& stream, const Camera& c );
 
 	/** Read a camera from a byte stream.
 	\param stream the stream to read from
 	\param c the camera
 	\return the stream (for chaining).
 	*/
-	SIBR_GRAPHICS_EXPORT ByteStream&		operator >> (ByteStream& stream, Camera& c );
+	ByteStream&				operator >> (ByteStream& stream, Camera& c );
 
 	///// DEFINITIONS /////
 

@@ -23,7 +23,7 @@ namespace sibr
 	/** Singleton used to store a list of plausible path to look for (based on the ibr_resources.ini)
 	\ingroup sibr_assets
 	*/
-	class SIBR_ASSETS_EXPORT Resources
+	class Resources
 	{
 	public:
 		/// Our singleton

@@ -24,7 +24,7 @@ namespace sibr {
 	/** Render a mesh colored using the per-vertex color attribute.
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT ColoredMeshRenderer
+	class ColoredMeshRenderer
 	{
 	public:
 		typedef std::shared_ptr<ColoredMeshRenderer>	Ptr;

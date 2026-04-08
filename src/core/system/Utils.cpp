@@ -17,62 +17,48 @@
 #include <vector>
 #include "core/system/Utils.hpp"
 
-#ifdef SIBR_OS_WINDOWS 
-	#include <nfd.h>
-	#include <Windows.h>
-	#include <shlobj.h>
-	#include <stdio.h>
-	// Some old MinGW/CYGWIN distributions don't define this:
-	#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
-	#define ENABLE_VIRTUAL_TERMINAL_PROCESSING  0x0004
-	#endif
-#else
-	#include <nfd.h>
-	#include <libgen.h>
-	#include <linux/limits.h>
-	#include <unistd.h>
-	#include <sys/types.h>
-	#include <pwd.h>
-#endif
+#include <nfd.h>
+#include <Windows.h>
+#include <shlobj.h>
+#include <stdio.h>
+
 
 namespace sibr
 {
-#ifdef SIBR_OS_WINDOWS
-		static HANDLE stdoutHandle;
-		static DWORD outModeInit;
+	static HANDLE stdoutHandle;
+	static DWORD outModeInit;
 
-		void setupConsole(void) {
-			DWORD outMode = 0;
-			stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	void setupConsole(void) {
+		DWORD outMode = 0;
+		stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-			if(stdoutHandle == INVALID_HANDLE_VALUE) {
-				exit(GetLastError());
-			}
-			
-			if(!GetConsoleMode(stdoutHandle, &outMode)) {
-				exit(GetLastError());
-			}
-
-			outModeInit = outMode;
-			
-			// Enable ANSI escape codes
-			outMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-
-			if(!SetConsoleMode(stdoutHandle, outMode)) {
-				exit(GetLastError());
-			}	
+		if(stdoutHandle == INVALID_HANDLE_VALUE) {
+			exit(GetLastError());
 		}
 
-		void restoreConsole(void) {
-			// Reset colors
+		if(!GetConsoleMode(stdoutHandle, &outMode)) {
+			exit(GetLastError());
+		}
+
+		outModeInit = outMode;
+
+		// Enable ANSI escape codes
+		outMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+		if(!SetConsoleMode(stdoutHandle, outMode)) {
+			exit(GetLastError());
+		}
+	}
+
 			printf("\x1b[0m");	
-			
-			// Reset console mode
-			if(!SetConsoleMode(stdoutHandle, outModeInit)) {
-				exit(GetLastError());
-			}
+	void restoreConsole(void) {
+		// Reset colors
+
+		// Reset console mode
+		if(!SetConsoleMode(stdoutHandle, outModeInit)) {
+			exit(GetLastError());
 		}
-#endif
+	}
 
 
 	std::string	loadFile(const std::string& fname)
@@ -307,44 +293,21 @@ namespace sibr
 	}
 
 	size_t getAvailableMem() {
-#define DIV 1024
+		constexpr int DIV = 1024;
 
-#ifdef SIBR_OS_WINDOWS 
 		MEMORYSTATUSEX statex;
 		statex.dwLength = sizeof(statex);
 		GlobalMemoryStatusEx(&statex);
 		return static_cast<size_t>(statex.ullAvailPhys) / DIV;
-#else
-		long pages = sysconf(_SC_PHYS_PAGES);
-		long page_size = sysconf(_SC_PAGE_SIZE);
-		return static_cast<size_t>(pages * page_size) / DIV;
-#endif
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getInstallDirectory()
+	std::string getInstallDirectory()
 	{
 		char exePath[4095];
 
-#ifdef SIBR_OS_WINDOWS 
 		unsigned int len = GetModuleFileNameA(GetModuleHandleA(0x0), exePath, MAX_PATH);
 
 		std::string installDirectory = parentDirectory(parentDirectory(exePath));
-#else
-		unsigned int len=0;
-
-		char result[PATH_MAX];
-		ssize_t c = readlink("/proc/self/exe", result, PATH_MAX);
-		len = c;
-		result[len]='\0';
-		const char* path;
-		if( c != -1 )
-			path = dirname(result);
-		else
-			SIBR_ERR  << "Cant find executable path  "<< std::endl;
-
-
-		std::string installDirectory(parentDirectory(path));
-#endif
 
 		if (len == 0 && 
 		!directoryExists(installDirectory + "/bin")) // memory not sufficient or general error occured
@@ -354,30 +317,29 @@ namespace sibr
 		return installDirectory;
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getBinDirectory()
+	std::string getBinDirectory()
 	{
 		return getInstallSubDirectory("bin");
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getShadersDirectory(const std::string & subfolder)
+	std::string getShadersDirectory(const std::string & subfolder)
 	{
 		return getInstallSubDirectory("shaders" + ((subfolder != "") ? "/" + subfolder : ""));
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getScriptsDirectory()
+	std::string getScriptsDirectory()
 	{
 		return getInstallSubDirectory("scripts");
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getResourcesDirectory()
+	std::string getResourcesDirectory()
 	{
 		return getInstallSubDirectory("resources");
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getAppDataDirectory()
+	std::string getAppDataDirectory()
 	{
 		std::string appDataDirectory = "";
-#ifdef SIBR_OS_WINDOWS 
 		PWSTR path_tmp;
 
 		/* Attempt to get user's AppData folder
@@ -398,17 +360,13 @@ namespace sibr
 		appDataDirectory += std::string( path_wtmp.begin(), path_wtmp.end() );
 		appDataDirectory += "\\sibr";
 		CoTaskMemFree(path_tmp);
-#else
-		struct passwd *pw = getpwuid(getuid());
-		appDataDirectory += pw->pw_dir + std::string("/.sibr");
-#endif
 
 		makeDirectory(appDataDirectory);
 
 		return appDataDirectory;
 	}
 
-	SIBR_SYSTEM_EXPORT std::string getInstallSubDirectory(const std::string & subfolder)
+	std::string getInstallSubDirectory(const std::string & subfolder)
 	{
 		std::string installDirectory = getInstallDirectory();
 		std::string installSubDirectory = installDirectory + "/" + subfolder;
@@ -457,42 +415,9 @@ namespace sibr
 
 	}
 
-	SIBR_SYSTEM_EXPORT std::istream& safeGetline(std::istream& is, std::string& t)
+	std::istream& safeGetline(std::istream& is, std::string& t)
 	{
-#ifdef SIBR_OS_WINDOWS
 		return std::getline(is, t);
-#else
-	    t.clear();
-
-	    // The characters in the stream are read one-by-one using a std::streambuf.
-	    // That is faster than reading them one-by-one using the std::istream.
-	    // Code that uses streambuf this way must be guarded by a sentry object.
-	    // The sentry object performs various tasks,
-	    // such as thread synchronization and updating the stream state.
-
-	    std::istream::sentry se(is, true);
-	    std::streambuf* sb = is.rdbuf();
-
-	    for(;;) {
-		int c = sb->sbumpc();
-		switch (c) {
-		case '\n':
-		    return is;
-		case '\r':
-		    if(sb->sgetc() == '\n')
-			sb->sbumpc();
-		    return is;
-		case std::streambuf::traits_type::eof():
-		    // Also handle the case when the last line has no line ending
-			is.setstate(std::ios::eofbit);
-			// this helps ignore the last line if it's empty (otherwise it's a different behavior from std::get_line)
-			if (t.empty()) is.setstate(std::ios::badbit);
-		    return is;
-		default:
-		    t += (char)c;
-		}
-	    }
-#endif
 	}
 
 } // namespace sirb

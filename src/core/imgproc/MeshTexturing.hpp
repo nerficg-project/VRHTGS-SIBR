@@ -25,7 +25,7 @@ namespace sibr {
 	 * and accumulate colors in UV-space to generate a texture map.
 	 * \ingroup sibr_imgproc
 	 */
-	class SIBR_IMGPROC_EXPORT MeshTexturing
+	class MeshTexturing
 	{
 	public:
 

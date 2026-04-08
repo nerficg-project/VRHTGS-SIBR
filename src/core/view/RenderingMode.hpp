@@ -27,7 +27,7 @@ namespace sibr
 	*	Rendering mode manages the rendertarget and camera fed to an IBR view. Can be used to render a view using a stereoscopic mode (anaglyph or VR).
 	*   \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT IRenderingMode
+	class IRenderingMode
 	{
 		SIBR_CLASS_PTR(IRenderingMode);
 
@@ -77,7 +77,7 @@ namespace sibr
 	/** Default rendering mode: monoview, passthrough.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MonoRdrMode : public IRenderingMode
+	class MonoRdrMode : public IRenderingMode
 	{
 	public:
 
@@ -114,7 +114,7 @@ namespace sibr
 	 *Stereo rendering mode: two slightly shifted views are rendered and composited as anaglyphs.
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT StereoAnaglyphRdrMode : public IRenderingMode
+	class StereoAnaglyphRdrMode : public IRenderingMode
 	{
 	public:
 

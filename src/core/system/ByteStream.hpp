@@ -27,7 +27,7 @@ namespace sibr
 	 \note This ByteStream stores integer using the network byte order (which is big endian).
 	 \ingroup sibr_system
 	*/
-	class SIBR_SYSTEM_EXPORT ByteStream
+	class ByteStream
 	{
 	public:
 

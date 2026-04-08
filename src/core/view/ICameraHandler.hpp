@@ -27,7 +27,7 @@ namespace sibr {
 	 * Represent an interaction mode (FPS, trackball,...) for a camera controlled by the user, or a combination of multiple modes.
 	  \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT ICameraHandler
+	class ICameraHandler
 	{
 	public:
 		SIBR_CLASS_PTR(ICameraHandler)

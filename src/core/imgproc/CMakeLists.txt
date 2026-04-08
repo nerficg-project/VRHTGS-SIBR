@@ -14,7 +14,7 @@ file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
 source_group("Source Files" FILES ${SOURCES})
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(
 	${Boost_INCLUDE_DIRS}
@@ -25,7 +25,7 @@ target_link_libraries(${PROJECT_NAME}
 	${Boost_LIBRARIES}
 	${OpenCV_LIBRARIES}
 	OpenMP::OpenMP_CXX
-	glfw3
+	glfw
 	mrf
 	sibr_system
 	sibr_graphics
@@ -53,8 +53,6 @@ if (NOT WIN32)
 		# X11 Xi Xrandr Xxf86vm Xinerama Xcursor dl rt m pthread
 	)
 endif()
-
-add_definitions( -DSIBR_IMGPROC_EXPORTS -DBOOST_ALL_DYN_LINK  )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
 

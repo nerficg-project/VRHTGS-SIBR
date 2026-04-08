@@ -15,7 +15,7 @@ source_group("Source Files" FILES ${SOURCES})
 
 
 ## Specify target rules
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
@@ -29,8 +29,6 @@ target_link_libraries(${PROJECT_NAME}
     sibr_graphics
     sibr_raycaster
 )
-
-add_definitions( -DSIBR_SCENE_EXPORTS -DBOOST_ALL_DYN_LINK  )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
 

@@ -27,7 +27,7 @@ namespace sibr {
 	/** \brief Utility class to crop and rescale images, especially for uniformizing IBR datasets.
 	* \ingroup sibr_imgproc
 	*/
-	class SIBR_IMGPROC_EXPORT CropScaleImageUtility
+	class CropScaleImageUtility
 	{
 	public:
 

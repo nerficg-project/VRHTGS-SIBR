@@ -24,7 +24,7 @@ namespace sibr{
 	/** Provide basic IBR utilities. 
 	 \ingroup sibr_view
 	 */
-	class SIBR_VIEW_EXPORT IBRBasicUtils
+	class IBRBasicUtils
 	{
 
 	public:

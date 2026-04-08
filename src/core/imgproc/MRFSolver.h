@@ -26,7 +26,7 @@ namespace sibr {
 	 *Solve labelling problems on regular grids using alpha expension.
 	\ingroup sibr_imgproc
 	*/
-	class SIBR_IMGPROC_EXPORT MRFSolver
+	class MRFSolver
 	{
 
 	public:

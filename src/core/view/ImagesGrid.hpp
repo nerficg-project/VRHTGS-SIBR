@@ -21,7 +21,7 @@
 namespace sibr
 {
 
-	class SIBR_VIEW_EXPORT DrawUtilities
+	class DrawUtilities
 	{
 	public:
 
@@ -98,7 +98,7 @@ namespace sibr
 	};
 
 
-	class SIBR_VIEW_EXPORT GridMapping {
+	class GridMapping {
 
 	protected:
 		MVpixel pixFromScreenPos(const Vector2i & pos, const Vector2f & size);
@@ -171,7 +171,7 @@ namespace sibr
 	};
 	
 
-	class SIBR_VIEW_EXPORT ImagesGrid : public ViewBase, GridMapping 
+	class ImagesGrid : public ViewBase, GridMapping
 	{
 		SIBR_CLASS_PTR(ImagesGrid);
 

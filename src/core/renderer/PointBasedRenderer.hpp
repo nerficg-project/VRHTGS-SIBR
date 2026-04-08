@@ -24,7 +24,7 @@ namespace sibr {
 	/** Render a Point Cloud with colors
 	\ingroup sibr_renderer
 	*/
-	class SIBR_EXP_RENDERER_EXPORT PointBasedRenderer
+	class PointBasedRenderer
 	{
 	public:
 		typedef std::shared_ptr<PointBasedRenderer>	Ptr;

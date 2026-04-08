@@ -68,8 +68,8 @@ namespace sibr {
 
 	class MultiViewInterface;
 
-	class SIBR_VIEW_EXPORT MultiViewInterfaceView : public sibr::ViewBase {
-	
+	class MultiViewInterfaceView : public sibr::ViewBase {
+
 	public:
 		enum class ViewType { IMAGES, MESH };
 
@@ -94,7 +94,7 @@ namespace sibr {
 		This class provides basic rendering utilities for a list of images + a mesh.
 		\ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT MultiViewInterface {
+	class MultiViewInterface {
 
 		SIBR_CLASS_PTR(MultiViewInterface);
 
@@ -267,7 +267,7 @@ namespace sibr {
 					imagesPtr.push_back(layerPtrs);
 				}
 				const std::vector<sibr::Image<T_Type, T_NumComp> > & imgs = (scale == 0 ?  images : resized_imgs);
-				auto layer = std::make_shared<sibr::Texture2DArray<T_Type, T_NumComp>>();
+				sibr::Texture2DArray<T_Type, T_NumComp>::template Ptr layer = std::make_shared<sibr::Texture2DArray<T_Type, T_NumComp>>();
 
 				layer->createFromImages(imgs);
 
@@ -321,7 +321,7 @@ namespace sibr {
 					imagesPtr.push_back(layerPtrs);
 				}
 
-				typename sibr::Texture2DArray<Lambda_Out_Type, Lambda_Out_N>::Ptr layer = std::make_shared<sibr::Texture2DArray<Lambda_Out_Type, Lambda_Out_N> >();
+				sibr::Texture2DArray<Lambda_Out_Type, Lambda_Out_N>::template Ptr layer = std::make_shared<sibr::Texture2DArray<Lambda_Out_Type, Lambda_Out_N> >();
 				layer->createFromImages(lambdaImgs);
 				sibr::ITexture2DArray::Ptr layerBase(layer);
 				imagesLayers[scale].push_back(layerBase);

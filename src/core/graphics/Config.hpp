@@ -32,31 +32,6 @@
 # pragma warning(pop)
 
 
-
-# ifdef SIBR_OS_WINDOWS
-//// Export Macro (used for creating DLLs) ////
-#  ifdef SIBR_STATIC_DEFINE
-#    define SIBR_EXPORT
-#    define SIBR_NO_EXPORT
-#  else
-#    ifndef SIBR_GRAPHICS_EXPORT
-#      ifdef SIBR_GRAPHICS_EXPORTS
-          /* We are building this library */
-#        define SIBR_GRAPHICS_EXPORT __declspec(dllexport)
-#      else
-          /* We are using this library */
-#        define SIBR_GRAPHICS_EXPORT __declspec(dllimport)
-#      endif
-#    endif
-#    ifndef SIBR_NO_EXPORT
-#      define SIBR_NO_EXPORT 
-#    endif
-#  endif
-# else
-# define SIBR_GRAPHICS_EXPORT
-# endif
-
-
 /** Macro to check OpenGL error and throw \p std::runtime_error if found */
 # undef CHECK_GL_ERROR
 # define CHECK_GL_ERROR  {								\

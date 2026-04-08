@@ -41,7 +41,7 @@ namespace sibr {
 	 * count to 1, and know that it will introduce a stall when querying the value.
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT GPUQuery
+	class GPUQuery
 	{
 		SIBR_CLASS_PTR(GPUQuery);
 

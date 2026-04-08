@@ -31,7 +31,7 @@ namespace sibr {
 	/** Provide a handler to interact using a trackball (based on mouse motions).
 	* \ingroup sibr_view
 	*/
-	class SIBR_VIEW_EXPORT TrackBall : public ICameraHandler
+	class TrackBall : public ICameraHandler
 	{
 	public:
 		/** Constructor
