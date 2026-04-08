@@ -18,6 +18,7 @@
 # endif
 # include <cmath>
 # include <cassert>
+# include <filesystem>
 # include <iostream>
 # include <string>
 # include <memory>
@@ -25,7 +26,6 @@
 # include <algorithm>
 # include <mutex>
 # include <stdint.h>
-#include <boost/filesystem.hpp>
 
 
 // Windows define macro for 'far' and 'near'...
@@ -195,7 +195,7 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
-using Path = boost::filesystem::path;
+using Path = std::filesystem::path;
 
 // This stuff should be in a file gathering all debug tools
 //# if !defined(NDEBUG)

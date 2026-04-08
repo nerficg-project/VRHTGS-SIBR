@@ -10,6 +10,7 @@
  */
 
 
+#include <filesystem>
 #include <fstream>
 #include "core/assets/CameraRecorder.hpp"
 #include "core/assets/InputCamera.hpp"
@@ -215,7 +216,7 @@ namespace sibr
 	void CameraRecorder::loadColmap(const std::string &filePath, int w, int h)
 	{
 		SIBR_LOG << "Loading colmap path." << std::endl;
-		boost::filesystem::path colmapDir ( filePath );
+		std::filesystem::path colmapDir ( filePath );
 
 		SIBR_LOG << "DEBUG: colmap path dir " << colmapDir.parent_path().string() << std::endl;
 
@@ -414,11 +415,12 @@ namespace sibr
 			return false;
 		}
 		_ow = w, _oh = h;
-		if (boost::filesystem::extension(pathFileName) == ".out")
+		std::filesystem::path pathFile(pathFileName);
+		if (pathFile.extension() == ".out")
 			loadBundle(pathFileName, w, h);
-		else if (boost::filesystem::extension(pathFileName) == ".lookat")
+		else if (pathFile.extension() == ".lookat")
 			loadLookat(pathFileName, w, h);
-		else if (boost::filesystem::extension(pathFileName) == ".txt")
+		else if (pathFile.extension() == ".txt")
 			loadColmap(pathFileName, w, h);
 		else
 			load(pathFileName);
@@ -434,14 +436,14 @@ namespace sibr
 		outFrame.reset(new RenderTargetRGBA32F(_ow, _oh));
 		std::string outFileName;
 
-		boost::filesystem::path dstFolder;
+		std::filesystem::path dstFolder;
 
 		outpathd = outPathDir;
 
 		if (outPathDir == "pathOutput" && _savingPath != "") { // default to path parent, saved by loadPath
 			outpathd = _savingPath + "/" + "pathOutput";
 			dstFolder = outpathd;
-			if (!directoryExists(outpathd) && !boost::filesystem::create_directories(dstFolder))
+			if (!directoryExists(outpathd) && !std::filesystem::create_directories(dstFolder))
 				SIBR_ERR << "Error creating directory " << dstFolder << std::endl;
 		}
 
@@ -450,7 +452,7 @@ namespace sibr
         else 
             dstFolder = outpathd ;
 
-		if (!directoryExists(outpathd) && !boost::filesystem::create_directories(dstFolder))
+		if (!directoryExists(outpathd) && !std::filesystem::create_directories(dstFolder))
 			SIBR_ERR << "Error creating directory " << dstFolder << std::endl;
 
 		std::cout << "Rendering path with " << _cameras.size() << " cameras to " << outpathd << std::endl;
@@ -481,20 +483,20 @@ namespace sibr
 		outFrame.reset(new RenderTargetRGBA32F(_ow, _oh));
 		std::string outFileName;
 
-		boost::filesystem::path dstFolder;
+		std::filesystem::path dstFolder;
 
 		outpathd = outPathDir;
 
 		if (outPathDir == "") { // default to path parent, saved by loadPath
 			outpathd = _dsPath + "/" + "pathOutput";
 			dstFolder = outpathd;
-			if (!directoryExists(outpathd) && !boost::filesystem::create_directories(dstFolder))
+			if (!directoryExists(outpathd) && !std::filesystem::create_directories(dstFolder))
 				SIBR_ERR << "Error creating directory " << dstFolder << std::endl;
 		}
 
 		dstFolder = outpathd;
 
-		if (!directoryExists(outpathd) && !boost::filesystem::create_directories(dstFolder))
+		if (!directoryExists(outpathd) && !std::filesystem::create_directories(dstFolder))
 			SIBR_ERR << "Error creating directory " << dstFolder << std::endl;
 
 		std::cout << "Saving current camera to " << outpathd << std::endl;

@@ -11,7 +11,7 @@
 
 
 #include "TrackBall.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include "core/graphics/Input.hpp"
 #include "core/graphics/Viewport.hpp"
 #include "core/raycaster/CameraRaycaster.hpp" 
@@ -131,7 +131,7 @@ namespace sibr {
 
 	void TrackBall::save(std::string & filePath) const
 	{
-		if (boost::filesystem::exists(filePath)) {
+		if (std::filesystem::exists(filePath)) {
 			char c;
 			SIBR_LOG << " a track ball already exists, override ? y/n ... " << std::flush;
 			std::cin >> c;

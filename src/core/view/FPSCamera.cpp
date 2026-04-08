@@ -11,7 +11,6 @@
 
 
 #include "FPSCamera.hpp"
-#include <boost/filesystem.hpp>
 #include "core/graphics/Input.hpp"
 #include "core/graphics/Viewport.hpp"
 #include "core/graphics/Window.hpp"

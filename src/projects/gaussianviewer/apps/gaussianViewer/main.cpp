@@ -21,11 +21,11 @@
 #include <core/raycaster/Raycaster.hpp>
 #include <core/view/SceneDebugView.hpp>
 #include <algorithm>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <regex>
 #include <imgui/imgui_internal.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 std::string findLargestNumberedSubdirectory(const std::string& directoryPath) {
 	fs::path dirPath(directoryPath);

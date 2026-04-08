@@ -10,7 +10,7 @@
  */
 
 
-# include <boost/filesystem.hpp>
+# include <filesystem>
 # include <fstream>
 # include "core/assets/ActiveImageFile.hpp"
 
@@ -29,7 +29,7 @@ namespace sibr
 		for(int i=0; i < _numImages; i++)
 			_active[i]=false;
 
-		if (file && !boost::filesystem::is_empty(filename))
+		if (file && !std::filesystem::is_empty(filename))
 		{
 			while (file.eof() == false)
 			{

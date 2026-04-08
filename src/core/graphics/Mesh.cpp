@@ -10,6 +10,7 @@
  */
 
 
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <map>
@@ -24,7 +25,6 @@
 #include "core/system/ByteStream.hpp"
 #include "core/graphics/Mesh.hpp"
 
-#include "boost/filesystem.hpp"
 #include "core/system/XMLTree.h"
 #include "core/system/Matrix.hpp"
 #include <set>
@@ -633,8 +633,8 @@ namespace sibr
 	bool	Mesh::loadSfM(const std::string& filename, const std::string& dataset_path )
 	{
 		// Does the file exist?
-	
-		std::string fname = dataset_path + "points3D.bin";
+
+		std::string fname = (std::filesystem::path(dataset_path) / "points3D.bin").string();
 
 		std::cerr << "LOADSFM: Try to open " << fname << std::endl;
 
@@ -676,7 +676,7 @@ namespace sibr
 	bool sibr::Mesh::loadMtsXML(const std::string& xmlFile)
 	{
 		bool allLoaded = true;
-		std::string pathFolder = boost::filesystem::path(xmlFile).parent_path().string();
+		std::string pathFolder = std::filesystem::path(xmlFile).parent_path().string();
 		sibr::XMLTree doc(xmlFile);
 
 		std::map<std::string, sibr::Mesh> meshes;

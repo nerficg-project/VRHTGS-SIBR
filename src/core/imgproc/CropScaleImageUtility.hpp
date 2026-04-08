@@ -15,8 +15,6 @@
 #include "Config.hpp"
 #include <core/graphics/Image.hpp>
 
-#include <boost/filesystem.hpp>
-
 #include <fstream>
 #include <iostream>
 #include <iomanip>

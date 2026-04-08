@@ -14,6 +14,7 @@
 
 #include <core/graphics/Utils.hpp>
 #include <algorithm>
+#include <filesystem>
 
 
 #include <opencv2/ximgproc/edge_filter.hpp>
@@ -765,10 +766,10 @@ namespace sibr {
 
 	int VideoUtils::rotationAngleFromMetadata(const std::string & videoPath)
 	{
-		namespace bfs = boost::filesystem;
+		namespace fs = std::filesystem;
 
-		Path vidPath = bfs::canonical(videoPath);
-		std::string parentAbs = bfs::canonical(vidPath.parent_path()).string();
+		Path vidPath = fs::canonical(videoPath);
+		std::string parentAbs = fs::canonical(vidPath.parent_path()).string();
 		std::string tmpFilePath = parentAbs + "/" + vidPath.stem().string() + "_tmp.txt";
 
 		std::string cmd = "ffprobe -i \"" + vidPath.string() + "\" > \"" + tmpFilePath + "\" 2>&1";
@@ -796,7 +797,7 @@ namespace sibr {
 		}
 		file.close();
 
-		if (!boost::filesystem::remove(tmpFilePath)) {
+		if (!fs::remove(tmpFilePath)) {
 			SIBR_WRG << "getMetaData failed to remove " << tmpFilePath << std::endl;
 		}
 
@@ -1571,7 +1572,7 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT cv::Mat slice(const PyramidLayer & layer, int i, int j, bool vertical, bool center)
+	cv::Mat slice(const PyramidLayer & layer, int i, int j, bool vertical, bool center)
 	{
 		cv::Mat out;
 		if (vertical) {

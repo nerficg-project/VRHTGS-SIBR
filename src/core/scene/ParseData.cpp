@@ -398,14 +398,14 @@ namespace sibr {
 
 		_imgPath = _basePathName + "/images/";
 
-		std::string blackListFile = dataset_path + "/colmap/database.blacklist";
+		std::string blackListFileName = dataset_path + "/colmap/database.blacklist";
 
-		if (sibr::fileExists(blackListFile)) {
+		if (sibr::fileExists(blackListFileName)) {
 			std::string line;
 			std::vector<std::string> splitS;
-			std::ifstream blackListFileF(blackListFile);
-			if (blackListFileF.is_open()) {
-				while (safeGetline(blackListFileF, line)) {
+			std::ifstream blackListFile(blackListFileName);
+			if (blackListFile.is_open()) {
+				while (std::getline(blackListFile, line)) {
 
 					split(splitS, line, is_any_of(" "));
 					//std::cout << splitS.size() << std::endl;

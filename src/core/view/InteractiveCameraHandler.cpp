@@ -10,6 +10,7 @@
  */
 
 
+#include <filesystem>
 #include "InteractiveCameraHandler.hpp"
 #include "core/graphics/Input.hpp"
 #include "core/graphics/Viewport.hpp"
@@ -421,7 +422,7 @@ namespace sibr {
 				std::cin.get();
 
 				_cameraRecorder.reset();
-				if (boost::filesystem::extension(filename) == ".out")
+				if (std::filesystem::path(filename).extension() == ".out")
 					_cameraRecorder.loadBundle(filename, w, h);
 				else
 					_cameraRecorder.load(filename);
@@ -652,11 +653,12 @@ namespace sibr {
 						if (!selectedFile.empty()) {
 							SIBR_LOG << "Loading" << std::endl;
 							_cameraRecorder.reset();
-							if (boost::filesystem::extension(selectedFile) == ".out")
+							const std::filesystem::path selectedFilePath(selectedFile);
+							if (selectedFilePath.extension() == ".out")
 								_cameraRecorder.loadBundle(selectedFile, _currentCamera.w(), _currentCamera.h());
-							else if (boost::filesystem::extension(selectedFile) == ".lookat")
+							else if (selectedFilePath.extension() == ".lookat")
 								_cameraRecorder.loadLookat(selectedFile, _currentCamera.w(), _currentCamera.h());
-							else if (boost::filesystem::extension(selectedFile) == ".txt")
+							else if (selectedFilePath.extension() == ".txt")
 								_cameraRecorder.loadColmap(selectedFile, _currentCamera.w(), _currentCamera.h());
 							else
 								_cameraRecorder.load(selectedFile);

@@ -11,7 +11,7 @@
 
 
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -82,9 +82,9 @@ namespace sibr
 
 	void			makeDirectory(const std::string& path)
 	{
-		boost::filesystem::path p(path);
-		if (boost::filesystem::exists(p) == false)
-			boost::filesystem::create_directories(p);
+		std::filesystem::path p(path);
+		if (std::filesystem::exists(p) == false)
+			std::filesystem::create_directories(p);
 	}
 
 	std::vector<std::string> listFiles(const std::string & path, const bool listHidden, const bool includeSubdirectories, const std::vector<std::string> & allowedExtensions)
@@ -97,16 +97,16 @@ namespace sibr
 		bool shouldCheckExtension = !allowedExtensions.empty();
 
 		try {
-			boost::filesystem::directory_iterator end_iter;
-			for (boost::filesystem::directory_iterator dir_itr(path); dir_itr != end_iter; ++dir_itr) {
+			std::filesystem::directory_iterator end_iter;
+			for (std::filesystem::directory_iterator dir_itr(path); dir_itr != end_iter; ++dir_itr) {
 
 				const std::string itemName = dir_itr->path().filename().string();
-				if (includeSubdirectories && boost::filesystem::is_directory(dir_itr->status())) {
+				if (includeSubdirectories && std::filesystem::is_directory(dir_itr->status())) {
 					if (listHidden || (itemName.size() > 0 && itemName.at(0) != '.')) {
 						files.push_back(itemName);
 					}
 				}
-				else if (boost::filesystem::is_regular_file(dir_itr->status())) {
+				else if (std::filesystem::is_regular_file(dir_itr->status())) {
 					bool shouldKeep = !shouldCheckExtension;
 					if (shouldCheckExtension) {
 						for (const auto & allowedExtension : allowedExtensions) {
@@ -123,7 +123,7 @@ namespace sibr
 				}
 			}
 		}
-		catch (const boost::filesystem::filesystem_error&) {
+		catch (const std::filesystem::filesystem_error&) {
 			std::cout << "Can't access or find directory." << std::endl;
 		}
 
@@ -142,18 +142,18 @@ namespace sibr
 
 
 		try {
-			boost::filesystem::directory_iterator end_iter;
-			for (boost::filesystem::directory_iterator dir_itr(path); dir_itr != end_iter; ++dir_itr) {
+			std::filesystem::directory_iterator end_iter;
+			for (std::filesystem::directory_iterator dir_itr(path); dir_itr != end_iter; ++dir_itr) {
 
 				const std::string itemName = dir_itr->path().filename().string();
-				if (boost::filesystem::is_directory(dir_itr->status())) {
+				if (std::filesystem::is_directory(dir_itr->status())) {
 					if (listHidden || (itemName.size() > 0 && itemName.at(0) != '.')) {
 						dirs.push_back(itemName);
 					}
 				}
 			}
 		}
-		catch (const boost::filesystem::filesystem_error& ) {
+		catch (const std::filesystem::filesystem_error& ) {
 			std::cout << "Can't access or find directory." << std::endl;
 		}
 
@@ -165,9 +165,9 @@ namespace sibr
 
 	bool copyDirectory(const std::string& src, const std::string& dst)
 	{
-		boost::filesystem::path source = src;
-		boost::filesystem::path destination = dst;
-		namespace fs = boost::filesystem;
+		std::filesystem::path source = src;
+		std::filesystem::path destination = dst;
+		namespace fs = std::filesystem;
 		try
 		{
 			// Check whether the function call is valid
@@ -232,9 +232,9 @@ namespace sibr
 
 	bool copyFile(const std::string & src, const std::string & dst, const bool overwrite)
 	{
-		boost::filesystem::path source = src;
-		boost::filesystem::path destination = dst;
-		namespace fs = boost::filesystem;
+		std::filesystem::path source = src;
+		std::filesystem::path destination = dst;
+		namespace fs = std::filesystem;
 		try {
 			// Check whether the function call is valid
 			if (!fs::exists(source) || !fs::is_regular_file(source))
@@ -258,7 +258,7 @@ namespace sibr
 				return false;
 			}
 			if(overwrite) {
-				fs::copy_file(source, destination, boost::filesystem::copy_option::overwrite_if_exists);
+				fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
 			} else {
 				fs::copy_file(source, destination);
 			}
@@ -274,22 +274,22 @@ namespace sibr
 	}
 
 	void			emptyDirectory(const std::string& path) {
-		boost::filesystem::path p(path);
-		for (boost::filesystem::directory_iterator end_dir_it, it(p); it != end_dir_it; ++it) {
-			boost::filesystem::remove_all(it->path());
+		std::filesystem::path p(path);
+		for (std::filesystem::directory_iterator end_dir_it, it(p); it != end_dir_it; ++it) {
+			std::filesystem::remove_all(it->path());
 		}
 	}
 
 	bool			fileExists(const std::string& path)
 	{
-		boost::filesystem::path p(path);
-		return boost::filesystem::exists(p) && boost::filesystem::is_regular_file(path);
+		std::filesystem::path p(path);
+		return std::filesystem::exists(p) && std::filesystem::is_regular_file(p);
 	}
 
 	bool			directoryExists(const std::string& path)
 	{
-		boost::filesystem::path p(path);
-		return boost::filesystem::exists(p) && boost::filesystem::is_directory(path);
+		std::filesystem::path p(path);
+		return std::filesystem::exists(p) && std::filesystem::is_directory(p);
 	}
 
 	size_t getAvailableMem() {

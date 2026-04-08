@@ -10,6 +10,8 @@
  */
 
 
+#include <filesystem>
+
 #include <core/renderer/RenderMaskHolder.hpp>
 #include <core/assets/Resources.hpp>
 
@@ -67,13 +69,13 @@ namespace sibr {
 	void 	RenderMaskHolder::loadMasks(const sibr::BasicIBRScene::Ptr& ibrScene,  const std::string& maskDir,  
 				const std::string& preFileName, const std::string& postFileName, int w, int h)
 	{
-		if( boost::filesystem::exists(maskDir) ) {
+		if( std::filesystem::exists(maskDir) ) {
 
 		for(int i=0; i<(int)ibrScene->cameras()->inputCameras().size(); i++ ) {
 				sibr::ImageRGB mask;
 				std::string filename = maskDir + "/" + preFileName + sibr::imageIdToString(i) + postFileName;
 			
-				if( boost::filesystem::exists(filename))  {
+				if( std::filesystem::exists(filename))  {
 					mask.load(filename,false);
 					// Split the image in its channels and keep only the first.
 					cv::Mat channels[3];
@@ -115,7 +117,7 @@ namespace sibr {
 	) {
 		std::string maskdir = (maskDir == "" ? ibrScene->data()->basePathName() + "/images/" : maskDir);
 
-		if (!boost::filesystem::exists(maskdir)) {
+		if (!std::filesystem::exists(maskdir)) {
 			SIBR_ERR << "[RenderMaskHolder] Cant find directory " << maskDir << std::endl;
 		} else {
 			int numInputImgs = (int)ibrScene->cameras()->inputCameras().size();

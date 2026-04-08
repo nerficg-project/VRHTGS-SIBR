@@ -11,7 +11,7 @@
 
 
 
-# include <boost/filesystem.hpp>
+# include <filesystem>
 # include <fstream>
 # include "core/assets/ImageListFile.hpp"
 
@@ -34,7 +34,7 @@ namespace sibr
 			}
 
 			// store basename
-			boost::filesystem::path path(filename);
+			std::filesystem::path path(filename);
 			_basename = path.parent_path().string();
 
 			if( verbose )

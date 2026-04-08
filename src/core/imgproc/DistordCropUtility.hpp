@@ -17,7 +17,6 @@
 #include <core/system/Vector.hpp>
 #include <core/system/Array2d.hpp>
 
-#include <boost/filesystem.hpp>
 #include <boost/foreach.hpp> 
 
 #include<fstream>

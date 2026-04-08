@@ -12,6 +12,8 @@
 
 #pragma once
 
+# include <filesystem>
+
 # include "core/graphics/Config.hpp"
 # include "core/system/Vector.hpp"
 # include "core/system/ByteStream.hpp"
@@ -20,7 +22,6 @@
 #  include <opencv2/core/core.hpp>
 #  include <opencv2/imgproc/imgproc.hpp>
 #  include <opencv2/highgui/highgui.hpp>
-#  include <boost/filesystem.hpp>
 # pragma warning(pop)
 
 #include <utility>
@@ -903,9 +904,9 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp>
 	void		Image<T_Type, T_NumComp>::save(const std::string& filename, bool verbose) const {
 		{ // Create the output dir if doesn't exists
-			boost::filesystem::path outdir = boost::filesystem::path(filename).parent_path();
+			std::filesystem::path outdir = std::filesystem::path(filename).parent_path();
 			if (outdir.empty() == false)
-				boost::filesystem::create_directories(outdir);
+				std::filesystem::create_directories(outdir);
 		}
 
 		// Important Note:
@@ -954,9 +955,9 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp>
 	void		Image<T_Type, T_NumComp>::saveHDR(const std::string& filename, bool verbose) const {
 		{ // Create the output dir if doesn't exists
-			boost::filesystem::path outdir = boost::filesystem::path(filename).parent_path();
+			std::filesystem::path outdir = std::filesystem::path(filename).parent_path();
 			if (outdir.empty() == false)
-				boost::filesystem::create_directories(outdir);
+				std::filesystem::create_directories(outdir);
 		}
 
 		if (verbose)
@@ -998,9 +999,9 @@ namespace sibr
 	template <typename T_Type, unsigned int T_NumComp>
 	void		Image<T_Type, T_NumComp>::saveByteStream(const std::string& filename, bool verbose) const {
 		{ // Create the output dir if doesn't exists
-			boost::filesystem::path outdir = boost::filesystem::path(filename).parent_path();
+			std::filesystem::path outdir = std::filesystem::path(filename).parent_path();
 			if (outdir.empty() == false)
-				boost::filesystem::create_directories(outdir);
+				std::filesystem::create_directories(outdir);
 		}
 		if (verbose)
 			SIBR_LOG << "Saving image file '" << filename << "'." << std::endl;

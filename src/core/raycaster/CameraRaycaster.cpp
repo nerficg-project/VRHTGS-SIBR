@@ -9,8 +9,6 @@
  * For inquiries contact sibr@inria.fr and/or George.Drettakis@inria.fr
  */
 
-
-#include <boost/filesystem/path.hpp>
 #include <core/system/Vector.hpp>
 #include "core/raycaster/CameraRaycaster.hpp"
 

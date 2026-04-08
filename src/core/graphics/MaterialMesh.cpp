@@ -10,6 +10,7 @@
  */
 
 
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <map>
@@ -24,7 +25,6 @@
 #include "core/system/ByteStream.hpp"
 #include "core/graphics/MaterialMesh.hpp"
 #include "core/system/Transform3.hpp"
-#include "boost/filesystem.hpp"
 #include "core/system/XMLTree.h"
 #include "core/system/Matrix.hpp"
 #include <set>
@@ -349,7 +349,7 @@ namespace sibr
 	{
 		srand(static_cast <unsigned> (time(0)));
 		bool allLoaded = true;
-		std::string pathFolder = boost::filesystem::path(xmlFile).parent_path()
+		std::string pathFolder = std::filesystem::path(xmlFile).parent_path()
 			.string();
 		sibr::XMLTree doc(xmlFile);
 		std::map<std::string, sibr::MaterialMesh> meshes;
