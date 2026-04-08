@@ -118,6 +118,15 @@ namespace sibr
 		inline Quaternionf eyeGazeRotation(void) const { return _eyeGazeTransform.rotation(); }
 
 		/////////////////////////////////////////////////////////////////
+		///// ================= Visibility mask  ================== /////
+		/////////////////////////////////////////////////////////////////
+		inline void visibilityMask(const XrVisibilityMaskKHR& mask) { _visibilityMask = mask; }
+		inline XrVisibilityMaskKHR visibilityMask() const { return _visibilityMask; }
+
+		inline void boundsOnViewPlane(const Vector4f& bounds) { _boundsOnViewPlane = bounds; }
+		inline Vector4f boundsOnViewPlane() const { return _boundsOnViewPlane; }
+
+		/////////////////////////////////////////////////////////////////
 		///// ==================== Projection  ==================== /////
 		/////////////////////////////////////////////////////////////////
 
@@ -291,6 +300,8 @@ namespace sibr
 
 		Transform3f		_transform; ///< The camera pose.
 		Transform3f		_eyeGazeTransform; ///< The eye gaze transform.
+		XrVisibilityMaskKHR	_visibilityMask; ///< The visibility mask.
+		Vector4f		_boundsOnViewPlane; ///< The bounds on the view plane.
 		uint32_t		_viewIndex; ///< The view index for multi-view rendering. LEFT=0, RIGHT=1
 		float			_fov; ///< The vertical field of view (radians)
 		float			_aspect; ///< Aspect ratio.

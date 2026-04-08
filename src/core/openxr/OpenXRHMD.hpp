@@ -249,6 +249,24 @@ namespace sibr
         Eigen::Vector3f getEyeGazePosition(Eye eye) const;
 
         /**
+         * @brief Return the visibility mask of each eye
+         * @param eye: LEFT or RIGHT
+         */
+        XrVisibilityMaskKHR getVisibilityMask(Eye eye) {
+            if (!m_visibilityMasksInitialized) {
+                initializeVisibilityMasks();
+            }
+
+            XrVisibilityMaskKHR mask = {};
+            if (eye == Eye::LEFT && m_visibilityMasksInitialized) {
+                mask = m_visibilityMaskLeftEye;
+            } else if (eye == Eye::RIGHT && m_visibilityMasksInitialized) {
+                mask = m_visibilityMaskRightEye;
+            }
+            return mask;
+        }
+
+        /**
          * @brief Return the fields of view of each eye
          * @return a list of angles: left, right, down and up
          * @param eye: LEFT or RIGHT
@@ -257,6 +275,13 @@ namespace sibr
          * Each eye has a different left and right field of view due to IPD (Inter pupillary distance)
          */
         Eigen::Vector4f getFieldOfView(Eye eye, AngleUnit unit = AngleUnit::RADIAN) const;
+
+        /**
+         * @brief Return the bounds on the view plane (z=1) of each eye
+         * @return a list of coordinates: left, right, down and up
+         * @param eye: LEFT or RIGHT
+         */
+        Eigen::Vector4f getBoundsOnViewPlane(Eye eye) const;
 
         /**
          * @brief Return the horizontal and vertical fields of view of each eye
@@ -335,6 +360,11 @@ namespace sibr
         // The session deals with the renderloop submitting frames to the runtime
         XrSession m_session = XR_NULL_HANDLE;
 
+        // Visibility mask
+        bool m_visibilityMasksInitialized = false;
+        XrVisibilityMaskKHR m_visibilityMaskLeftEye = {};
+        XrVisibilityMaskKHR m_visibilityMaskRightEye = {};
+
         // Eye tracking extension handle
         XrEyeTrackerFB m_eyeTracker = XR_NULL_HANDLE; // eye tracking
         // Eye gazes state
@@ -386,6 +416,7 @@ namespace sibr
         bool synchronizeSession();
         void updateCurrentSessionState(const XrSessionState &state);
         void updateRefreshReport();
+        void initializeVisibilityMasks();
 
         // Helper methods
         static Eigen::Vector3f quaternionToEulerAngles(const XrQuaternionf &q);

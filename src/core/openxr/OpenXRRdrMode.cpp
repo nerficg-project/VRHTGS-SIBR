@@ -116,6 +116,7 @@ namespace sibr
                                      OpenXRHMD::Eye eye = viewIndex == 0 ? OpenXRHMD::Eye::LEFT : OpenXRHMD::Eye::RIGHT;
 
                                      auto fov = this->m_openxrHmd->getFieldOfView(eye);
+                                     auto bounds = this->m_openxrHmd->getBoundsOnViewPlane(eye);
                                      auto q = this->m_openxrHmd->getPoseQuaternion(eye);
                                      auto pos = this->m_openxrHmd->getPosePosition(eye);
 
@@ -149,10 +150,14 @@ namespace sibr
                                      cam.znear(camera.znear());
                                      cam.fovy(fov.w() - fov.z());
                                      cam.aspect((fov.y() - fov.x()) / (fov.w() - fov.z()));
+                                     cam.boundsOnViewPlane(bounds);
 
                                      // Set eye gaze position and rotation by transforming to camera space
                                      cam.eyeGazePosition(pos_eye);
                                      cam.eyeGazeRotation(q_eye);
+
+                                     // Set visibility mask
+                                     cam.visibilityMask(this->m_openxrHmd->getVisibilityMask(eye));
 
                                      if (m_vrExperience == 1) { // 1: seated experience - used sibr_viewer current camera's position as default position
                                          cam.translate(camera.position());

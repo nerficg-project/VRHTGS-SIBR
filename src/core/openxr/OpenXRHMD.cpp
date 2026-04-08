@@ -75,6 +75,12 @@ namespace sibr
         if (!xrCheck(instance, result, "Failed to get Eye Tracking Get function!"))
             return false;
 
+        // Visibility mask
+        result = xrGetInstanceProcAddr(instance, "xrGetVisibilityMaskKHR",
+                (PFN_xrVoidFunction *)&xrGetVisibilityMaskKHR_);
+        if (!xrCheck(instance, result, "Failed to get Visibility Mask function!"))
+            return false;
+
         return true;
     }
 
@@ -259,6 +265,24 @@ namespace sibr
         return (unit == AngleUnit::RADIAN ? fov : radianToDegree(fov));
     }
 
+    Eigen::Vector4f OpenXRHMD::getBoundsOnViewPlane(OpenXRHMD::Eye eye) const
+    {
+        uint32_t viewIndex = eyeToViewIndex(eye);
+        if (viewIndex >= m_viewCount)
+        {
+            fprintf(stderr, "View for %s eye does not exist\n", eyeToString(eye));
+            return Vector4f::Zero();
+        }
+
+        // Calculate bounds on the view plane at unit distance
+        float left = tan(views[viewIndex].fov.angleLeft);
+        float right = tan(views[viewIndex].fov.angleRight);
+        float down = tan(views[viewIndex].fov.angleDown);
+        float up = tan(views[viewIndex].fov.angleUp);
+
+        return Vector4f(left, right, down, up);
+    }
+
     Eigen::Vector2f OpenXRHMD::getHVFieldOfView(AngleUnit unit) const
     {
         if (m_viewCount < 2)
@@ -326,6 +350,7 @@ namespace sibr
         std::vector<const char *> expectedExtensions = {
             XR_KHR_OPENGL_ENABLE_EXTENSION_NAME,
             XR_FB_EYE_TRACKING_SOCIAL_EXTENSION_NAME, // eye tracking
+            XR_KHR_VISIBILITY_MASK_EXTENSION_NAME,    // visibility mask
 #if defined(XR_USE_PLATFORM_WIN32)
             XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME,
 #elif defined(XR_USE_TIMESPEC)
@@ -460,6 +485,47 @@ namespace sibr
         return true;
     }
 
+    void OpenXRHMD::initializeVisibilityMasks() {
+        if (this->m_visibilityMasksInitialized) {
+            return;
+        }
+        m_visibilityMaskLeftEye.type = XR_TYPE_VISIBILITY_MASK_KHR;
+        m_visibilityMaskLeftEye.next = nullptr;
+        m_visibilityMaskLeftEye.indexCapacityInput = 0;
+        m_visibilityMaskLeftEye.vertexCapacityInput = 0;
+        m_visibilityMaskRightEye.type = XR_TYPE_VISIBILITY_MASK_KHR;
+        m_visibilityMaskRightEye.next = nullptr;
+        m_visibilityMaskRightEye.indexCapacityInput = 0;
+        m_visibilityMaskRightEye.vertexCapacityInput = 0;
+
+        // Left eye
+        XrVisibilityMaskTypeKHR maskType = XR_VISIBILITY_MASK_TYPE_LINE_LOOP_KHR;
+        XrResult result = xrGetVisibilityMaskKHR_(m_session, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO, 0, maskType, &m_visibilityMaskLeftEye);
+        if (!xrCheck(m_instance, result, "Failed to get visibility mask for left eye") || m_visibilityMaskLeftEye.vertexCountOutput == 0)
+            return;
+        m_visibilityMaskLeftEye.indexCapacityInput = m_visibilityMaskLeftEye.indexCountOutput;
+        m_visibilityMaskLeftEye.vertexCapacityInput = m_visibilityMaskLeftEye.vertexCountOutput;
+        m_visibilityMaskLeftEye.indices = (uint32_t *)malloc(sizeof(uint32_t) * m_visibilityMaskLeftEye.indexCapacityInput);
+        m_visibilityMaskLeftEye.vertices = (XrVector2f *)malloc(sizeof(XrVector2f) * m_visibilityMaskLeftEye.vertexCapacityInput);
+        result = xrGetVisibilityMaskKHR_(m_session, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO, 0, maskType, &m_visibilityMaskLeftEye);
+        if (!xrCheck(m_instance, result, "Failed to get visibility mask for left eye (2nd call)"))
+            return;
+
+        // Right eye
+        result = xrGetVisibilityMaskKHR_(m_session, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO, 1, maskType, &m_visibilityMaskRightEye);
+        if (!xrCheck(m_instance, result, "Failed to get visibility mask for right eye") || m_visibilityMaskRightEye.vertexCountOutput == 0)
+            return;
+        m_visibilityMaskRightEye.indexCapacityInput = m_visibilityMaskRightEye.indexCountOutput;
+        m_visibilityMaskRightEye.vertexCapacityInput = m_visibilityMaskRightEye.vertexCountOutput;
+        m_visibilityMaskRightEye.indices = (uint32_t *)malloc(sizeof(uint32_t) * m_visibilityMaskRightEye.indexCapacityInput);
+        m_visibilityMaskRightEye.vertices = (XrVector2f *)malloc(sizeof(XrVector2f) * m_visibilityMaskRightEye.vertexCapacityInput);
+        result = xrGetVisibilityMaskKHR_(m_session, XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO, 1, maskType, &m_visibilityMaskRightEye);
+        if (!xrCheck(m_instance, result, "Failed to get visibility mask for right eye (2nd call)"))
+            return;
+
+        this->m_visibilityMasksInitialized = true;
+    }
+
     Vector2i OpenXRHMD::getRecommendedResolution() const
     {
         return (m_viewCount > 0 ? Vector2i(m_viewConfigViews[0].recommendedImageRectWidth, m_viewConfigViews[0].recommendedImageRectHeight) : Vector2i::Zero());
@@ -499,7 +565,6 @@ namespace sibr
         XrSessionCreateInfo m_sessionCreateInfo = {
             .type = XR_TYPE_SESSION_CREATE_INFO, .next = &graphicsBindingGL, .systemId = m_systemId};
 
-        return createSession(m_sessionCreateInfo) && createReferenceSpace() && createSwapchain() && synchronizeSession();
         bool success = createSession(m_sessionCreateInfo) && createReferenceSpace() && createSwapchain() && initializeEyeTracking();
         if (!success) {
             std::cout << "ERROR: Failed to start XR session." << std::endl;
