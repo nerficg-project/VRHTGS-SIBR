@@ -277,10 +277,10 @@ namespace sibr {
 	{
 		_basePathName = dataset_path + "/sparse/0/";
 
-		_camInfos = sibr::InputCamera::loadColmapBin(_basePathName, 0.01f, 1000.0f, fovXfovY_flag);
+		_camInfos = sibr::InputCamera::loadColmapBin(_basePathName, 0.2f, 1000.0f, fovXfovY_flag);
 
 		if (_camInfos.empty()) {
-			_camInfos = sibr::InputCamera::loadColmap(_basePathName, 0.01f, 1000.0f, fovXfovY_flag);
+			_camInfos = sibr::InputCamera::loadColmap(_basePathName, 0.2f, 1000.0f, fovXfovY_flag);
 		}
 
 		if (_camInfos.empty()) {

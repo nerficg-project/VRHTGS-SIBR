@@ -127,8 +127,8 @@ namespace sibr {
 				zFar = (zFar<0 || cam->zfar() > zFar ? cam->zfar() : zFar);
 				zNear = (zNear < 0 || cam->znear() < zNear ? cam->znear() : zNear);
 			}
-			idealCam.zfar(zFar*1.1f);
-			idealCam.znear(zNear*0.9f);
+			idealCam.zfar(zFar);
+			idealCam.znear(zNear);
 		} else {
 			idealCam.znear(clippingPlanes[0]);
 			idealCam.zfar(clippingPlanes[1]);
