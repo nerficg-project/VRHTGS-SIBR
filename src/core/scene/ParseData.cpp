@@ -70,7 +70,7 @@ namespace sibr {
 		_numCameras = _camInfos.size();
 		_imgInfos.resize(_numCameras);
 		_activeImages.resize(_numCameras);
-		for (uint id = 0; id < _numCameras; id++) {
+		for (uint32_t id = 0; id < _numCameras; id++) {
 			_imgInfos[id].camId = _camInfos[id]->id();
 			_imgInfos[id].filename = _camInfos[id]->name();
 			_imgInfos[id].height = _camInfos[id]->h();
@@ -90,7 +90,7 @@ namespace sibr {
 			return false;
 		}
 
-		uint camId = 0;
+		uint32_t camId = 0;
 
 		while (safeGetline(scene_metadata, line))
 
@@ -410,7 +410,7 @@ namespace sibr {
 					split(splitS, line, is_any_of(" "));
 					//std::cout << splitS.size() << std::endl;
 					if (splitS.size() > 0) {
-						for (uint cam_id = 0; cam_id < _camInfos.size(); cam_id++) {
+						for (uint32_t cam_id = 0; cam_id < _camInfos.size(); cam_id++) {
 							if (find_any(splitS, _camInfos[cam_id]->name())) {
 								_camInfos[cam_id]->setActive(false);
 							}
@@ -578,7 +578,7 @@ namespace sibr {
 		// Ans: Priority --> SIBR > COLMAP > NVM
 
 		// Subtract minCAMID from all
-		uint minCamID = UINT_MAX;
+		uint32_t minCamID = UINT_MAX;
 		for (const auto& cam : _camInfos)
 			minCamID = std::min(minCamID, cam->id());
 		for (auto& cam : _camInfos)

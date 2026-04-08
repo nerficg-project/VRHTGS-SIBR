@@ -70,7 +70,7 @@ namespace sibr
 		}
 	}
 
-	void BasicIBRScene::createFromCustomData(const IParseData::Ptr & data, const uint width, BasicIBRScene::SceneOptions myOpts)
+	void BasicIBRScene::createFromCustomData(const IParseData::Ptr & data, const uint32_t width, BasicIBRScene::SceneOptions myOpts)
 	{
 		_data = data;
 		_currentOpts = myOpts;
@@ -92,7 +92,7 @@ namespace sibr
 		_renderTargets = scene.renderTargets();
 	}
 
-	void BasicIBRScene::createFromData(const uint width)
+	void BasicIBRScene::createFromData(const uint32_t width)
 	{
 		_cams.reset(new CalibratedCameras());
 		_imgs.reset(new InputImages());
@@ -108,7 +108,7 @@ namespace sibr
 
 		// load input images
 
-		uint mwidth = width;
+		uint32_t mwidth = width;
 		if (_currentOpts.images) {
 			_imgs->loadFromData(_data);
 			std::cout << "Number of Images loaded: " << _imgs->inputImages().size() << std::endl;

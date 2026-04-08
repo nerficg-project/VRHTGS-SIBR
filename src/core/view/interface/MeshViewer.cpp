@@ -258,7 +258,7 @@ void sibr::MeshRenderer::updateMeshPoints(void)
 void sibr::MeshRenderer::updateMeshLines(void)
 {
 	std::vector<float> vertexBuffer;
-	std::vector<uint> indicesBuffer(3 * (lines.points.size() / 2));
+	std::vector<uint32_t> indicesBuffer(3 * (lines.points.size() / 2));
 	std::vector<sibr::Vector3f> colors(lines.points.size());
 	for (int vertex_id = 0; vertex_id<(int)lines.points.size(); vertex_id += 2) {
 		for (int c = 0; c<3; ++c) {

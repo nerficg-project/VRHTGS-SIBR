@@ -139,7 +139,7 @@ namespace sibr
 		const Viewport viewport(0.0f, titleBarHeight,
 			res.x() > 0 ? res.x() : (float)_defaultViewResolution.x(),
 			(res.y() > 0 ? res.y() : (float)_defaultViewResolution.y()) + titleBarHeight);
-		RenderTargetRGB::Ptr rtPtr(new RenderTargetRGB((uint)viewport.finalWidth(), (uint)viewport.finalHeight(), SIBR_CLAMP_UVS));
+		RenderTargetRGB::Ptr rtPtr(new RenderTargetRGB(static_cast<uint32_t>(viewport.finalWidth()), static_cast<uint32_t>(viewport.finalHeight()), SIBR_CLAMP_UVS));
 		_subViews[title] = {view, rtPtr, viewport, title, flags, updateFunc };
 
 	}
@@ -152,7 +152,7 @@ namespace sibr
 		const Viewport viewport(0.0f, titleBarHeight,
 			res.x() > 0 ? res.x() : (float)_defaultViewResolution.x(),
 			(res.y() > 0 ? res.y() : (float)_defaultViewResolution.y()) + titleBarHeight);
-		RenderTargetRGB::Ptr rtPtr(new RenderTargetRGB((uint)viewport.finalWidth(), (uint)viewport.finalHeight(), SIBR_CLAMP_UVS));
+		RenderTargetRGB::Ptr rtPtr(new RenderTargetRGB(static_cast<uint32_t>(viewport.finalWidth()), static_cast<uint32_t>(viewport.finalHeight()), SIBR_CLAMP_UVS));
 		if (_ibrSubViews.count(title) > 0){
 			const auto handler = _ibrSubViews[title].handler;
 			_ibrSubViews[title] = { view, rtPtr, viewport, title, flags, updateFunc, defaultFuncUsed };
@@ -331,8 +331,8 @@ namespace sibr
 
 	void MultiViewBase::captureView(const SubView & view, const std::string& path, const std::string & filename) {
 
-		const uint w = view.rt->w();
-		const uint h = view.rt->h();
+		const uint32_t w = view.rt->w();
+		const uint32_t h = view.rt->h();
 
 		ImageRGB renderingImg(w, h);
 

@@ -31,7 +31,7 @@ namespace sibr {
 
 		/** \brief Export options
 		 */
-		enum Options : uint {
+		enum Options : uint32_t {
 			NONE = 0,
 			FLIP_VERTICAL = 1, ///< Flip the final result.
 			FLOOD_FILL = 2, ///< Perform flood filling.
@@ -59,7 +59,7 @@ namespace sibr {
 		/** Get the final result. 
 		* \param options the options to apply to the generated texture map.
 		*/
-		sibr::ImageRGB::Ptr getTexture(uint options = NONE) const;
+		sibr::ImageRGB::Ptr getTexture(uint32_t options = NONE) const;
 
 		/** Performs flood fill of an image, following a mask.
 		* \param image the image to fill

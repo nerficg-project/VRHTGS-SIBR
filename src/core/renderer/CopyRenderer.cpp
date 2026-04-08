@@ -23,7 +23,7 @@ namespace sibr {
 		_flip.init(_shader, "flip");
 	}
 
-	void	CopyRenderer::process( uint textureID, IRenderTarget& dst, bool disableTest )
+	void	CopyRenderer::process( uint32_t textureID, IRenderTarget& dst, bool disableTest )
 	{
 		if (disableTest)
 			glDisable(GL_DEPTH_TEST);
@@ -43,7 +43,7 @@ namespace sibr {
 		_shader.end();
 	}
 
-	void	CopyRenderer::copyToWindow(uint textureID, Window& dst)
+	void	CopyRenderer::copyToWindow(uint32_t textureID, Window& dst)
 	{
 		glDisable(GL_DEPTH_TEST);
 

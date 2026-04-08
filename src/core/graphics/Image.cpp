@@ -25,11 +25,11 @@ namespace sibr
 			// keep in mind
 			//enum { CV_8U=0, CV_8S=1, CV_16U=2, CV_16S=3, CV_32S=4, CV_32F=5, CV_64F=6 };
 			static float ranges[] = {
-				imageTypeRange<uint8>(),
-				imageTypeRange<int8>(),
-				imageTypeRange<uint16>(),
-				imageTypeRange<int16>(),
-				imageTypeRange<int32>(),
+				imageTypeRange<uint8_t>(),
+				imageTypeRange<int8_t>(),
+				imageTypeRange<uint16_t>(),
+				imageTypeRange<int16_t>(),
+				imageTypeRange<int32_t>(),
 				imageTypeRange<float>(),
 				imageTypeRange<double>()
 			};
@@ -71,8 +71,8 @@ namespace sibr
 	sibr::ImageRGBA convertL32FtoRGBA(const sibr::ImageL32F & imgF)
 	{
 		sibr::ImageRGBA out(imgF.w(), imgF.h());
-		for (uint y = 0; y < out.h(); ++y) {
-			for (uint x = 0; x < out.w(); ++x) {
+		for (uint32_t y = 0; y < out.h(); ++y) {
+			for (uint32_t x = 0; x < out.w(); ++x) {
 				unsigned char const * p = reinterpret_cast<unsigned char const *>(&imgF(x, y).x());
 				for (std::size_t i = 0; i != sizeof(float); ++i) {
 					out(x, y)[i] = p[i];
@@ -87,7 +87,7 @@ namespace sibr
 		sibr::ImageL32F out(imgRGBA.w(), imgRGBA.h());
 #pragma omp parallel for
 		for (int y = 0; y < int(out.h()); ++y) {
-			for (uint x = 0; x < out.w(); ++x) {
+			for (uint32_t x = 0; x < out.w(); ++x) {
 				unsigned char * p = reinterpret_cast<unsigned char *>(&out(x, y).x());
 				for (std::size_t i = 0; i != sizeof(float); ++i) {
 					p[i] = imgRGBA(x, y)[i];
@@ -102,7 +102,7 @@ namespace sibr
 		sibr::ImageRGBA out(3*imgF.w(), imgF.h());
 #pragma omp parallel for
 		for (int y = 0; y < int(imgF.h()); ++y) {
-			for (uint x = 0; x < imgF.w(); ++x) {
+			for (uint32_t x = 0; x < imgF.w(); ++x) {
 				for (int k = 0; k < 3; k++) {
 					unsigned char const * p = reinterpret_cast<unsigned char const *>(&imgF(x, y)[k]);
 					for (std::size_t i = 0; i != sizeof(float); ++i) {
@@ -119,7 +119,7 @@ namespace sibr
 		sibr::ImageRGB32F out(imgRGBA.w() / 3, imgRGBA.h());
 #pragma omp parallel for
 		for (int y = 0; y < int(out.h()); ++y) {
-			for (uint x = 0; x < out.w(); ++x) {
+			for (uint32_t x = 0; x < out.w(); ++x) {
 				for (int k = 0; k < 3; k++) {
 					unsigned char* p = reinterpret_cast<unsigned char*>(&out(x, y)[k]);
 					for (std::size_t i = 0; i != sizeof(float); ++i) {
@@ -133,19 +133,19 @@ namespace sibr
 
 	 sibr::ImageRGBA convertNormalMapToSphericalHalf(const sibr::ImageRGB32F & imgF)
 	{
-		uint phi_uint; 
-		uint theta_uint;
+		uint32_t phi_uint; 
+		uint32_t theta_uint;
 		unsigned char * phi_ptr = reinterpret_cast<unsigned char *>(&phi_uint);
 		unsigned char * theta_ptr = reinterpret_cast<unsigned char *>(&theta_uint);
 
 		ImageRGBA out(imgF.w(),imgF.h());
 
-		for (uint i = 0; i < out.h(); ++i) {
-			for (uint j = 0; j < out.w(); ++j) {		
+		for (uint32_t i = 0; i < out.h(); ++i) {
+			for (uint32_t j = 0; j < out.w(); ++j) {		
 				const double phi = std::acos((double)imgF(j, i)[2]);
 				const double theta = std::atan2((double)imgF(j, i)[1], (double)imgF(j, i)[0]);
-				phi_uint = (uint)((phi / M_PI) * (1 << 16));
-				theta_uint = (uint)((0.5*(theta / M_PI + 1.0)) * (1 << 16));
+				phi_uint = (uint32_t)((phi / M_PI) * (1 << 16));
+				theta_uint = (uint32_t)((0.5*(theta / M_PI + 1.0)) * (1 << 16));
 
 				unsigned char * out_ptr = reinterpret_cast<unsigned char *>(&out(j, i)[0]);
 				out_ptr[0] = phi_ptr[0];
@@ -160,15 +160,15 @@ namespace sibr
 
 	 sibr::ImageRGB32F convertSphericalHalfToNormalMap(const sibr::ImageRGBA & imgRGBA)
 	{	
-		uint phi_uint;
-		uint theta_uint; 
+		uint32_t phi_uint;
+		uint32_t theta_uint; 
 		unsigned char * phi_ptr = reinterpret_cast<unsigned char *>(&phi_uint);
 		unsigned char * theta_ptr = reinterpret_cast<unsigned char *>(&theta_uint);
 
 		ImageRGB32F out(imgRGBA.w(), imgRGBA.h());
 
-		for (uint i = 0; i < out.h(); ++i) {
-			for (uint j = 0; j < out.w(); ++j) {	
+		for (uint32_t i = 0; i < out.h(); ++i) {
+			for (uint32_t j = 0; j < out.w(); ++j) {	
 				unsigned char const * out_ptr = reinterpret_cast<unsigned char const *>(&imgRGBA(j, i)[0]);
 				phi_ptr[0] = out_ptr[0];
 				phi_ptr[1] = out_ptr[1];

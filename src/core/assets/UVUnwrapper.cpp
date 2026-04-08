@@ -209,7 +209,7 @@ sibr::Mesh::Ptr UVUnwrapper::unwrap() {
 	return finalMesh;
 }
 
-const std::vector<uint>& UVUnwrapper::mapping() const
+const std::vector<uint32_t>& UVUnwrapper::mapping() const
 {
 	return _mapping;
 }

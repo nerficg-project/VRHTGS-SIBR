@@ -69,13 +69,13 @@ namespace sibr
 
 	void InputImages::alphaBlendInputImages(const std::vector<sibr::ImageRGB>& back, std::vector<sibr::ImageRGB>& alphas)
 	{
-		for (uint i = 0; i< _inputImages.size(); i++) {
+		for (uint32_t i = 0; i< _inputImages.size(); i++) {
 			// check size
 			if (_inputImages[i]->w() != alphas[i].w() ||
 				_inputImages[i]->h() != alphas[i].h())
 				alphas[i] = alphas[i].resized(_inputImages[i]->w(), _inputImages[i]->h());
-			for (uint x = 0; x<_inputImages[i]->w(); x++)
-				for (uint y = 0; y<_inputImages[i]->h(); y++) {
+			for (uint32_t x = 0; x<_inputImages[i]->w(); x++)
+				for (uint32_t y = 0; y<_inputImages[i]->h(); y++) {
 					ImageRGB::Pixel p = _inputImages[i](x, y);
 					ImageRGB::Pixel bp = back[i](x, y);
 					ImageRGB::Pixel a = alphas[i](x, y);
@@ -97,7 +97,7 @@ namespace sibr
 					else
 						out = Vector3f(0, 0, 0);
 
-					_inputImages[i](x, y) = ImageRGB::Pixel((uint)out[0], (uint)out[1], (uint)out[2]);
+					_inputImages[i](x, y) = ImageRGB::Pixel(static_cast<uint32_t>(out[0]), static_cast<uint32_t>(out[1]), static_cast<uint32_t>(out[2]));
 				}
 		}
 	}

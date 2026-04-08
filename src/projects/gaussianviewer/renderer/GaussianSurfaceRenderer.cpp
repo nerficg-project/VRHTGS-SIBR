@@ -76,7 +76,7 @@ namespace sibr {
 			layout(location = 0) uniform int size;
 
 			void main() {
-				uint index = gl_GlobalInvocationID.x;
+				uint32_t index = gl_GlobalInvocationID.x;
 				if (index < size) {
 					arr[index] = 0;
 				}

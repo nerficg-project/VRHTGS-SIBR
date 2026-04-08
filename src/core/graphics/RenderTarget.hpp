@@ -46,13 +46,13 @@ namespace sibr
 		\return the texture handle
 		\deprecated Use handle instead.
 		*/
-		virtual GLuint texture(uint t = 0) const = 0;
+		virtual GLuint texture(uint32_t t = 0) const = 0;
 
 		/** Get the texture handle of the t-th color attachment.
 		\param t the color attachment slot
 		\return the texture handle
 		*/
-		virtual GLuint handle(uint t = 0) const = 0;
+		virtual GLuint handle(uint32_t t = 0) const = 0;
 
 		/** Bind the rendertarget for drawing. All color buffers are bound, along 
 			with the depth and optional stencil buffers.*/
@@ -66,10 +66,10 @@ namespace sibr
 		virtual void clear(void) = 0;
 
 		/** \return the rendertarget width. */
-		virtual uint   w(void) const = 0;
+		virtual uint32_t   w(void) const = 0;
 
 		/** \return the rendertarget height. */
-		virtual uint   h(void) const = 0;
+		virtual uint32_t   h(void) const = 0;
 
 		/** \return the framebuffer handle. */
 		virtual GLuint fbo(void) const = 0;
@@ -92,16 +92,16 @@ namespace sibr
 
 	private:
 
-		GLuint m_fbo = 0; ///< Framebuffer handle.
-		GLuint m_depth_rb = 0; ///< Depth renderbuffer handle.
-		GLuint m_stencil_rb = 0; ///< Stencil renderbuffer handle.
-		GLuint m_textures[SIBR_MAX_SHADER_ATTACHMENTS]; ///< Color texture handles.
-		uint   m_numtargets = 0; ///< Number of active color attachments.
-		bool   m_autoMIPMAP = false; ///< Generate mipmaps on the fly.
-		bool   m_msaa = false; ///< Use multisampled targets.
-		bool   m_stencil = false; ///< Has a stencil buffer.
-		uint   m_W = 0; ///< Width.
-		uint   m_H = 0; ///< Height.
+		GLuint   m_fbo = 0; ///< Framebuffer handle.
+		GLuint   m_depth_rb = 0; ///< Depth renderbuffer handle.
+		GLuint   m_stencil_rb = 0; ///< Stencil renderbuffer handle.
+		GLuint   m_textures[SIBR_MAX_SHADER_ATTACHMENTS]; ///< Color texture handles.
+		uint32_t m_numtargets = 0; ///< Number of active color attachments.
+		bool     m_autoMIPMAP = false; ///< Generate mipmaps on the fly.
+		bool     m_msaa = false; ///< Use multisampled targets.
+		bool     m_stencil = false; ///< Has a stencil buffer.
+		uint32_t m_W = 0; ///< Width.
+		uint32_t m_H = 0; ///< Height.
 
 	public:
 
@@ -114,7 +114,7 @@ namespace sibr
 		\param flags options
 		\param num the number of color attachments.
 		*/
-		RenderTarget(uint w, uint h, uint flags = 0, uint num = 1);
+		RenderTarget(uint32_t w, uint32_t h, uint32_t flags = 0, uint32_t num = 1);
 
 		/// Destructor.
 		~RenderTarget(void);
@@ -124,13 +124,13 @@ namespace sibr
 		\return the texture handle
 		\deprecated Use handle instead.
 		*/
-		GLuint texture(uint t = 0) const;
-		
-		/** Get the texture handle of the t-th color attachment. 
+		GLuint texture(uint32_t t = 0) const;
+
+		/** Get the texture handle of the t-th color attachment.
 		\param t the color attachment slot
 		\return the texture handle
 		*/
-		GLuint handle(uint t = 0) const;
+		GLuint handle(uint32_t t = 0) const;
 
 		/** \return the depth buffer handle. */
 		GLuint depthRB() const;
@@ -151,7 +151,7 @@ namespace sibr
 		/** Clear the rendertarget buffers, using a custom clear color.
 		 * \param v the clear color
 		 * \warning This function will unbind the render target after clearing.
-		 * \bug This function does not rescale values for uchar (so background is either 0 or 1)
+		 * \bug This function does not rescale values for uint8_t (so background is either 0 or 1)
 		 */
 		void clear(const typename RenderTarget<T_Type, T_NumComp>::PixelFormat& v);
 
@@ -166,33 +166,33 @@ namespace sibr
 		\param target the color attachment index to read
 		\warning Might cause a GPU flush/sync.
 		*/
-		template <typename TType, uint NNumComp>
-		void readBack(sibr::Image<TType, NNumComp>& image, uint target = 0) const;
+		template <typename TType, uint32_t NNumComp>
+		void readBack(sibr::Image<TType, NNumComp>& image, uint32_t target = 0) const;
 
 		/** Readback the content of a color attachment into a cv::Mat on the CPU.
 		\param image will contain the texture content
 		\param target the color attachment index to read
 		\warning Might cause a GPU flush/sync.
 		*/
-		template <typename TType, uint NNumComp>
-		void readBackToCVmat(cv::Mat& image, uint target = 0) const;
+		template <typename TType, uint32_t NNumComp>
+		void readBackToCVmat(cv::Mat& image, uint32_t target = 0) const;
 
 		/** Readback the content of the depth attachment into an sibr::Image on the CPU.
 		\param image will contain the depth content
 		\warning Might cause a GPU flush/sync.
 		\warning Image orientation might be inconsistent with readBack (flip around horizontal axis).
 		*/
-		template <typename TType, uint NNumComp>
+		template <typename TType, uint32_t NNumComp>
 		void readBackDepth(sibr::Image<TType, NNumComp>& image) const;
 
 		/** \return the number of active color targets. */
-		uint   numTargets(void)  const;
+		uint32_t   numTargets(void)  const;
 
 		/** \return the target width. */
-		uint   w(void)  const;
+		uint32_t   w(void)  const;
 
 		/** \return the target height. */
-		uint   h(void)  const;
+		uint32_t   h(void)  const;
 
 		/** \return the framebuffer handle. */
 		GLuint fbo(void)  const;
@@ -230,7 +230,7 @@ namespace sibr
 	\ingroup sibr_graphics
 	*/
 	template <typename T_Type, unsigned T_NumComp>
-	static void		show( const RenderTarget<T_Type, T_NumComp> & rt, uint layer=0, const std::string& windowTitle="sibr::show()" , bool closeWindow = true ) {
+	static void		show( const RenderTarget<T_Type, T_NumComp> & rt, uint32_t layer=0, const std::string& windowTitle="sibr::show()" , bool closeWindow = true ) {
 		sibr::Image<T_Type, T_NumComp>	img(rt.w(), rt.h());
 		rt.readBack(img, layer);
 		show(img, windowTitle, closeWindow);
@@ -260,9 +260,9 @@ namespace sibr
 		sibr::Image<float, 4>	img(rt.w(), rt.h());
 		rt.readBack(img);
 
-		for (uint y = 0; y < img.h(); ++y)
+		for (uint32_t y = 0; y < img.h(); ++y)
 		{
-			for (uint x = 0; x < img.w(); ++x)
+			for (uint32_t x = 0; x < img.w(); ++x)
 			{
 				sibr::ColorRGBA c = img.color(x, y);
 				c = sibr::ColorRGBA(1.f, 1.f, 1.f, 0.f) * c[3];
@@ -306,7 +306,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	RenderTarget<T_Type, T_NumComp>::RenderTarget(uint w, uint h, uint flags, uint num) {
+	RenderTarget<T_Type, T_NumComp>::RenderTarget(uint32_t w, uint32_t h, uint32_t flags, uint32_t num) {
 		RenderUtility::useDefaultVAO();
 
 		m_W = w;
@@ -317,7 +317,7 @@ namespace sibr
 		int maxRenterTargets = 0;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxRenterTargets);
 
-		SIBR_ASSERT(num <= uint(maxRenterTargets) && num > 0);
+		SIBR_ASSERT(num <= static_cast<uint32_t>(maxRenterTargets) && num > 0);
 		SIBR_ASSERT(!is_depth || num == 1);
 
 		if (flags & SIBR_GPU_INTEGER) {
@@ -342,7 +342,7 @@ namespace sibr
 
 		if (m_msaa && (m_numtargets != 1))
 			throw std::runtime_error("Only one MSAA render target can be attached.");
-		for (uint n = 0; n < m_numtargets; n++) {
+		for (uint32_t n = 0; n < m_numtargets; n++) {
 			if (m_msaa)
 				break;
 
@@ -404,7 +404,7 @@ namespace sibr
 				//glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, w, h);
 				CHECK_GL_ERROR;
 				glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-				for (uint n = 0; n < m_numtargets; n++) {
+				for (uint32_t n = 0; n < m_numtargets; n++) {
 					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + n, GL_TEXTURE_2D, m_textures[n], 0);
 				}
 				CHECK_GL_ERROR;
@@ -423,7 +423,7 @@ namespace sibr
 		}
 
 		if (m_msaa) {
-			uint msaa_samples = ((flags >> 7) & 0xF) << 2;
+			uint32_t msaa_samples = ((flags >> 7) & 0xF) << 2;
 
 			if (msaa_samples == 0)
 				throw std::runtime_error("Number of MSAA Samples not set. Please use SIBR_MSAA4X, SIBR_MSAA8X, SIBR_MSAA16X or SIBR_MSAA32X as an additional flag.");
@@ -461,7 +461,7 @@ namespace sibr
 		}
 
 		if (m_autoMIPMAP) {
-			for (uint i = 0; i < m_numtargets; i++) {
+			for (uint32_t i = 0; i < m_numtargets; i++) {
 				glBindTexture(GL_TEXTURE_2D, m_textures[i]);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
@@ -472,7 +472,7 @@ namespace sibr
 
 	template<typename T_Type, unsigned int T_NumComp>
 	RenderTarget<T_Type, T_NumComp>::~RenderTarget(void) {
-		for (uint i = 0; i < m_numtargets; i++)
+		for (uint32_t i = 0; i < m_numtargets; i++)
 			glDeleteTextures(1, &m_textures[i]);
 		glDeleteFramebuffers(1, &m_fbo);
 		glDeleteRenderbuffers(1, &m_depth_rb);
@@ -485,12 +485,12 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	GLuint RenderTarget<T_Type, T_NumComp>::texture(uint t) const {
+	GLuint RenderTarget<T_Type, T_NumComp>::texture(uint32_t t) const {
 		SIBR_ASSERT(t < m_numtargets);
 		return m_textures[t];
 	}
 	template<typename T_Type, unsigned int T_NumComp>
-	GLuint RenderTarget<T_Type, T_NumComp>::handle(uint t) const {
+	GLuint RenderTarget<T_Type, T_NumComp>::handle(uint32_t t) const {
 		SIBR_ASSERT(t < m_numtargets);
 		return m_textures[t];
 	}
@@ -502,7 +502,7 @@ namespace sibr
 		if (!is_depth) {
 			if (m_numtargets > 0) {
 				GLenum drawbuffers[SIBR_MAX_SHADER_ATTACHMENTS];
-				for (uint i = 0; i < SIBR_MAX_SHADER_ATTACHMENTS; i++)
+				for (uint32_t i = 0; i < SIBR_MAX_SHADER_ATTACHMENTS; i++)
 					drawbuffers[i] = GL_COLOR_ATTACHMENT0 + i;
 				glDrawBuffers(m_numtargets, drawbuffers);
 			}
@@ -515,7 +515,7 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp>
 	void RenderTarget<T_Type, T_NumComp>::unbind(void) {
 		if (m_autoMIPMAP) {
-			for (uint i = 0; i < m_numtargets; i++) {
+			for (uint32_t i = 0; i < m_numtargets; i++) {
 				glBindTexture(GL_TEXTURE_2D, m_textures[i]);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
@@ -560,9 +560,9 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	template <typename T_IType, uint N_INumComp>
-	void RenderTarget<T_Type, T_NumComp>::readBack(sibr::Image<T_IType, N_INumComp>& img, uint target) const {
-		//void RenderTarget<T_Type, T_NumComp>::readBack(PixelImage& img, uint target) const {
+	template <typename T_IType, uint32_t N_INumComp>
+	void RenderTarget<T_Type, T_NumComp>::readBack(sibr::Image<T_IType, N_INumComp>& img, uint32_t target) const {
+		//void RenderTarget<T_Type, T_NumComp>::readBack(PixelImage& img, uint32_t target) const {
 		glFinish();
 		if (target >= m_numtargets)
 			SIBR_ERR << "Reading back texture out of bounds" << std::endl;
@@ -596,8 +596,8 @@ namespace sibr
 
 
 	template<typename T_Type, unsigned int T_NumComp>
-	template <typename T_IType, uint N_INumComp>
-	void RenderTarget<T_Type, T_NumComp>::readBackToCVmat(cv::Mat& img, uint target) const {
+	template <typename T_IType, uint32_t N_INumComp>
+	void RenderTarget<T_Type, T_NumComp>::readBackToCVmat(cv::Mat& img, uint32_t target) const {
 
 		using Infos = GLTexFormat<cv::Mat, T_IType, N_INumComp>;
 
@@ -628,8 +628,8 @@ namespace sibr
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	template <typename TType, uint NNumComp>
-	template <typename T_IType, uint N_INumComp>
+	template <typename TType, uint32_t NNumComp>
+	template <typename T_IType, uint32_t N_INumComp>
 	void RenderTarget<TType, NNumComp>::readBackDepth(sibr::Image<T_IType, N_INumComp>& image) const {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
@@ -643,8 +643,8 @@ namespace sibr
 		);
 
 		sibr::Image<T_IType, N_INumComp>	out(buffer.w(), buffer.h());
-		for (uint y = 0; y < buffer.h(); ++y)
-			for (uint x = 0; x < buffer.w(); ++x)
+		for (uint32_t y = 0; y < buffer.h(); ++y)
+			for (uint32_t x = 0; x < buffer.w(); ++x)
 				out.color(x, y, sibr::ColorRGBA(1, 1, 1, 1.f) * buffer(x, y)[0]);
 		image = std::move(out);
 
@@ -652,13 +652,13 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint   RenderTarget<T_Type, T_NumComp>::numTargets(void)  const { return m_numtargets; }
+	uint32_t   RenderTarget<T_Type, T_NumComp>::numTargets(void)  const { return m_numtargets; }
 	template<typename T_Type, unsigned int T_NumComp>
-	uint   RenderTarget<T_Type, T_NumComp>::w(void)  const { return m_W; }
+	uint32_t   RenderTarget<T_Type, T_NumComp>::w(void)  const { return m_W; }
 	template<typename T_Type, unsigned int T_NumComp>
-	uint   RenderTarget<T_Type, T_NumComp>::h(void)  const { return m_H; }
+	uint32_t   RenderTarget<T_Type, T_NumComp>::h(void)  const { return m_H; }
 	template<typename T_Type, unsigned int T_NumComp>
-	uint   RenderTarget<T_Type, T_NumComp>::fbo(void)  const { return m_fbo; }
+	uint32_t   RenderTarget<T_Type, T_NumComp>::fbo(void)  const { return m_fbo; }
 
 
 } // namespace sibr

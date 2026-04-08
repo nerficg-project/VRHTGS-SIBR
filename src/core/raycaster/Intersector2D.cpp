@@ -169,7 +169,7 @@ namespace sibr {
 				vertexBuffer.push_back(quad.q4);
 
 				int indices[12] = { 0, 1, 2, 0, 2, 3, 1, 2, 3, 0, 1, 3 }; //triangle added, can be optimized if quad ensured with good order
-				std::vector<uint> indicesBuffer(&indices[0], &indices[0] + 12);
+				std::vector<uint32_t> indicesBuffer(&indices[0], &indices[0] + 12);
 
 				quadMesh->vertices(vertexBuffer);
 				quadMesh->triangles(indicesBuffer);

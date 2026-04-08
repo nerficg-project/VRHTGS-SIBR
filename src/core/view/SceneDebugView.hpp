@@ -69,10 +69,10 @@ namespace sibr
 			 *\param id the corresponding vector ID
 			 *\param highlight should the camera be highlighted. 
 			 */
-			CameraInfos(const InputCamera& cam, uint id, bool highlight);
+			CameraInfos(const InputCamera& cam, uint32_t id, bool highlight);
 
 			const InputCamera & cam; ///< Camera.
-			uint id = 0; ///< Array ID.
+			uint32_t id = 0; ///< Array ID.
 			bool highlight = false; ///< Highlight status.
 		};
 
@@ -135,7 +135,7 @@ namespace sibr
 		 *\param tex2Darray_handle input images texture array
 		 *\param cam_id the array slice associated to the camera
 		 */
-		void renderImage(const Camera & eye, const InputCamera & cam, uint tex2Darray_handle, int cam_id);
+		void renderImage(const Camera & eye, const InputCamera & cam, uint32_t tex2Darray_handle, int cam_id);
 
 		GLShader _shader2D;		///< Shader for the 2D separate case.
 		GLShader _shaderArray;  ///< Shader for the texture array case.
@@ -230,7 +230,7 @@ namespace sibr
 		/** Update the active status of all cameras
 		 *\param cams_id the active camera IDs. 
 		 */
-		void updateActiveCams(const std::vector<uint> & cams_id);
+		void updateActiveCams(const std::vector<uint32_t> & cams_id);
 
 	protected:
 

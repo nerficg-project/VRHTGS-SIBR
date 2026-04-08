@@ -12,9 +12,9 @@
 namespace sibr
 {
 
-    SwapchainImageRenderTarget::SwapchainImageRenderTarget(uint32_t texture, uint w, uint h) : m_texture(texture),
-                                                                                               m_W(w),
-                                                                                               m_H(h)
+    SwapchainImageRenderTarget::SwapchainImageRenderTarget(uint32_t texture, uint32_t w, uint32_t h) : m_texture(texture),
+                                                                                                       m_W(w),
+                                                                                                       m_H(h)
     {
         // Allocate a Framebuffer
         glGenFramebuffers(1, &m_fbo);
@@ -31,12 +31,12 @@ namespace sibr
         m_fbo = 0;
     }
 
-    GLuint SwapchainImageRenderTarget::texture(uint) const
+    GLuint SwapchainImageRenderTarget::texture(uint32_t) const
     {
         return m_texture;
     }
 
-    GLuint SwapchainImageRenderTarget::handle(uint) const
+    GLuint SwapchainImageRenderTarget::handle(uint32_t) const
     {
         return m_texture;
     }
@@ -59,12 +59,12 @@ namespace sibr
         unbind();
     }
 
-    uint SwapchainImageRenderTarget::w(void) const
+    uint32_t SwapchainImageRenderTarget::w(void) const
     {
         return m_W;
     }
 
-    uint SwapchainImageRenderTarget::h(void) const
+    uint32_t SwapchainImageRenderTarget::h(void) const
     {
         return m_H;
     }

@@ -42,31 +42,31 @@ namespace sibr
 		/// Build from the given size.
 		/// Note you can't resize your Array2d (just create a new one 
 		/// if you need).
-		Array2d( uint width=0, uint height=0 );
+		Array2d( uint32_t width=0, uint32_t height=0 );
 		/// Build from the given size and using the given default value.
 		/// Note you can't resize your Array2d (just create a new one 
 		/// if you need).
-		Array2d( uint width, uint height, const_reference defaultValue );
+		Array2d( uint32_t width, uint32_t height, const_reference defaultValue );
 
 		/// Destructor.
 		~Array2d( );
 
 		/// Return the width of this Array2d
-		uint	width( void ) const;
+		uint32_t	width( void ) const;
 		/// Return the height of this Array2d
-		uint	height( void ) const;
+		uint32_t	height( void ) const;
 		/// Return the width of this Array2d
-		uint	w(void) const;
+		uint32_t	w(void) const;
 		/// Return the height of this Array2d
-		uint	h(void) const;
+		uint32_t	h(void) const;
 
 		/// Return TRUE if is empty
 		bool	empty( void ) const;
 
 		/// Return data about a pixel at given coordinates
-		const_reference		operator ()( uint x, uint y ) const;
+		const_reference		operator ()( uint32_t x, uint32_t y ) const;
 		/// Access data about a pixel at given coordinates
-		reference			operator ()( uint x, uint y );
+		reference			operator ()( uint32_t x, uint32_t y );
 
 		/// Return data about a pixel at given coordinates
 		const_reference		operator ()(const sibr::Vector2i & coords) const;
@@ -99,19 +99,19 @@ namespace sibr
 
 
 		/// Return the element index for the given coordinates
-		inline uint		index( uint x, uint y ) const;
+		inline uint32_t		index( uint32_t x, uint32_t y ) const;
 
 		/// Return FALSE if x,y are out of range. (DON'T print error)
-		inline bool		inRange( uint x, uint y ) const;
-		inline bool		isInRange( uint x, uint y) const;
+		inline bool		inRange( uint32_t x, uint32_t y ) const;
+		inline bool		isInRange( uint32_t x, uint32_t y) const;
 
 
 	protected:
 		/// Return FALSE if x,y are out of range. (print error)
-		bool	checkSizeFor( uint x, uint y ) const;
+		bool	checkSizeFor( uint32_t x, uint32_t y ) const;
 
-		uint				_width;		///< Width of the pixel map
-		uint				_height;	///< Height of the pixel map
+		uint32_t		_width;		///< Width of the pixel map
+		uint32_t		_height;	///< Height of the pixel map
 		std::vector<T>		_data;		///< data of the pixel map
 	};
 	
@@ -119,12 +119,12 @@ namespace sibr
 	///// DEFINITION /////
 	
 	template<typename T>
-	Array2d<T>::Array2d( uint width, uint height )
+	Array2d<T>::Array2d( uint32_t width, uint32_t height )
 	: _width(width), _height(height), _data(_width*_height) {
 	}
 
 	template<typename T>
-	Array2d<T>::Array2d( uint width, uint height, const_reference defaultValue )
+	Array2d<T>::Array2d( uint32_t width, uint32_t height, const_reference defaultValue )
 	: _width(width), _height(height), _data(_width*_height, defaultValue) {
 	}
 
@@ -135,33 +135,33 @@ namespace sibr
 	}
 
 	template<typename T>
-	uint	Array2d<T>::width( void ) const {
+	uint32_t	Array2d<T>::width( void ) const {
 		return _width;
 	}
 
 	template<typename T>
-	uint	Array2d<T>::height( void ) const {
+	uint32_t	Array2d<T>::height( void ) const {
 		return _height;
 	}
 
 	template<typename T>
-	uint	Array2d<T>::w(void) const {
+	uint32_t	Array2d<T>::w(void) const {
 		return _width;
 	}
 
 	template<typename T>
-	uint	Array2d<T>::h(void) const {
+	uint32_t	Array2d<T>::h(void) const {
 		return _height;
 	}
 
 
 	template<typename T>
-	typename Array2d<T>::const_reference		Array2d<T>::operator ()( uint x, uint y ) const {
+	typename Array2d<T>::const_reference		Array2d<T>::operator ()( uint32_t x, uint32_t y ) const {
 		checkSizeFor(x, y);
 		return _data.at(index(x, y));
 	}
 	template<typename T>
-	typename Array2d<T>::reference			Array2d<T>::operator ()( uint x, uint y) {
+	typename Array2d<T>::reference			Array2d<T>::operator ()( uint32_t x, uint32_t y) {
 		checkSizeFor(x, y);
 		return _data[index(x, y)];
 	}
@@ -226,22 +226,22 @@ namespace sibr
 
 
 	template<typename T>
-	uint		Array2d<T>::index( uint x, uint y ) const {
+	uint32_t	Array2d<T>::index( uint32_t x, uint32_t y ) const {
 		return y*_width + x;
 	}
 
 	template<typename T>
-	bool	Array2d<T>::inRange( uint x, uint y ) const {
+	bool	Array2d<T>::inRange( uint32_t x, uint32_t y ) const {
 		return (x < _width && y < _height);
 	}
 
 	template<typename T>
-	bool	Array2d<T>::isInRange(uint x, uint y) const {
+	bool	Array2d<T>::isInRange(uint32_t x, uint32_t y) const {
 		return (x < _width && y < _height);
 	}
 
 	template<typename T>
-	bool	Array2d<T>::checkSizeFor( uint x, uint y ) const {
+	bool	Array2d<T>::checkSizeFor( uint32_t x, uint32_t y ) const {
 		if (inRange(x, y))
 			return true;
 		//else

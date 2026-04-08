@@ -37,9 +37,9 @@ namespace sibr
 		return _vBuffer;
 	}
 
-	static const std::vector<uint>&		getCameraStubIndices( void )
+	static const std::vector<uint32_t>&		getCameraStubIndices( void )
 	{
-		static std::vector<uint>	_iBuffer;
+		static std::vector<uint32_t>	_iBuffer;
 
 		if (_iBuffer.empty())
 		{

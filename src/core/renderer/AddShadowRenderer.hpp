@@ -41,8 +41,8 @@ namespace sibr {
 		\param dst the destination rendertarget
 		*/
 		void	process(
-			/*input*/	uint backgroundTextureID,
-						uint foregroundTextureID,
+			/*input*/	uint32_t backgroundTextureID,
+						uint32_t foregroundTextureID,
 						const Vector2f& textureSize,
 						const Camera& camera,
 			/*output*/	IRenderTarget& dst );

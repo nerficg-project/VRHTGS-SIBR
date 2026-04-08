@@ -36,7 +36,7 @@ namespace sibr
 		virtual void										alphaBlendInputImages(const std::vector<sibr::ImageRGB>& back, std::vector<sibr::ImageRGB>& alphas) = 0;
 
 		virtual const std::vector<sibr::ImageRGB::Ptr>&		inputImages(void) const = 0;
-		virtual const	sibr::ImageRGB& 						image(uint i) = 0;
+		virtual const	sibr::ImageRGB& 						image(uint32_t i) = 0;
 
 	protected:
 		IInputImages() {};

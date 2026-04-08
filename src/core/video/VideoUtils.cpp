@@ -50,9 +50,9 @@ namespace sibr {
 		return volume;
 	}
 
-	uint optimal_num_levels(uint length)
+	uint32_t optimal_num_levels(uint32_t length)
 	{
-		uint num_levels = 1;
+		uint32_t num_levels = 1;
 		while (length != 1) {
 			length = (length + 1) / 2;
 			++num_levels;
@@ -60,7 +60,7 @@ namespace sibr {
 		return num_levels;
 	}
 
-	std::vector<sibr::Volume3u> gaussianPyramid(const sibr::Volume3u & vid, uint num_levels)
+	std::vector<sibr::Volume3u> gaussianPyramid(const sibr::Volume3u & vid, uint32_t num_levels)
 	{
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
@@ -73,7 +73,7 @@ namespace sibr {
 		return out;
 	}
 
-	std::vector<sibr::Volume3u> gaussianPyramidTemporal(const sibr::Volume3u & vid, uint num_levels)
+	std::vector<sibr::Volume3u> gaussianPyramidTemporal(const sibr::Volume3u & vid, uint32_t num_levels)
 	{
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
@@ -86,7 +86,7 @@ namespace sibr {
 		return out;
 	}
 
-	std::vector<sibr::Volume3u> laplacianPyramid(const sibr::Volume3u & vid, uint num_levels)
+	std::vector<sibr::Volume3u> laplacianPyramid(const sibr::Volume3u & vid, uint32_t num_levels)
 	{
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
@@ -102,14 +102,14 @@ namespace sibr {
 			//up.play(30, { 1200,800 });
 			current_v.substract(up);
 			current_v.shift(128);
-			out.push_back(current_v.convertTo<uchar>());
+			out.push_back(current_v.convertTo<uint8_t>());
 			std::swap(current_v, down);
 		}
-		out.push_back(current_v.convertTo<uchar>());
+		out.push_back(current_v.convertTo<uint8_t>());
 		return out;
 	}
 
-	std::vector<sibr::Volume3u> laplacianPyramidTemporalDouble(const sibr::Volume3u & vid, uint num_levels)
+	std::vector<sibr::Volume3u> laplacianPyramidTemporalDouble(const sibr::Volume3u & vid, uint32_t num_levels)
 	{
 		if (num_levels == 0) {
 			num_levels = 1;
@@ -130,11 +130,11 @@ namespace sibr {
 			up = down.pyrUpTemporal((current_v.l + 1) / 2).pyrUpTemporal(current_v.l);
 			current_v.substract(up);
 			current_v.shift(128);
-			out.push_back(current_v.convertTo<uchar>());
+			out.push_back(current_v.convertTo<uint8_t>());
 			std::cout << i << " : " << current_v.l << std::endl;
 			std::swap(current_v, down);
 		}
-		out.push_back(current_v.convertTo<uchar>());
+		out.push_back(current_v.convertTo<uint8_t>());
 		return out;
 	}
 
@@ -148,7 +148,7 @@ namespace sibr {
 				v.shift(shift);
 			}
 		}
-		return v.convertTo<uchar>();
+		return v.convertTo<uint8_t>();
 	}
 
 	sibr::Volume3u laplacianBlending(const sibr::Volume3u & vA, const sibr::Volume3u & vB, std::vector<sibr::Volume1u>& pyrM)
@@ -333,9 +333,9 @@ namespace sibr {
 			for (int j = 0; j < median.cols; ++j) {
 				cv::Vec3b medianColor;
 				for (int c = 0; c < 3; ++c) {
-					std::vector<uchar> values(L);
+					std::vector<uint8_t> values(L);
 					for (int t = 0; t < L; ++t) {
-						values[t] = volume.at<uchar>(t, 3 * (i*median.cols + j) + c);
+						values[t] = volume.at<uint8_t>(t, 3 * (i*median.cols + j) + c);
 					}
 					//std::sort(values.begin(), values.end());
 					//medianColor[c] = values[values.size() / 2];
@@ -365,7 +365,7 @@ namespace sibr {
 #pragma omp parallel for
 		for (int i = 0; i < median.rows; ++i) {
 			cv::Mat line = vol.video_line(i);
-			std::vector<uchar> values;
+			std::vector<uint8_t> values;
 			for (int j = 0; j < median.cols; ++j) {
 				for (int c = 0; c < 3; ++c) {
 					line.col(3 * j + c).rowRange(start, end).copyTo(values);
@@ -397,7 +397,7 @@ namespace sibr {
 
 				for (int c = 0; c < 3; ++c) {
 					for (int t = 0; t < L; ++t) {
-						values[t][c] = volume.at<uchar>(3 * (i*bg.cols + j) + c, t);
+						values[t][c] = volume.at<uint8_t>(3 * (i*bg.cols + j) + c, t);
 					}
 				}
 
@@ -439,7 +439,7 @@ namespace sibr {
 				std::vector<sibr::Vector3ub> values(L);
 				for (int c = 0; c < 3; ++c) {
 					for (int t = 0; t < L; ++t) {
-						values[t][c] = volume.at<uchar>(3 * (i*w + j) + c, t);
+						values[t][c] = volume.at<uint8_t>(3 * (i*w + j) + c, t);
 					}
 				}
 
@@ -450,7 +450,7 @@ namespace sibr {
 				auto mode = histo.getHMode();
 				auto mode_color = histo.getBinMiddle(histo.getHMode());
 
-				out_img.at<cv::Vec3b>(i, j) = sibr::toOpenCV<uchar, uchar, 3>(mode_color);
+				out_img.at<cv::Vec3b>(i, j) = sibr::toOpenCV<uint8_t, uint8_t, 3>(mode_color);
 
 				sibr::Vector3ub stdDev;
 
@@ -469,7 +469,7 @@ namespace sibr {
 					}
 					sumColor /= (float)(num);
 					sumColorSq = sumColorSq / (float)num - sumColor.cwiseProduct(sumColor);
-					stdDev = sumColorSq.cwiseSqrt().cast<uchar>();
+					stdDev = sumColorSq.cwiseSqrt().cast<uint8_t>();
 					threshold = 15 * stdDev.norm();
 				}
 
@@ -479,16 +479,16 @@ namespace sibr {
 
 					//float cdf = histo.sorted_bins[bin];
 					//float outlier_prop = 1.0f - cdf;
-					//auto viz_color = sibr::jetColor<uchar>(outlier_prop);
+					//auto viz_color = sibr::jetColor<uint8_t>(outlier_prop);
 
 					for (int c = 0; c < 3; ++c) {
-						//out_mask.volume.at<uchar>(t, 3 * (i*w + j) + c) = (cdf < 0.75f ? 0 : 255);
-						//out_video.volume.at<uchar>(t, 3 * (i*w + j) + c) = viz_color[c];
+						//out_mask.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = (cdf < 0.75f ? 0 : 255);
+						//out_video.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = viz_color[c];
 
 						if ((color.cast<int>() - mode_color.cast<int>()).norm() < threshold) {
-							out_mask.volume.at<uchar>(t, 3 * (i*w + j) + c) = 0;
+							out_mask.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = 0;
 						} else {
-							out_mask.volume.at<uchar>(t, 3 * (i*w + j) + c) = 255;
+							out_mask.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = 255;
 						}
 					}
 				}
@@ -704,7 +704,7 @@ namespace sibr {
 				std::vector<sibr::Vector3ub> values(L);
 				for (int c = 0; c < 3; ++c) {
 					for (int t = 0; t < L; ++t) {
-						values[t][c] = volume.at<uchar>(3 * (i*w + j) + c, t);
+						values[t][c] = volume.at<uint8_t>(3 * (i*w + j) + c, t);
 					}
 				}
 
@@ -725,13 +725,13 @@ namespace sibr {
 
 
 					for (int c = 0; c < 3; ++c) {
-						out_ratio.volume.at<uchar>(t, 3 * (i*w + j) + c) = sibr::clamp<uchar>((uchar)(128 * ratios[c]), 0, 255);
+						out_ratio.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = sibr::clamp<uint8_t>((uint8_t)(128 * ratios[c]), 0, 255);
 						//if (ratios.maxCoeff() > 0.5) {
-						//	out_ratio.volume.at<uchar>(t, 3 * (i*w + j) + c) = 255;
+						//	out_ratio.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = 255;
 						//} else {
-						//	out_ratio.volume.at<uchar>(t, 3 * (i*w + j) + c) = 0;
+						//	out_ratio.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = 0;
 						//}
-						//out_ratio.volume.at<uchar>(t, 3 * (i*w + j) + c) = sibr::clamp<uchar>((uchar)(64*ratios[c]),0,255);
+						//out_ratio.volume.at<uint8_t>(t, 3 * (i*w + j) + c) = sibr::clamp<uint8_t>((uint8_t)(64*ratios[c]),0,255);
 					}
 				}
 
@@ -841,7 +841,7 @@ namespace sibr {
 		cv::Mat initGray = VideoUtils::getGrey(initFrame);
 
 		std::vector<cv::Point2f> features, nextFeatures;
-		std::vector<uchar> status;
+		std::vector<uint8_t> status;
 		std::vector<float> errors;
 
 		cv::Mat totalHomography = cv::Mat::eye(3, 3, CV_32FC1);
@@ -935,7 +935,7 @@ namespace sibr {
 		cv::Mat initGray = VideoUtils::getGrey(initFrame);
 
 		std::vector<cv::Point2f> features, nextFeatures;
-		std::vector<uchar> status;
+		std::vector<uint8_t> status;
 		std::vector<float> errors;
 
 		cv::Mat completeHomography = cv::Mat::eye(3, 3, CV_64FC1);
@@ -1581,7 +1581,7 @@ namespace sibr {
 			for (int t = 0; t < layer.l; ++t) {
 				for (int i = 0; i < layer.h; ++i) {
 					for (int c = 0; c < 3; ++c) {
-						out.at<cv::Vec3b>(t, i)[c] = (uchar)sibr::clamp((int)layer.volume.at<float>(t, 3 * (i*layer.w + j) + c) + (center ? 128 : 0), 0, 255);
+						out.at<cv::Vec3b>(t, i)[c] = static_cast<uint8_t>(sibr::clamp((int)layer.volume.at<float>(t, 3 * (i*layer.w + j) + c) + (center ? 128 : 0), 0, 255));
 					}
 				}
 			}

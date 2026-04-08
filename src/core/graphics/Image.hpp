@@ -58,15 +58,15 @@ namespace sibr
 		template <typename T_Type>
 		int		imageType(void);// { return -1; } // default, unknown
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> inline int		imageType< uint8 >(void) { return CV_8U; }
+		template <> inline int		imageType< uint8_t >(void) { return CV_8U; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> inline int		imageType< int8  >(void) { return CV_8S; }
+		template <> inline int		imageType< int8_t  >(void) { return CV_8S; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> inline int		imageType< uint16>(void) { return CV_16U; }
+		template <> inline int		imageType< uint16_t>(void) { return CV_16U; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> inline int		imageType< int16 >(void) { return CV_16S; }
+		template <> inline int		imageType< int16_t >(void) { return CV_16S; }
 		/** \return the OpenCV type corresponding to a C type. */
-		template <> inline int		imageType< int32 >(void) { return CV_32S; }
+		template <> inline int		imageType< int32_t >(void) { return CV_32S; }
 		/** \return the OpenCV type corresponding to a C type. */
 		template <> inline int		imageType< float >(void) { return CV_32F; }
 		/** \return the OpenCV type corresponding to a C type. */
@@ -149,10 +149,10 @@ namespace sibr
 		virtual void			saveHDR(const std::string& filename, bool verbose = true) const = 0;
 
 		/** \return the image width. */
-		virtual uint			w(void) const = 0;
+		virtual uint32_t		w(void) const = 0;
 
 		/** \return the image height. */
-		virtual uint			h(void) const = 0;
+		virtual uint32_t		h(void) const = 0;
 
 		/** \return the image size. */
 		virtual sibr::Vector2u	size(void) const = 0;
@@ -169,10 +169,10 @@ namespace sibr
 		virtual std::string		pixelStr(const ::sibr::Vector2i & xy)  const = 0;
 
 		/** \return the number of components of the image. */
-		virtual uint			numComp(void) const = 0;
+		virtual uint32_t		numComp(void) const = 0;
 
 		/** \return the size of a pixel value in bytes. */
-		virtual uint			sizeOfComp(void) const = 0;
+		virtual uint32_t		sizeOfComp(void) const = 0;
 
 		/** Flip the image along the horizontal axis. */
 		virtual void			flipH(void) = 0;
@@ -258,21 +258,21 @@ namespace sibr
 		\param height image height
 		\warning The image content will be undefined.
 		*/
-		Image(uint width, uint height);
+		Image(uint32_t width, uint32_t height);
 
 		/** Constructor.
 		\param width image width
 		\param height image height
 		\param init default value to use for all components of all pixels
 		*/
-		Image(uint width, uint height, const T_Type& init);
+		Image(uint32_t width, uint32_t height, const T_Type& init);
 
 		/** Constructor.
 		\param width image width
 		\param height image height
 		\param init default value to use for all pixels
 		*/
-		Image(uint width, uint height, const Pixel& init);
+		Image(uint32_t width, uint32_t height, const Pixel& init);
 
 		/** Move constructor.
 		\param other image to move, don't use after move
@@ -316,14 +316,14 @@ namespace sibr
 		\param y y coordinate
 		\return a reference to the pixel value.
 		*/
-		const Pixel&	operator()(uint x, uint y) const;
+		const Pixel&	operator()(uint32_t x, uint32_t y) const;
 
 		/** Pixel accessor.
 		\param x x coordinate
 		\param y y coordinate
 		\return a reference to the pixel value.
 		*/
-		Pixel&			operator()(uint x, uint y);
+		Pixel&			operator()(uint32_t x, uint32_t y);
 
 		/** Pixel accessor.
 		\param xy pixel coordinates
@@ -364,14 +364,14 @@ namespace sibr
 		\param y y coordinate
 		\return the normalized expanded value
 		*/
-		ColorRGBA	 color(uint x, uint y) const;
+		ColorRGBA	 color(uint32_t x, uint32_t y) const;
 
 		/** Set a pixel value from 4 components float vector (in 0,1).
 		\param x x coordinate
 		\param y y coordinate
 		\param c the new value
 		*/
-		void		 color(uint x, uint y, const ColorRGBA& c);
+		void		 color(uint32_t x, uint32_t y, const ColorRGBA& c);
 
 		/** Helper to convert a 4 components float vector (in 0,1) to the proper pixel format.
 		\param rgba the value to convert
@@ -402,10 +402,10 @@ namespace sibr
 		ImagePtr<T_Type, T_NumComp>	  clonePtr(void) const;
 
 		/** \return the image width. */
-		uint			w(void) const;
+		uint32_t		w(void) const;
 
 		/** \return the image height. */
-		uint			h(void) const;
+		uint32_t		h(void) const;
 
 		/** \return the image size. */
 		sibr::Vector2u size(void) const;
@@ -437,10 +437,10 @@ namespace sibr
 		bool			isInRange(const sibr::Vector2f & xy)  const { return (xy.x() >= 0 && xy.y() >= 0 && xy.x() < (float)w() && xy.y() < (float)h()); }
 
 		/** \copydoc IImage::numComp */
-		uint		numComp(void) const;
+		uint32_t	numComp(void) const;
 
 		/** \copydoc IImage::sizeOfComp */
-		uint		sizeOfComp(void) const;
+		uint32_t	sizeOfComp(void) const;
 
 		/** \copydoc IImage::flipH */
 		void		flipH(void);
@@ -564,14 +564,14 @@ namespace sibr
 		\param y y coordinate
 		\return a reference to the pixel value.
 		*/
-		const typename Image<T_Type, T_NumComp>::Pixel&			operator()(uint x, uint y) const;
+		const typename Image<T_Type, T_NumComp>::Pixel&			operator()(uint32_t x, uint32_t y) const;
 
 		/** Pixel accessor.
 		\param x x coordinate
 		\param y y coordinate
 		\return a reference to the pixel value.
 		*/
-		typename Image<T_Type, T_NumComp>::Pixel&				operator()(uint x, uint y);
+		typename Image<T_Type, T_NumComp>::Pixel&				operator()(uint32_t x, uint32_t y);
 
 		/** Pixel accessor.
 		\param xy pixel coordinates
@@ -734,15 +734,15 @@ namespace sibr
 		_pixels(0, 0, opencvType()) { }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Image<T_Type, T_NumComp>::Image(uint width, uint height) :
+	Image<T_Type, T_NumComp>::Image(uint32_t width, uint32_t height) :
 		_pixels(height, width, opencvType()) { }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Image<T_Type, T_NumComp>::Image(uint width, uint height, const T_Type& init) :
+	Image<T_Type, T_NumComp>::Image(uint32_t width, uint32_t height, const T_Type& init) :
 		_pixels(height, width, opencvType(), init) { }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Image<T_Type, T_NumComp>::Image(uint width, uint height, const Pixel& init)
+	Image<T_Type, T_NumComp>::Image(uint32_t width, uint32_t height, const Pixel& init)
 	{
 		cv::Scalar scal(0);
 		for (int i = 0; i < T_NumComp; i++)
@@ -815,8 +815,8 @@ namespace sibr
 				{
 					const T_Type* ptr = img.ptr<T_Type>(y, x);
 					assert(ptr != nullptr);
-					uint i;
-					for (i = 0; i < (uint)img.channels() && i < T_NumComp; ++i)
+					uint32_t i;
+					for (i = 0; i < static_cast<uint32_t>(img.channels()) && i < T_NumComp; ++i)
 						p[i] = ptr[i];
 					for (; i < T_NumComp && i < 3; ++i)
 						p[i] = p[0];
@@ -890,7 +890,7 @@ namespace sibr
 		{
 			for (int x = 0; x < wIm; ++x)
 			{
-				uint i;
+				uint32_t i;
 				for (i = 0; i < T_NumComp; ++i)
 					bs >> p[i];
 
@@ -1027,7 +1027,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	inline const typename Image<T_Type, T_NumComp>::Pixel&		Image<T_Type, T_NumComp>::operator()(uint x, uint y) const {
+	inline const typename Image<T_Type, T_NumComp>::Pixel&		Image<T_Type, T_NumComp>::operator()(uint32_t x, uint32_t y) const {
 #ifndef NDEBUG
 		if (!(x < w() && y < h())) {
 			std::cout << " access (" << x << " , " << y << ") while size is " << w() << " x " << h() << std::endl;
@@ -1038,13 +1038,13 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	inline const typename Image<T_Type, T_NumComp>::Pixel & ImagePtr<T_Type, T_NumComp>::operator()(uint x, uint y) const
+	inline const typename Image<T_Type, T_NumComp>::Pixel & ImagePtr<T_Type, T_NumComp>::operator()(uint32_t x, uint32_t y) const
 	{
 		return (*imPtr)(x, y);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	inline typename Image<T_Type, T_NumComp>::Pixel&		Image<T_Type, T_NumComp>::operator()(uint x, uint y) {
+	inline typename Image<T_Type, T_NumComp>::Pixel&		Image<T_Type, T_NumComp>::operator()(uint32_t x, uint32_t y) {
 #ifndef NDEBUG
 		if (!(x < w() && y < h())) {
 			std::cout << " access (" << x << " , " << y << ") while size is " << w() << " x " << h() << std::endl;
@@ -1055,7 +1055,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	inline typename Image<T_Type, T_NumComp>::Pixel & ImagePtr<T_Type, T_NumComp>::operator()(uint x, uint y)
+	inline typename Image<T_Type, T_NumComp>::Pixel & ImagePtr<T_Type, T_NumComp>::operator()(uint32_t x, uint32_t y)
 	{
 		return (*imPtr)(x, y);
 	}
@@ -1091,7 +1091,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	ColorRGBA	Image<T_Type, T_NumComp>::color(uint x, uint y) const {
+	ColorRGBA	Image<T_Type, T_NumComp>::color(uint32_t x, uint32_t y) const {
 		SIBR_ASSERT(x < w() && y < h());
 		float scale = 1.f / opencv::imageTypeRange<T_Type>();
 		cv::Vec<T_Type, T_NumComp> v = _pixels.at<cv::Vec<T_Type, T_NumComp>>(y, x);
@@ -1100,11 +1100,11 @@ namespace sibr
 			(T_NumComp > 3) ? v.val[3] * scale : 1.f);
 	}
 	template<typename T_Type, unsigned int T_NumComp>
-	void		Image<T_Type, T_NumComp>::color(uint x, uint y, const ColorRGBA& rgba) {
+	void		Image<T_Type, T_NumComp>::color(uint32_t x, uint32_t y, const ColorRGBA& rgba) {
 		SIBR_ASSERT(x < w() && y < h());
 		float scale = opencv::imageTypeRange<T_Type>();
 		cv::Vec<T_Type, T_NumComp> v;//(p.data(), T_NumComp);
-		for (uint i = 0; i < T_NumComp; ++i) v[i] = T_Type(rgba[i] * scale);
+		for (uint32_t i = 0; i < T_NumComp; ++i) v[i] = T_Type(rgba[i] * scale);
 		_pixels.at<cv::Vec<T_Type, T_NumComp>>(y, x) = v;
 	}
 
@@ -1131,7 +1131,7 @@ namespace sibr
 	typename Image<T_Type, T_NumComp>::Pixel Image<T_Type, T_NumComp>::color(const ColorRGBA& rgba) {
 		float scale = opencv::imageTypeRange<T_Type>();
 		Pixel v;//(p.data(), T_NumComp);
-		for (uint i = 0; i < T_NumComp; ++i) v[i] = T_Type(rgba[i] * scale);
+		for (uint32_t i = 0; i < T_NumComp; ++i) v[i] = T_Type(rgba[i] * scale);
 		return v;
 	}
 
@@ -1139,7 +1139,7 @@ namespace sibr
 	std::string Image<T_Type, T_NumComp>::pixelStr(const ::sibr::Vector2i & xy)  const {
 		if (isInRange(xy)) {
 			std::stringstream ss;
-//			ss << "( " << operator()(xy).cast<std::conditional<std::is_same_v<T_Type, uchar>, int, T_Type>::type>().transpose() << " )";
+//			ss << "( " << operator()(xy).cast<std::conditional<std::is_same_v<T_Type, uint8_t>, int, T_Type>::type>().transpose() << " )";
 std::cerr << "PIXEL STR PB" << std::endl;
 exit(1);
 			return  ss.str();
@@ -1148,12 +1148,12 @@ exit(1);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint		Image<T_Type, T_NumComp>::w(void) const {
+	uint32_t		Image<T_Type, T_NumComp>::w(void) const {
 		return _pixels.cols;
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint		Image<T_Type, T_NumComp>::h(void) const {
+	uint32_t		Image<T_Type, T_NumComp>::h(void) const {
 		return _pixels.rows;
 	}
 
@@ -1163,12 +1163,12 @@ exit(1);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint		Image<T_Type, T_NumComp>::numComp(void) const {
+	uint32_t		Image<T_Type, T_NumComp>::numComp(void) const {
 		return T_NumComp;
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint		Image<T_Type, T_NumComp>::sizeOfComp(void) const {
+	uint32_t		Image<T_Type, T_NumComp>::sizeOfComp(void) const {
 		return sizeof(T_Type)*T_NumComp;
 	}
 
@@ -1183,16 +1183,16 @@ exit(1);
 
 	template<typename T_Type, unsigned int T_NumComp>
 	void Image<T_Type, T_NumComp>::findMinMax(Pixel& minImage, Pixel& maxImage) {
-		for (uint c = 0; c < T_NumComp; ++c) {
+		for (uint32_t c = 0; c < T_NumComp; ++c) {
 			minImage[c] = T_Type(opencv::imageTypeRange<Type>());
 			maxImage[c] = T_Type(-opencv::imageTypeRange<Type>());
 		}
 
 		Pixel p;
-		for (uint y = 0; y < h(); ++y) {
-			for (uint x = 0; x < w(); ++x) {
+		for (uint32_t y = 0; y < h(); ++y) {
+			for (uint32_t x = 0; x < w(); ++x) {
 				Pixel v = operator()(x, y);
-				for (uint c = 0; c < T_NumComp; ++c) {
+				for (uint32_t c = 0; c < T_NumComp; ++c) {
 					minImage[c] = std::min(v[c], minImage[c]);
 					maxImage[c] = std::max(v[c], maxImage[c]);
 				}
@@ -1207,10 +1207,10 @@ exit(1);
 		findMinMax(minImage, maxImage);
 
 		Pixel p;
-		for (uint y = 0; y < h(); ++y) {
-			for (uint x = 0; x < w(); ++x) {
+		for (uint32_t y = 0; y < h(); ++y) {
+			for (uint32_t x = 0; x < w(); ++x) {
 				Pixel v = operator()(x, y);
-				for (uint i = 0; i < T_NumComp; ++i)
+				for (uint32_t i = 0; i < T_NumComp; ++i)
 					p[i] = minVal[i] + ((maxVal[i] - minVal[i])*(v[i] - minImage[i])) / (maxImage[i] - minImage[i]);
 				operator()(x, y) = p;
 			}

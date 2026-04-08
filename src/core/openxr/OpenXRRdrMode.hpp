@@ -62,7 +62,7 @@ namespace sibr
         int m_downscaleResolution = 1.0f;                        ///< Downscale rendering resolution to improve performance
         RenderTarget::UPtr _leftRT, _rightRT;                    ///< Only used to implement abstract method lRT andrRT!
 
-        SwapchainImageRenderTarget::Ptr getRenderTarget(uint32_t texture, uint w, uint h);
+        SwapchainImageRenderTarget::Ptr getRenderTarget(uint32_t texture, uint32_t w, uint32_t h);
     };
 
 } /*namespace sibr*/

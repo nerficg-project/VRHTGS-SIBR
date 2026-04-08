@@ -117,7 +117,7 @@ namespace sibr {
 		ImGui::End();
 	}
 
-	void ImageView::setRenderTarget(const IRenderTarget& rt, uint handle) {
+	void ImageView::setRenderTarget(const IRenderTarget& rt, uint32_t handle) {
 		_tex = nullptr;
 		_texHandle = rt.handle(handle);
 		_size.get()[0] = float(rt.w()); _size.get()[1] = float(rt.h());

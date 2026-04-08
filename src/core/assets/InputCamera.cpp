@@ -150,9 +150,9 @@ namespace sibr
 
 	// ------------------------------------------------------------------------
 
-	void InputCamera::size(uint w, uint h) { _w = w; _h = h; }
-	uint InputCamera::w(void)  const { return _w; }
-	uint InputCamera::h(void)  const { return _h; }
+	void InputCamera::size(uint32_t w, uint32_t h) { _w = w; _h = h; }
+	uint32_t InputCamera::w(void)  const { return _w; }
+	uint32_t InputCamera::h(void)  const { return _h; }
 	bool InputCamera::isActive(void)  const { return _active; }
 
 	/* compatibility for preprocess (depth) */
@@ -715,7 +715,7 @@ namespace sibr
 				continue;
 			}
 
-			uint		cId = std::stoi(tokens[0]) - 1;
+			uint32_t	cId = std::stoi(tokens[0]) - 1;
 			float       qw = std::stof(tokens[1]);
 			float       qx = std::stof(tokens[2]);
 			float       qy = std::stof(tokens[3]);
@@ -1049,7 +1049,7 @@ namespace sibr
 			int width = std::stoi(views[view_idx].get("width").get<std::string>());
 			int height = std::stoi(views[view_idx].get("height").get<std::string>());
 
-			uint camId = uint(i);
+			uint32_t camId = static_cast<uint32_t>(i);
 
 			picojson::array& center = poses[pose_idx].get("pose").get("transform").get("center").get<picojson::array>();
 			picojson::array& rotation = poses[pose_idx].get("pose").get("transform").get("rotation").get<picojson::array>();
@@ -1110,12 +1110,12 @@ namespace sibr
 
 		if (bytes.load(filename))
 		{
-			uint8	version;
+			uint8_t	version;
 			float	focal;
 			float	k1;
 			float	k2;
-			uint16	w;
-			uint16	h;
+			uint16_t	w;
+			uint16_t	h;
 			Vector3f	pos;
 			Quaternionf	rot;
 			float		fov;
@@ -1144,8 +1144,8 @@ namespace sibr
 			_focal = focal;
 			_k1 = k1;
 			_k2 = k2;
-			_w = (uint)w;
-			_h = (uint)h;
+			_w = static_cast<uint32_t>(w);
+			_h = static_cast<uint32_t>(h);
 			Camera::position(pos);
 			Camera::rotation(rot);
 			Camera::fovy(fov);
@@ -1166,12 +1166,12 @@ namespace sibr
 	{
 		ByteStream	bytes;
 
-		uint8	version = SIBR_INPUTCAMERA_BINARYFILE_VERSION;
+		uint8_t	version = SIBR_INPUTCAMERA_BINARYFILE_VERSION;
 		float	focal = _focal;
 		float	k1 = _k1;
 		float	k2 = _k2;
-		uint16	w = (uint16)_w;
-		uint16	h = (uint16)_h;
+		uint16_t	w = (uint16_t)_w;
+		uint16_t	h = (uint16_t)_h;
 		Vector3f	pos = position();
 		Quaternionf	rot = rotation();
 		float		fov = _fov;
@@ -1382,7 +1382,7 @@ namespace sibr
   		const size_t num_reg_images = ReadBinaryLittleEndian<uint64_t>(&imagesFile);
 		for (size_t i = 0; i < num_reg_images; ++i) {
 
-			uint	    cId = ReadBinaryLittleEndian<image_t>(&imagesFile);
+			uint32_t    cId = ReadBinaryLittleEndian<image_t>(&imagesFile);
 			float       qw = float(ReadBinaryLittleEndian<double>(&imagesFile));
 			float       qx = float(ReadBinaryLittleEndian<double>(&imagesFile)) ;
 			float       qy = float(ReadBinaryLittleEndian<double>(&imagesFile)) ;

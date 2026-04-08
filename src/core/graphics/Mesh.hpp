@@ -109,7 +109,7 @@ namespace sibr
 		/** Set triangles. Using a flat vector of uints.
 		\param triangles the new indices
 		*/
-		void	triangles(const std::vector<uint>& triangles);
+		void	triangles(const std::vector<uint32_t>& triangles);
 		
 		/** \return a reference to the triangles list. */
 		inline const Triangles& triangles( void ) const;
@@ -119,7 +119,7 @@ namespace sibr
 		 Useful for rendering and converting to another mesh
 		 struct.
 		 */
-		inline const uint* triangleArray( void ) const;
+		inline const uint32_t* triangleArray( void ) const;
 
 		/** Set vertex colors.
 		\param colors the new vertex colors
@@ -355,7 +355,7 @@ namespace sibr
 		/** Erase some of the triangles.
 		\param faceIDList a list of triangle IDs to erase
 		*/
-		void		eraseTriangles(const std::vector<uint>& faceIDList);
+		void		eraseTriangles(const std::vector<uint32_t>& faceIDList);
 
 		/** Submesh extraction options. */
 		enum class VERTEX_LIST_CHOICE { KEEP, REMOVE };
@@ -534,7 +534,7 @@ namespace sibr
 	const float* Mesh::vertexArray( void ) const {
 		return _vertices.empty()? nullptr : &(_vertices[0][0]);
 	}
-	const uint* Mesh::triangleArray( void ) const {
+	const uint32_t* Mesh::triangleArray( void ) const {
 		return _triangles.empty() ? nullptr : &(_triangles[0][0]);
 	}
 	const float* Mesh::colorArray( void ) const {

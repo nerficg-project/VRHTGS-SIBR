@@ -22,9 +22,9 @@ namespace sibr
 	/** Double-buffered texture, used to load/display video frames for instance.
 	* \ingroup sibr_video
 	*/
-	template<uint N>
+	template<uint32_t N>
 	struct PingPongTexture {
-		using TexPtr = std::shared_ptr<sibr::Texture2D<uchar, N>>;
+		using TexPtr = std::shared_ptr<sibr::Texture2D<uint8_t, N>>;
 
 		/** \return the current loading texture. */
 		TexPtr & getLoadingTex();
@@ -53,7 +53,7 @@ namespace sibr
 	/** Batch decoding of multiple videos at the same time, stored in a texture array.
 	* \ingroup sibr_video
 	*/
-	template<typename T, uint N>
+	template<typename T, uint32_t N>
 	struct MultipleVideoDecoder {
 		using TexArray = sibr::Texture2DArray<T,N>;
 		using TexArrayPtr = typename TexArray::Ptr;
@@ -94,7 +94,7 @@ namespace sibr
 			size_t numVids = videos.size();
 			std::vector<cv::Mat> frames(numVids);
 			for (size_t i = 0; i < numVids; ++i) {
-				if (std::is_same_v<T, uchar> && N == 3) {
+				if (std::is_same_v<T, uint8_t> && N == 3) {
 					frames[i] = videos[i]->getCurrentFrame();
 				} else {
 					std::vector<cv::Mat> cs;
@@ -126,7 +126,7 @@ namespace sibr
 	* Support updating an arbitrary subset. 
 	* \ingroup sibr_video
 	*/
-	template<typename T, uint N>
+	template<typename T, uint32_t N>
 	struct MultipleVideoDecoderArray : public MultipleVideoDecoder<T,N> {
 		using TexArray = sibr::Texture2DArray<T, N>;
 		using TexArrayPtr = typename TexArray::Ptr;
@@ -170,7 +170,7 @@ namespace sibr
 
 			std::vector<cv::Mat> frames(numVids);
 			for (int s = 0; s < numSlices; ++s) {
-				if (std::is_same_v<T, uchar> && N == 3) {
+				if (std::is_same_v<T, uint8_t> && N == 3) {
 					frames[slices[s]] = videos[slices[s]]->getCurrentFrame();
 				} else {
 					std::vector<cv::Mat> cs;
@@ -180,7 +180,7 @@ namespace sibr
 			} 
 
 			if (!getLoadingTexArray().get()) {
-				getLoadingTexArray() = TexArrayPtr(new TexArray((uint)videos.size(), SIBR_GPU_LINEAR_SAMPLING));
+				getLoadingTexArray() = TexArrayPtr(new TexArray(static_cast<uint32_t>(videos.size()), SIBR_GPU_LINEAR_SAMPLING));
 			}
 
 			CHECK_GL_ERROR;
@@ -195,26 +195,26 @@ namespace sibr
 	using PingPong4u = PingPongTexture<4>;
 	using PingPong3u = PingPongTexture<3>;
 	using PingPong1u = PingPongTexture<1>;
-	using MultipleVideoDecoder1u = MultipleVideoDecoder<uchar, 1>;
-	using MultipleVideoDecoder3u = MultipleVideoDecoder<uchar, 3>;
-	using MultipleVideoDecoderArray1u = MultipleVideoDecoderArray<uchar, 1>;
-	using MultipleVideoDecoderArray3u = MultipleVideoDecoderArray<uchar, 3>;
+	using MultipleVideoDecoder1u = MultipleVideoDecoder<uint8_t, 1>;
+	using MultipleVideoDecoder3u = MultipleVideoDecoder<uint8_t, 3>;
+	using MultipleVideoDecoderArray1u = MultipleVideoDecoderArray<uint8_t, 1>;
+	using MultipleVideoDecoderArray3u = MultipleVideoDecoderArray<uint8_t, 3>;
 
 	// --- IMPLEMENTATION ----------------
 
-	template<uint N>
-	std::shared_ptr<sibr::Texture2D<uchar, N>> & PingPongTexture<N>::getLoadingTex()
+	template<uint32_t N>
+	std::shared_ptr<sibr::Texture2D<uint8_t, N>> & PingPongTexture<N>::getLoadingTex()
 	{
 		return loadingTex ? ping : pong;
 	}
 
-	template<uint N>
-	std::shared_ptr<sibr::Texture2D<uchar,N>> & PingPongTexture<N>::getDisplayTex()
+	template<uint32_t N>
+	std::shared_ptr<sibr::Texture2D<uint8_t,N>> & PingPongTexture<N>::getDisplayTex()
 	{
 		return displayTex ? ping : pong;
 	}
 
-	template<uint N> template<typename ImgType>
+	template<uint32_t N> template<typename ImgType>
 	void PingPongTexture<N>::update(const ImgType & frame)
 	{
 		if (first) {
@@ -230,13 +230,13 @@ namespace sibr
 		loadingTex = (loadingTex + 1) % 2;
 	}
 
-	template<uint N> template<typename ImgType>
+	template<uint32_t N> template<typename ImgType>
 	void PingPongTexture<N>::updateGPU(const ImgType & frame)
 	{
 		if (getLoadingTex()) {
 			getLoadingTex()->update(frame);
 		} else {
-			getLoadingTex() = TexPtr(new sibr::Texture2D<uchar, N>(frame, SIBR_GPU_LINEAR_SAMPLING));
+			getLoadingTex() = TexPtr(new sibr::Texture2D<uint8_t, N>(frame, SIBR_GPU_LINEAR_SAMPLING));
 		}
 	}
 

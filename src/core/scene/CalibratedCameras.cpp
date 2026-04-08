@@ -22,11 +22,11 @@ namespace sibr {
 		return;
 	}
 
-	void CalibratedCameras::debugFlagCameraAsUsed(const std::vector<uint>& selectedCameras)
+	void CalibratedCameras::debugFlagCameraAsUsed(const std::vector<uint32_t>& selectedCameras)
 	{
 		// Used for Debugging -- Display colored cameras in TopView
 		std::vector<bool> cameraUsed(inputCameras().size(), false);
-		for (uint usedID : selectedCameras)
+		for (uint32_t usedID : selectedCameras)
 			cameraUsed[usedID] = true;
 		usedCameraForRendering(cameraUsed);
 

@@ -46,7 +46,7 @@ namespace sibr
 		 *\sa WindowArgs
 		 *\param defaultSettingsFilename default settings file for this specific window
 		 **/
-		Window(uint w, uint h, const std::string& title, const WindowArgs & args = {}, const std::string& defaultSettingsFilename = "");
+		Window(uint32_t w, uint32_t h, const std::string& title, const WindowArgs & args = {}, const std::string& defaultSettingsFilename = "");
 
 		/** Constructor, adjust the size to fill the screen except for the margins.
 		 *\param title window title
@@ -146,10 +146,10 @@ namespace sibr
 
 		// From IRenderTarget
 		/** Get the backbuffer texture ID. unsuported. */
-		GLuint				texture(uint t = 0) const;
+		GLuint				texture(uint32_t t = 0) const;
 
 		/** Get the backbuffer texture ID. unsuported. */
-		GLuint				handle(uint t = 0) const;
+		GLuint				handle(uint32_t t = 0) const;
 
 		/** \return the window buffer ID (0) */
 		GLuint				fbo(void) const;
@@ -164,10 +164,10 @@ namespace sibr
 		void				clear(void);
 
 		/** \return the window buffer width */
-		uint				w(void) const;
+		uint32_t			w(void) const;
 
 		/** \return the window buffer height */
-		uint				h(void) const;
+		uint32_t			h(void) const;
 
 		/** \return the screens caling factor. */
 		float				scaling() const;
@@ -226,11 +226,11 @@ namespace sibr
 		return glfwGetCurrentContext();
 	}
 
-	inline GLuint	Window::texture(uint /*t*/) const {
+	inline GLuint	Window::texture(uint32_t /*t*/) const {
 		SIBR_ERR << "You are trying to read the Window's backbuffer (use sibr::blit instead)." << std::endl;
 		return 0;
 	}
-	inline GLuint	Window::handle(uint /*t*/) const {
+	inline GLuint	Window::handle(uint32_t /*t*/) const {
 		SIBR_ERR << "You are trying to read the Window's backbuffer (use sibr::blit instead)." << std::endl;
 		return 0;
 	}
@@ -252,12 +252,12 @@ namespace sibr
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	inline uint		Window::w(void) const {
-		return (uint)size().x();
+	inline uint32_t		Window::w(void) const {
+		return static_cast<uint32_t>(size().x());
 	}
 
-	inline uint		Window::h(void) const {
-		return (uint)size().y();
+	inline uint32_t		Window::h(void) const {
+		return static_cast<uint32_t>(size().y());
 	}
 
 	inline float	Window::scaling() const

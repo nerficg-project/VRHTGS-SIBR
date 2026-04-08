@@ -111,12 +111,12 @@ int main(int ac, char** av)
 	int device = myArgs.device;
 
 	// rendering size
-	uint rendering_width = myArgs.rendering_size.get()[0];
-	uint rendering_height = myArgs.rendering_size.get()[1];
-	
+	uint32_t rendering_width = myArgs.rendering_size.get()[0];
+	uint32_t rendering_height = myArgs.rendering_size.get()[1];
+
 	// window size
-	uint win_width = rendering_width; // myArgs.win_width;
-	uint win_height = rendering_height; // myArgs.win_height;
+	uint32_t win_width = rendering_width; // myArgs.win_width;
+	uint32_t win_height = rendering_height; // myArgs.win_height;
 
 	const char* toload = myArgs.modelPath.get().c_str();
 
@@ -187,11 +187,11 @@ int main(int ac, char** av)
 	}
 
 	// Setup the scene: load the proxy, create the texture arrays.
-	const uint flags = SIBR_GPU_LINEAR_SAMPLING | SIBR_FLIP_TEXTURE;
+	const uint32_t flags = SIBR_GPU_LINEAR_SAMPLING | SIBR_FLIP_TEXTURE;
 
 	// Fix rendering aspect ratio if user provided rendering size
-	uint scene_width = scene->cameras()->inputCameras()[0]->w();
-	uint scene_height = scene->cameras()->inputCameras()[0]->h();
+	uint32_t scene_width = scene->cameras()->inputCameras()[0]->w();
+	uint32_t scene_height = scene->cameras()->inputCameras()[0]->h();
 	float scene_aspect_ratio = scene_width * 1.0f / scene_height;
 	float rendering_aspect_ratio = rendering_width * 1.0f / rendering_height;
 

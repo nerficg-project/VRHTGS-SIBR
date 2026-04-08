@@ -83,7 +83,7 @@ namespace sibr
 	}
 
 
-	LabelsManager::CameraInfos::CameraInfos(const InputCamera& cam, uint id, bool highlight)
+	LabelsManager::CameraInfos::CameraInfos(const InputCamera& cam, uint32_t id, bool highlight)
 		: cam(cam), id(id), highlight(highlight) {
 	}
 
@@ -121,7 +121,7 @@ namespace sibr
 		for (const auto & camInfos : cams_info) {
 			const auto & inputCam = camInfos.cam;
 			if (!inputCam.isActive()) { continue; }
-			const uint uid = camInfos.id;
+			const uint32_t uid = camInfos.id;
 			if (_labelMeshes.count(uid) == 0) {
 				continue;
 			}
@@ -176,7 +176,7 @@ namespace sibr
 		}
 	}
 
-	void ImageCamViewer::renderImage(const Camera & eye, const InputCamera & cam, uint tex2Darray_handle, int cam_id)
+	void ImageCamViewer::renderImage(const Camera & eye, const InputCamera & cam, uint32_t tex2Darray_handle, int cam_id)
 	{
 		const auto quad = generateCamQuadWithUvs(cam, _cameraScaling);
 		_shaderArray.begin();
@@ -359,12 +359,12 @@ namespace sibr
 		}
 	}
 
-	void SceneDebugView::updateActiveCams(const std::vector<uint>& cams_id)
+	void SceneDebugView::updateActiveCams(const std::vector<uint32_t>& cams_id)
 	{
 		for (auto & cam : _cameras) {
 			cam.highlight = false;
 		}
-		for (const uint id : cams_id) {
+		for (const uint32_t id : cams_id) {
 			if (id < _cameras.size()) {
 				_cameras[id].highlight = true;
 			}
@@ -427,8 +427,8 @@ namespace sibr
 			}
 			ImGui::NextColumn();
 			ImGui::Separator();
-	
-			//for (uint i = 0; i < _cameras.size(); ++i) 
+
+			//for (uint32_t i = 0; i < _cameras.size(); ++i)
 			{
 				std::string name = "cam_" + intToString<4>(_cameraIdInfoGUI);
 				ImGui::Text(name.c_str());

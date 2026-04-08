@@ -161,7 +161,7 @@ namespace sibr {
 			else {
 				const float w = _viewport.finalWidth();
 				const float h = _viewport.finalHeight();
-				idealCam.size(uint(w), uint(h));
+				idealCam.size(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
 				idealCam.aspect(w / h);
 			}
 		}
@@ -251,19 +251,19 @@ namespace sibr {
 		int selectedCam = 0;
 		int numCams = inputCameras.size();
 
-		std::vector<uint> sortByDistance = sibr::IBRBasicUtils::selectCamerasSimpleDist(inputCameras, _currentCamera, numCams);
-		std::vector<uint> sortByAngle = sibr::IBRBasicUtils::selectCamerasAngleWeight(inputCameras, _currentCamera, numCams);
+		std::vector<uint32_t> sortByDistance = sibr::IBRBasicUtils::selectCamerasSimpleDist(inputCameras, _currentCamera, numCams);
+		std::vector<uint32_t> sortByAngle = sibr::IBRBasicUtils::selectCamerasAngleWeight(inputCameras, _currentCamera, numCams);
 
-		std::map<uint, int> weights;
-		for (uint cam_id = 0; cam_id < sortByDistance.size(); cam_id++) {
+		std::map<uint32_t, int> weights;
+		for (uint32_t cam_id = 0; cam_id < sortByDistance.size(); cam_id++) {
 			weights[sortByDistance[cam_id]] = cam_id;
 		}
 
-		for (uint cam_id = 0; cam_id < sortByAngle.size(); cam_id++) {
+		for (uint32_t cam_id = 0; cam_id < sortByAngle.size(); cam_id++) {
 			weights[sortByAngle[cam_id]] += cam_id;
 		}
 
-		std::multimap<int, uint> combinedWeight;
+		std::multimap<int, uint32_t> combinedWeight;
 
 		for (auto const& weight : weights) {
 			combinedWeight.insert(std::make_pair(weight.second, weight.first));
@@ -391,7 +391,7 @@ namespace sibr {
 				_saveFrame = !_saveFrame;
 				if (_saveFrame) {
 					std::string pathOutView;
-					for (uint i = 0; i < 10; ++i) std::cout << std::endl;
+					for (uint32_t i = 0; i < 10; ++i) std::cout << std::endl;
 					std::cout << "Enter path to output the frames:" << std::endl;
 					safeGetline(std::cin, pathOutView);
 
@@ -412,7 +412,7 @@ namespace sibr {
 				std::string filename;
 
 				int w, h;
-				for (uint i = 0; i < 10; ++i) std::cout << std::endl;
+				for (uint32_t i = 0; i < 10; ++i) std::cout << std::endl;
 				std::cout << "Enter a filename for loading a camera path:" << std::endl;
 				safeGetline(std::cin, filename);
 				std::cout << "Enter width for camera" << std::endl;
@@ -431,7 +431,7 @@ namespace sibr {
 			else if (input.key().isActivated(Key::LeftControl) && input.key().isReleased(Key::C))
 			{
 				std::string filename;
-				for (uint i = 0; i < 10; ++i) std::cout << std::endl;
+				for (uint32_t i = 0; i < 10; ++i) std::cout << std::endl;
 				std::cout << "Enter a filename for saving a camera path:" << std::endl;
 				safeGetline(std::cin, filename);
 				_cameraRecorder.save(filename);
@@ -450,7 +450,7 @@ namespace sibr {
 			}
 			else if (input.key().isActivated(Key::RightAlt) && input.key().isReleased(Key::C)) {
 				std::string filename;
-				for (uint i = 0; i < 10; ++i) std::cout << std::endl;
+				for (uint32_t i = 0; i < 10; ++i) std::cout << std::endl;
 				std::cout << "Enter a filename for saving a camera path:" << std::endl;
 				safeGetline(std::cin, filename);
 				_cameraRecorder.playback();

@@ -125,12 +125,12 @@ namespace sibr
 		_raycaster.addMesh(mesh);
 	}
 
-	void	CameraRaycaster::castForEachPixel( const sibr::InputCamera& cam, ICameraRaycasterProcessor* processors[], uint nbProcessors, const std::string& optLogMsg )
+	void	CameraRaycaster::castForEachPixel( const sibr::InputCamera& cam, ICameraRaycasterProcessor* processors[], uint32_t nbProcessors, const std::string& optLogMsg )
 	{
 		//SIBR_PROFILESCOPE;
 
 		// Check there is no NULL process
-		for (uint i = 0; i < nbProcessors; ++i)
+		for (uint32_t i = 0; i < nbProcessors; ++i)
 			if (processors[i] == nullptr)
 			SIBR_ERR << "camera-raycaster process NULL detected" << std::endl;
 
@@ -141,9 +141,9 @@ namespace sibr
 		(void)optLogMsg;
 
 		// For each pixel of the camera's image
-		for (uint py = 0; py < cam.h(); ++py)
+		for (uint32_t py = 0; py < cam.h(); ++py)
 		{
-			for (uint px = 0; px < cam.w(); ++px)
+			for (uint32_t px = 0; px < cam.w(); ++px)
 			{ 
 				//progress.walk();
 				sibr::Vector3f worldPos = (float)px*dx + (float)py*dy + upLeftOffset;
@@ -151,7 +151,7 @@ namespace sibr
 				sibr::Vector3f dir =  worldPos - cam.position();
 				RayHit hit = _raycaster.intersect(Ray( cam.position(), dir));
 
-				for (uint i = 0; i < nbProcessors; ++i)
+				for (uint32_t i = 0; i < nbProcessors; ++i)
 					processors[i]->onCast(px, py, hit);
 			}
 		}
@@ -182,7 +182,7 @@ namespace sibr
 
 		//sibr::Vector3f pt = unproject({ 0, 0, 0 });
 		//std::cout << " debug planes : ";
-		//for (uint i = 0; i < frustum_planes.size(); ++i) {
+		//for (uint32_t i = 0; i < frustum_planes.size(); ++i) {
 		//	std::cout << sibr::Vector4f(pt[0], pt[1], pt[2], 1).dot(frustum_planes[i].coeffs()) << " ";
 		//}
 		//std::cout << std::endl;
@@ -207,7 +207,7 @@ namespace sibr
 	sibr::Vector2f RaycastingCamera::rayProjection(const Line3 & line) const
 	{
 		sibr::Vector2f out(-1, -1);
-		uint id = 0;
+		uint32_t id = 0;
 		if (isInsideFrustum(line.origin())) {
 			out[id] = 0;
 			++id;
@@ -216,7 +216,7 @@ namespace sibr
 		std::vector<float> intersection_params;
 		intersection_params.reserve(frustum_planes.size());
 
-		for (uint i = 0; i < frustum_planes.size(); ++i) {
+		for (uint32_t i = 0; i < frustum_planes.size(); ++i) {
 			float param = line.intersectionParameter(frustum_planes[i]);
 			if (param >= 0) {
 				intersection_params.push_back(param);
@@ -239,7 +239,7 @@ namespace sibr
 
 	bool RaycastingCamera::isInsideFrustum(const sibr::Vector3f & pt, float eps) const
 	{
-		for (uint i = 0; i < frustum_planes.size(); ++i) {
+		for (uint32_t i = 0; i < frustum_planes.size(); ++i) {
 			if (sibr::Vector4f(pt[0], pt[1], pt[2], 1).dot(frustum_planes[i].coeffs()) < -eps) {
 				return false;
 			}

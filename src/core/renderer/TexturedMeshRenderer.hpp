@@ -43,7 +43,7 @@ namespace sibr {
 		\param dst destination rendertarget
 		\param backfaceCull should backface culling be performed
 		*/
-		void	process(const Mesh& mesh, const Camera& eye, uint textureID, IRenderTarget& dst, bool backfaceCull = true);
+		void	process(const Mesh& mesh, const Camera& eye, uint32_t textureID, IRenderTarget& dst, bool backfaceCull = true);
 
 		/** Render the textured mesh.
 		\param mesh the mesh to render (should have UV attribute)
@@ -53,7 +53,7 @@ namespace sibr {
 		\param dst destination rendertarget
 		\param backfaceCull should backface culling be performed
 		*/
-		void process(const Mesh & mesh, const Camera & eye, const sibr::Matrix4f & model, uint textureID, IRenderTarget & dst, bool backfaceCull = true);
+		void process(const Mesh & mesh, const Camera & eye, const sibr::Matrix4f & model, uint32_t textureID, IRenderTarget & dst, bool backfaceCull = true);
 
 	protected:
 

@@ -18,8 +18,8 @@ namespace sibr
 
 
 	cv::Scalar jetColor(float gray) {
-		const sibr::Vector3ub col = jetColor<uchar>(gray);
-		return toOpenCV<uchar, uchar, 3>(col);
+		const sibr::Vector3ub col = jetColor<uint8_t>(gray);
+		return toOpenCV<uint8_t, uint8_t, 3>(col);
 	}
 
 	sibr::Vector3ub getLinearColorFromProbaV(double proba) {

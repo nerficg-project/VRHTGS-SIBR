@@ -226,8 +226,8 @@ namespace sibr {
 		sibr::InputCamera _currentCamera; ///< Current camera.
 
 		/// Parameters for path interpolation.
-		uint _startCam; ///< Start camera index in the list.
-		uint _interpFactor; ///< Current interpolation factor between cam _startCam and _startCam+1.
+		uint32_t _startCam; ///< Start camera index in the list.
+		uint32_t _interpFactor; ///< Current interpolation factor between cam _startCam and _startCam+1.
 		std::vector<InputCamera::Ptr> _interpPath; ///< Cameras along the path.
 
 		sibr::CameraRecorder _cameraRecorder; ///< Camera recorder.

@@ -133,7 +133,7 @@ namespace sibr
 		if (stream.load(filename) == false)
 			return false;
 
-		int32 num = 0;
+		int32_t num = 0;
 
 		std::cout << " CameraRecorder::load " << num << std::endl;
 
@@ -152,7 +152,7 @@ namespace sibr
 	void	CameraRecorder::save(const std::string& filename)
 	{
 		sibr::ByteStream stream;
-		int32 num = (int32)_cameras.size();
+		int32_t num = static_cast<int32_t>(_cameras.size());
 		stream << num;
 		for (const Camera& cam : _cameras)
 			stream << cam;

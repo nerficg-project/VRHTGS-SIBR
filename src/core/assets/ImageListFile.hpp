@@ -31,9 +31,9 @@ namespace sibr
 		struct Infos
 		{
 			std::string		filename; ///< image filename.
-			uint			camId; ///< Associated camera ID.
-			uint			width; ///< Image width.
-			uint			height; ///< Image height.
+			uint32_t		camId; ///< Associated camera ID.
+			uint32_t		width; ///< Image width.
+			uint32_t		height; ///< Image height.
 		};
 
 	public:

@@ -373,7 +373,7 @@ namespace sibr
 
 	}
 
-	void DrawUtilities::image_grid(int num_imgs, uint texture, const Vector2f & grid, const Vector2f & tl, const Vector2f & br, int lod, bool flip_texture)
+	void DrawUtilities::image_grid(int num_imgs, uint32_t texture, const Vector2f & grid, const Vector2f & tl, const Vector2f & br, int lod, bool flip_texture)
 	{
 		gridShader.begin();
 

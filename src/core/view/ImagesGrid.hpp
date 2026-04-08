@@ -51,8 +51,8 @@ namespace sibr
 		void circle(const Vector3f & color, const Vector2f & center, float radius, bool fill, float alpha, const Vector2f & scaling = Vector3f(1, 1), int precision = 50);
 		void circlePixels(const Vector3f & color, const Vector2f & center, float radius, bool fill, float alpha, const Vector2f & winSize, int precision = 50);
 		void linePixels(const Vector3f & color, const Vector2f & ptA, const Vector2f & ptB, const Vector2f & winSize);
-		
-		void image_grid(int num_imgs, uint texture, const Vector2f & grid, const Vector2f & tl, const Vector2f & br, int lod, bool flip_texture);
+
+		void image_grid(int num_imgs, uint32_t texture, const Vector2f & grid, const Vector2f & tl, const Vector2f & br, int lod, bool flip_texture);
 
 	private:
 
@@ -212,11 +212,11 @@ namespace sibr
 		SelectionMode selectionMode = IMAGE_SELECTION;
 
 	public:
-		template<typename T, uint N>
+		template<typename T, uint32_t N>
 		void addImageLayer(
 			const std::string & layer_name,
 			const std::vector<Image<T, N> > & images,
-			uint flags = 0
+			uint32_t flags = 0
 		) {
 			std::vector<cv::Mat> images_cv(images.size());
 			for (size_t im = 0; im < images.size(); ++im) {
@@ -225,11 +225,11 @@ namespace sibr
 			addImageLayer<T, N>(layer_name, images_cv, flags);
 		}
 
-		template<typename T, uint N>
+		template<typename T, uint32_t N>
 		void addImageLayer(
 			const std::string & layer_name,
 			const std::vector<ImagePtr<T,N>> & images,
-			uint flags = 0
+			uint32_t flags = 0
 		) {
 			std::vector<cv::Mat> images_cv(images.size());
 			for (size_t im = 0; im < images.size(); ++im) {
@@ -238,7 +238,7 @@ namespace sibr
 			addImageLayer<T, N>(layer_name, images_cv, flags);
 		}
 
-		template<typename T, uint N>
+		template<typename T, uint32_t N>
 		void addImageLayer(
 			const std::string & layer_name,
 			const std::shared_ptr<Texture2DArray<T,N>> & images
@@ -256,11 +256,11 @@ namespace sibr
 			setupFirstLayer();
 		}
 
-		template<typename T, uint N>
+		template<typename T, uint32_t N>
 		void addImageLayer(
 			const std::string & layer_name,
 			const std::vector<cv::Mat> & images,
-			uint flags = 0
+			uint32_t flags = 0
 		) {
 
 			if (!images.size()) {

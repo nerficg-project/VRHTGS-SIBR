@@ -65,7 +65,7 @@ namespace sibr {
 		* \param width the constrained width for GPU texture data.
 		* \param myOpts to specify whether to initialize specific parts of the scene (RTs, geometry,...)
 		*/
-		void createFromCustomData(const IParseData::Ptr & data, const uint width = 0, SceneOptions myOpts = SceneOptions()) override;
+		void createFromCustomData(const IParseData::Ptr & data, const uint32_t width = 0, SceneOptions myOpts = SceneOptions()) override;
 		
 		/**
 		 * \brief Function to create a scene directly using the dataset path specified in command-line.
@@ -143,7 +143,7 @@ namespace sibr {
 		* The data could be populated either from dataset path or customized by the user externally.
 		* \param width the constrained width for GPU texture data.
 		*/
-		void createFromData(const uint width = 0);
+		void createFromData(const uint32_t width = 0);
 
 		
 	};

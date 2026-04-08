@@ -84,9 +84,9 @@ namespace sibr
 
 		/** Legacy: Set the internal RT to use.
 		 *\param i RT index */
-		virtual void		whichRT(uint i)			{ _whichRT=i; }
+		virtual void		whichRT(uint32_t i)			{ _whichRT=i; }
 		/** Legacy: \return the current selected RT ID. */
-		virtual uint		whichRT(void)			{ return _whichRT; }
+		virtual uint32_t		whichRT(void)			{ return _whichRT; }
 
 		/** Set the view resolution.
 		\param size the new resolution, in pixels.
@@ -119,7 +119,7 @@ namespace sibr
 		const std::string & name() const;
 		
 	protected:
-		uint			_whichRT; ///< Selected RT id.
+		uint32_t			_whichRT; ///< Selected RT id.
 		std::vector<RenderTargetLum::Ptr>	_masks; ///< Rendering masks that can beused by some views/renderers.
 
 		bool			_active = true; ///< Is the view active.

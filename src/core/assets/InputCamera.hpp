@@ -109,12 +109,12 @@ namespace sibr
 		/** Input image width
 		* \return width of input image
 		*/
-		uint w(void) const;
+		uint32_t w(void) const;
 
 		/** Input image height
 		* \return height of input image
 		*/
-		uint h(void) const;
+		uint32_t h(void) const;
 
 		/** Check if the input camera active or inactive,
 		* camera is completely ignored if set to inactive.
@@ -139,10 +139,10 @@ namespace sibr
 		* \param w image width
 		* \param h image height
 		*/
-		void size( uint w, uint h );
+		void size( uint32_t w, uint32_t h );
 
 		/** \return the camera id */
-		uint id() const { return _id; }
+		uint32_t id() const { return _id; }
 
 		/** Project a world space point into screen space.
 		 *\param pt 3d world point
@@ -316,7 +316,7 @@ namespace sibr
 		*/
 		static std::vector<InputCamera::Ptr> loadMeshroom(const std::string& meshroomSFMPath, const float zNear = 0.01f, const float zFar = 1000.0f);
 
-		uint _id; ///< Input camera id
+		uint32_t _id; ///< Input camera id
 
 	protected:
 
@@ -324,8 +324,8 @@ namespace sibr
 		float _focalx; ///< focal length x, if there is one (colmap typically; -1 by default use with caution)
 		float _k1; ///< K1 bundler distorsion parameter
 		float _k2; ///< K2 bundler dist parameter
-		uint _w; ///< Image width
-		uint _h; ///< Image height
+		uint32_t _w; ///< Image width
+		uint32_t _h; ///< Image height
 		std::string _name; ///< Input image name
 		bool _active; ///< is the camera currently in use.
 	};

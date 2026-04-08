@@ -172,7 +172,7 @@ namespace sibr {
 		}
 	}
 
-	sibr::ImageRGB::Ptr MeshTexturing::getTexture(uint options) const {
+	sibr::ImageRGB::Ptr MeshTexturing::getTexture(uint32_t options) const {
 
 		ImageRGB32F output;
 		if (options & Options::FLOOD_FILL) {
@@ -185,7 +185,7 @@ namespace sibr {
 			output = _accum.clone();
 		}
 
-		// Convert as-is to uchar.
+		// Convert as-is to uint8_t.
 		ImageRGB::Ptr result(new ImageRGB());
 		const cv::Mat3f outputF = output.toOpenCV();
 		const cv::Mat3b outputB = cv::Mat3b(outputF);

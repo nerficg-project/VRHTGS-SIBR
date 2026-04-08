@@ -62,20 +62,20 @@ namespace sibr
 			return Vector3f(v.x, v.y, v.z); };
 		_triangles.clear();
 
-		uint offsetVertices = 0;
-		uint offsetFaces = 0;
-		uint matId = 0; // Material
+		uint32_t offsetVertices = 0;
+		uint32_t offsetFaces = 0;
+		uint32_t matId = 0; // Material
 		std::map<std::string, int> matName2Id; // Material
 
 		_maxMeshId = size_t(int(scene->mNumMeshes) - 1);
 
 		SIBR_LOG << "Mesh with " << scene->mNumMeshes << " elements." << std::endl;
-		for (uint meshId = 0; meshId < scene->mNumMeshes; ++meshId) {
+		for (uint32_t meshId = 0; meshId < scene->mNumMeshes; ++meshId) {
 			const aiMesh* mesh = scene->mMeshes[meshId];
 
 			_vertices.resize(offsetVertices + mesh->mNumVertices);
 			_meshIds.resize(offsetVertices + mesh->mNumVertices);
-			for (uint i = 0; i < mesh->mNumVertices; ++i) {
+			for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
 				_vertices[offsetVertices + i] = convertVec(mesh->mVertices[i]);
 				_meshIds[offsetVertices + i] = meshId;
 			}
@@ -83,7 +83,7 @@ namespace sibr
 			if (mesh->HasVertexColors(0) && mesh->mColors[0])
 			{
 				_colors.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i)
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 				{
 					_colors[offsetVertices + i] = Vector3f(
 						mesh->mColors[0][i].r,
@@ -95,7 +95,7 @@ namespace sibr
 			if (mesh->HasVertexColors(0) && mesh->mColors[0])
 			{
 				_colors.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i)
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 				{
 					_colors[offsetVertices + i] = Vector3f(
 						mesh->mColors[0][i].r,
@@ -107,7 +107,7 @@ namespace sibr
 			if (mesh->HasNormals())
 			{
 				_normals.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i) {
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
 					_normals[offsetVertices + i] = convertVec(mesh->mNormals[i]);
 				}
 
@@ -118,7 +118,7 @@ namespace sibr
 			if (mesh->HasTextureCoords(0))
 			{
 				_texcoords.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i) {
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
 					_texcoords[offsetVertices + i] =
 						convertVec(mesh->mTextureCoords[0][i]).xy();
 					if (convertVec(mesh->mTextureCoords[0][i]).xy().x() != 0.f ||
@@ -133,7 +133,7 @@ namespace sibr
 			if (randomUV) {
 				SIBR_LOG << "using random UVs." << std::endl;
 				_texcoords.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i) {
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
 					float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 					float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 					_texcoords[offsetVertices + i] =
@@ -149,7 +149,7 @@ namespace sibr
 			}
 
 			//----------------------------- FULL MATERIAL ------------------------
-			uint currentMatId = matId;
+			uint32_t currentMatId = matId;
 			aiString aiMatName;
 
 			if (AI_SUCCESS != scene->mMaterials[mesh->mMaterialIndex]->
@@ -176,7 +176,7 @@ namespace sibr
 			_triangles.reserve(offsetFaces + mesh->mNumFaces);
 			_matIds.reserve(offsetFaces + mesh->mNumFaces); //material
 			_matIdsVertices.resize(_vertices.size());
-			for (uint i = 0; i < mesh->mNumFaces; ++i)
+			for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
 			{
 				const aiFace* f = &mesh->mFaces[i];
 				if (f->mNumIndices != 3)
@@ -198,8 +198,8 @@ namespace sibr
 				}
 			}
 
-			offsetFaces = (uint)_triangles.size();
-			offsetVertices = (uint)_vertices.size();
+			offsetFaces = static_cast<uint32_t>(_triangles.size());
+			offsetVertices = static_cast<uint32_t>(_vertices.size());
 
 		}
 
@@ -870,8 +870,8 @@ namespace sibr
 
 		for (unsigned int i = 0; i < _matIds.size(); i++)
 		{
-			const uint matId = uint(_matIds.at(i) + 1);
-			const sibr::Vector3u col = { uchar(matId & 0xff), uchar((matId >> 8) & 0xff) , uchar((matId >> 16) & 0xff) };
+			const uint32_t matId = static_cast<uint32_t>(_matIds.at(i) + 1);
+			const sibr::Vector3u col = { static_cast<uint8_t>(matId & 0xff), static_cast<uint8_t>((matId >> 8) & 0xff) , static_cast<uint8_t>((matId >> 16) & 0xff) };
 			const sibr::Vector3f finalCol = col.cast<float>() / 255.0f;
 			colorsIdsMaterials.at(_triangles.at(i)[0]) = finalCol;
 			colorsIdsMaterials.at(_triangles.at(i)[1]) = finalCol;
@@ -912,7 +912,7 @@ namespace sibr
 		{
 			if (matIds().at(i) == material) {
 
-				uint v1, v2, v3;
+				uint32_t v1, v2, v3;
 				v1 = triangles().at(i)[0];
 				v2 = triangles().at(i)[1];
 				v3 = triangles().at(i)[2];
@@ -1524,7 +1524,7 @@ namespace sibr
 
 		sibr::Mesh::merge(other);
 
-		uint		matIdsOffset = static_cast<unsigned int> (_matId2Name.size());
+		uint32_t	matIdsOffset = static_cast<unsigned int> (_matId2Name.size());
 		MatIds		matIds = other.matIds();
 		MatId2Name	matId2Name;
 

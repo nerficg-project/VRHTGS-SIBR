@@ -37,7 +37,7 @@ namespace sibr{
 		\warning The number of cameras selected might be lower than count
 		\sa selectCamerasAngleWeight
 		*/
-		static std::vector<uint> selectCameras(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera& eye, uint count);
+		static std::vector<uint32_t> selectCameras(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera& eye, uint32_t count);
 
 		/** Select cameras based on distance to a given viewpoint. Cameras with an orientation that is more than 45� off compared to the reference are ignored.
 		\param cams cameras to select from
@@ -46,7 +46,7 @@ namespace sibr{
 		\return a list of selected camera indices.
 		\warning The number of cameras selected might be lower than count
 		*/
-		static std::vector<uint> selectCamerasSimpleDist(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera& eye, uint count);
+		static std::vector<uint32_t> selectCamerasSimpleDist(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera& eye, uint32_t count);
 
 	
 		/** Select cameras based on distance and orientation to a given viewpoint. Cameras with an orientation that is more than 45� off compared to the reference are ignored.
@@ -56,7 +56,7 @@ namespace sibr{
 		\return a list of selected camera indices.
 		\warning The number of cameras selected might be lower than count
 		*/
-		static std::vector<uint> selectCamerasAngleWeight(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera& eye, uint count);
+		static std::vector<uint32_t> selectCamerasAngleWeight(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera& eye, uint32_t count);
 
 	};
 

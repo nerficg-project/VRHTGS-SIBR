@@ -21,20 +21,20 @@ namespace sibr {
 
 	std::vector<cv::Mat> cvSplitChannels(cv::Mat mat);
 
-	template<typename T, uint N>
+	template<typename T, uint32_t N>
 	struct CV_Assign {
-		static void assignValue(uint c, const T & val, cv::Vec<T, N> & vec) {
+		static void assignValue(uint32_t c, const T & val, cv::Vec<T, N> & vec) {
 			vec[c] = val;
 		}
 	};
 	template<typename T>
 	struct CV_Assign<T,1> {
-		static void assignValue(uint c, const T & val, T & vec) {
+		static void assignValue(uint32_t c, const T & val, T & vec) {
 			vec = val;
 		}
 	};
 
-	template<typename T, uint N>
+	template<typename T, uint32_t N>
 	cv::Mat cvConvertMatTo(cv::Mat mat, double scale = 1.0) {
 		if (mat.type() == getOpenCVtype<T, N>) {
 			return mat;
@@ -56,24 +56,24 @@ namespace sibr {
 		return out;
 	}
 
-	template<typename T, uint N = 3>
+	template<typename T, uint32_t N = 3>
 	class VideoVolume;
 
 	using Volume3f = VideoVolume<float, 3>;
 	using Volume1f = VideoVolume<float, 1>;
-	using Volume4u = VideoVolume<uchar, 4>;
-	using Volume3u = VideoVolume<uchar, 3>;
-	using Volume1u = VideoVolume<uchar, 1>;
+	using Volume4u = VideoVolume<uint8_t, 4>;
+	using Volume3u = VideoVolume<uint8_t, 3>;
+	using Volume1u = VideoVolume<uint8_t, 1>;
 
 	/**
 	* \addtogroup sibr_video
 	* @{
 	*/
-	template<typename T, uint N>
+	template<typename T, uint32_t N>
 	class VideoVolume {
 	public:
 		using CVpixel = std::conditional_t<N == 1, T, cv::Vec<T, N>>;
-		static const uint cv_type = getOpenCVtype<T, N>;
+		static const uint32_t cv_type = getOpenCVtype<T, N>;
 
 		// data
 		int w = 0, h = 0, l = 0;
@@ -102,7 +102,7 @@ namespace sibr {
 			mat = other.mat;
 		}
 
-		template<typename U, uint M>
+		template<typename U, uint32_t M>
 		void setupFrom(const VideoVolume<U, M> & other) {
 			*this = VideoVolume(other.l, other.w, other.h);
 		}
@@ -111,7 +111,7 @@ namespace sibr {
 			return VideoVolume(mat.clone(), w, h);
 		}
 
-		template<typename U, uint M = N>
+		template<typename U, uint32_t M = N>
 		VideoVolume<U, M> convertTo() const {
 			VideoVolume<U, M> out(l, w, h);
 			for (int f = 0; f < l; ++f) {
@@ -140,7 +140,7 @@ namespace sibr {
 			cv::subtract(mat, other.mat, mat, cv::noArray(), cv_type);
 		}
 
-		template<typename U, uint M>
+		template<typename U, uint32_t M>
 		void multiply(const VideoVolume<U,M> & other) {
 			for (int t = 0; t < l; ++t) {
 				cv::multiply(cvConvertMatTo<float, N>(frame(t)), cvConvertMatTo<float, N>(other.frame(t)), frame(t));
@@ -182,8 +182,8 @@ namespace sibr {
 			return  out;
 		}
 
-		template<uint M>
-		VideoVolume applyMask(const VideoVolume<uchar,M> & mask) {
+		template<uint32_t M>
+		VideoVolume applyMask(const VideoVolume<uint8_t,M> & mask) {
 			VideoVolume out = VideoVolume(l, w, h);
 			for (int t = 0; t < l; ++t) {
 				cv::multiply(cvConvertMatTo<float, N>(frame(t)), cvConvertMatTo<float, N>(mask.frame(t)), out.frame(t), 1 / 255.0);
@@ -191,7 +191,7 @@ namespace sibr {
 			return out;
 		}
 
-		template<typename U, uint M>
+		template<typename U, uint32_t M>
 		void applyMaskInPlace(const VideoVolume<U, M> & mask) {
 			for (int t = 0; t < l; ++t) {
 				cv::multiply(cvConvertMatTo<float, N>(frame(t)), cvConvertMatTo<float, N>(mask.frame(t)), frame(t), 1 / 255.0);
@@ -207,8 +207,8 @@ namespace sibr {
 			return out;
 		}
 
-		VideoVolume<uchar, 3> colorMapped(int colormap, double scaling = 1.0) {
-			
+		VideoVolume<uint8_t, 3> colorMapped(int colormap, double scaling = 1.0) {
+
 			int custom_colormap_size;
 			/* 
 			//twilight
@@ -239,11 +239,11 @@ namespace sibr {
 				first = false;
 			}	
 
-			VideoVolume<uchar, 3> out(l, w, h);
+			VideoVolume<uint8_t, 3> out(l, w, h);
 			for (int f = 0; f < l; ++f) {
 				cv::Mat ff = 4.0*(frame(f) - 128) + 128;
-				//cv::applyColorMap(cvConvertMatTo<uchar, N>(ff, scaling), out.frame(f), custom_colormap);
-				cvConvertMatTo<uchar, N>(ff, scaling).copyTo(out.frame(f));
+				//cv::applyColorMap(cvConvertMatTo<uint8_t, N>(ff, scaling), out.frame(f), custom_colormap);
+				cvConvertMatTo<uint8_t, N>(ff, scaling).copyTo(out.frame(f));
 			}
 			return out;
 		}
@@ -381,10 +381,10 @@ namespace sibr {
 			auto disp_frame = [&] {
 				if ((res.array() >= 0).all()) {
 					cv::Mat m;
-					cv::resize(cvConvertMatTo<uchar, 3>(frame(t), scale), m, cv::Size(res[0],res[1]), 0,0, cv::INTER_NEAREST);
+					cv::resize(cvConvertMatTo<uint8_t, 3>(frame(t), scale), m, cv::Size(res[0],res[1]), 0,0, cv::INTER_NEAREST);
 					cv::imshow(win_name, m);
 				} else {
-					cv::imshow(win_name, cvConvertMatTo<uchar, 3>(frame(t), scale));
+					cv::imshow(win_name, cvConvertMatTo<uint8_t, 3>(frame(t), scale));
 				}
 			};
 			
@@ -414,7 +414,7 @@ namespace sibr {
 
 			sibr::FFVideoEncoder output(filepath, framerate, { w,h });
 			for (int f = 0; f < l; ++f) {
-				output << sibr::cvConvertMatTo<uchar,3>(frame(f));
+				output << sibr::cvConvertMatTo<uint8_t,3>(frame(f));
 			}
 			output.close();
 		}
@@ -562,67 +562,67 @@ namespace sibr {
 		return out;
 	}
 
-	SIBR_VIDEO_EXPORT uint optimal_num_levels(uint length);
+	uint32_t optimal_num_levels(uint32_t length);
 
-	template<uint M>
-	std::vector<sibr::VideoVolume<uchar, M>> extendedBlurPyramid(const sibr::VideoVolume<uchar, M> & vid, uint num_levels = 0) {
+	template<uint32_t M>
+	std::vector<sibr::VideoVolume<uint8_t, M>> extendedBlurPyramid(const sibr::VideoVolume<uint8_t, M> & vid, uint32_t num_levels = 0) {
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
 		}
 
-		std::vector<sibr::VideoVolume<uchar, M>> out(1, vid);
-		for (uint i = 1; i < num_levels; ++i) {
+		std::vector<sibr::VideoVolume<uint8_t, M>> out(1, vid);
+		for (uint32_t i = 1; i < num_levels; ++i) {
 			out.push_back(out.back().extendedDownScaleTemporal());
 		}
 		return out;
 	}
 
-	template<uint M>
-	std::vector<sibr::VideoVolume<uchar, M>> gaussianPyramid(const sibr::VideoVolume<uchar, M> & vid, uint num_levels = 0) {
+	template<uint32_t M>
+	std::vector<sibr::VideoVolume<uint8_t, M>> gaussianPyramid(const sibr::VideoVolume<uint8_t, M> & vid, uint32_t num_levels = 0) {
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
 		}
 
-		std::vector<sibr::VideoVolume<uchar, M>> out(1, vid);
-		for (uint i = 1; i < num_levels; ++i) {
+		std::vector<sibr::VideoVolume<uint8_t, M>> out(1, vid);
+		for (uint32_t i = 1; i < num_levels; ++i) {
 			out.push_back(out.back().pyrDown());
 		}
 		return out;
 	}
 
-	template<typename T, uint M>
-	std::vector<sibr::VideoVolume<T, M>> gaussianPyramidTemporal (const sibr::VideoVolume<T, M> & vid, uint num_levels = 0) {
+	template<typename T, uint32_t M>
+	std::vector<sibr::VideoVolume<T, M>> gaussianPyramidTemporal (const sibr::VideoVolume<T, M> & vid, uint32_t num_levels = 0) {
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
 		}
 
 		std::vector<sibr::VideoVolume<T, M>> out(1, vid);
-		for (uint i = 1; i < num_levels; ++i) {
+		for (uint32_t i = 1; i < num_levels; ++i) {
 			out.push_back(out.back().pyrDownTemporal());
 		}
 		return out;
 	}
 
-	template<typename T, uint M>
-	std::vector<sibr::VideoVolume<T, M>> gaussianPyramidTemporalBox(const sibr::VideoVolume<T, M> & vid, uint num_levels = 0) {
+	template<typename T, uint32_t M>
+	std::vector<sibr::VideoVolume<T, M>> gaussianPyramidTemporalBox(const sibr::VideoVolume<T, M> & vid, uint32_t num_levels = 0) {
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
 		}
 
 		std::vector<sibr::VideoVolume<T, M>> out(1, vid);
-		for (uint i = 1; i < num_levels; ++i) {
+		for (uint32_t i = 1; i < num_levels; ++i) {
 			out.push_back(out.back().pyrDownTemporalBox());
 		}
 		return out;
 	}
 
-	std::vector<sibr::Volume3u> laplacianPyramid(const sibr::Volume3u & vid, uint num_levels = 0);
-	//std::vector<sibr::Volume3u> laplacianPyramidTemporal(const sibr::Volume3u & vid, uint num_levels = 0);
-	std::vector<sibr::Volume3u> laplacianPyramidTemporalDouble(const sibr::Volume3u & vid, uint num_levels = 0);
+	std::vector<sibr::Volume3u> laplacianPyramid(const sibr::Volume3u & vid, uint32_t num_levels = 0);
+	//std::vector<sibr::Volume3u> laplacianPyramidTemporal(const sibr::Volume3u & vid, uint32_t num_levels = 0);
+	std::vector<sibr::Volume3u> laplacianPyramidTemporalDouble(const sibr::Volume3u & vid, uint32_t num_levels = 0);
 
 
 	template< typename U, typename T = U>
-	std::vector<VideoVolume<T,3>> laplacianPyramidTemporal(const VideoVolume<U, 3>& vid, uint num_levels = 0)
+	std::vector<VideoVolume<T,3>> laplacianPyramidTemporal(const VideoVolume<U, 3>& vid, uint32_t num_levels = 0)
 	{
 		if (num_levels == 0) {
 			num_levels = optimal_num_levels(vid.l);
@@ -683,7 +683,7 @@ namespace sibr {
 		const sibr::VideoVolume<T_V, 3> & vB,
 		std::vector<sibr::VideoVolume<T_M, 1>> & pyrM)
 	{
-		uint num_levels = (uint)pyrM.size();
+		uint32_t num_levels = static_cast<uint32_t>(pyrM.size());
 
 		auto pyrA = laplacianPyramidTemporal(vA, num_levels);
 
@@ -712,7 +712,7 @@ namespace sibr {
 		return collapseLaplacianPyramidTemporal(pyrA, -128);
 	}
 
-	template<typename T, uint N, typename Pix = typename VideoVolume<float, N>::CVpixel>
+	template<typename T, uint32_t N, typename Pix = typename VideoVolume<float, N>::CVpixel>
 	cv::Mat_<Pix> totalVariation(const VideoVolume<T, N> & v) {
 		cv::Mat_<Pix> total_vars(v.h, v.w);
 
@@ -846,14 +846,14 @@ namespace sibr {
 
 	void videoLaplacianBlendingDebug(PyramidLayer vidA, PyramidLayer vidB, PyramidLayer mask_volume, PyramidParameters params = {});
 
-	template<typename T, uint N> 
+	template<typename T, uint32_t N>
 	class Histogram {
 		using Value = Vector<T, N>;
-		using Indice = Vector<uint, N>;
+		using Indice = Vector<uint32_t, N>;
 		using Range = Vector<double, N>;
 
 	public:
-		Histogram(const Value & _min, const Value & _max, uint _numBins = 100)
+		Histogram(const Value & _min, const Value & _max, uint32_t _numBins = 100)
 			: min(_min.template cast<double>()), max(_max.template cast<double>()), numBins(_numBins) {
 			Range diff = max - min;
 			scaling = numBins * diff.cwiseInverse();
@@ -879,7 +879,7 @@ namespace sibr {
 
 		Indice getModeIndice() const {
 			Indice mode;
-			uint mode_size = 0;
+			uint32_t mode_size = 0;
 			for (const auto & key_val : bins) {
 				if (key_val.second > mode_size) {
 					mode_size = key_val.second;
@@ -898,9 +898,9 @@ namespace sibr {
 		}
 
 	protected:
-		std::map<Indice, uint> bins;
+		std::map<Indice, uint32_t> bins;
 		Range max, min, scaling, bin_range;
-		uint numBins = 50;
+		uint32_t numBins = 50;
 	};
 
 	template<typename T> 
@@ -913,7 +913,7 @@ namespace sibr {
 			bin_range = (max - min) / numBins;
 		}
 
-		bool whatBin(T value, uint & bin) {
+		bool whatBin(T value, uint32_t & bin) {
 			int t = (int)(scaling * (value - min));
 			if (t >= 0 && t <= ((int)numBins - 1)) {
 				bin = t;
@@ -923,7 +923,7 @@ namespace sibr {
 		}
 
 		void addValue(T value) {
-			uint bin;
+			uint32_t bin;
 			if (whatBin(value, bin)) {
 				++bins[bin];
 			}
@@ -935,8 +935,8 @@ namespace sibr {
 			}
 		}
 
-		uint getModeIndice() const {
-			uint mode, mode_size = 0;
+		uint32_t getModeIndice() const {
+			uint32_t mode, mode_size = 0;
 			for (const auto & [key, val] : bins) {
 				if (val > mode_size) {
 					mode_size = val;
@@ -946,30 +946,30 @@ namespace sibr {
 			return mode;
 		}
 
-		T getBinMiddle(uint bin) const {
+		T getBinMiddle(uint32_t bin) const {
 			return static_cast<T>(min + bin_range * (bin + 0.5));
 		}
 
 		std::vector<float> normalized_values() const {
 			float sum = 0;
-			for (uint b = 0; b < numBins; ++b) {
+			for (uint32_t b = 0; b < numBins; ++b) {
 				sum += bins[b];
 			}
 			std::vector<float> out(numBins);
-			for (uint b = 0; b < numBins; ++b) {
+			for (uint32_t b = 0; b < numBins; ++b) {
 				out[b] = bins[b]/sum;
 			}
 			return out;
 		}
 
 	protected:
-		std::vector<uint> bins;
+		std::vector<uint32_t> bins;
 		double max, min, scaling, bin_range;
-		uint numBins = 50;
+		uint32_t numBins = 50;
 	};
 
 	using Histo1f = Histogram<float, 1>;
-	using ColorHistogram = Histogram<uchar, 3>;
+	using ColorHistogram = Histogram<uint8_t, 3>;
 
 	struct TimeHistogram {
 

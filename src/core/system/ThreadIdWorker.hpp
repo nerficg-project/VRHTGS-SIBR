@@ -49,7 +49,7 @@ namespace sibr
 	class ThreadIdWorker : public std::thread
 	{
 	public:
-		typedef	std::queue<uint>	TaskIds;
+		typedef	std::queue<uint32_t>	TaskIds;
 	public:
 		/// Build an empty worker (placeholder)
 		ThreadIdWorker( void );
@@ -63,7 +63,7 @@ namespace sibr
 		 \param ids a list of task ids
 		 \param func a function receiving a task ID as parameter returning either FALSE for signaling the worker to stop or TRUE for keep going.
 		*/
-		ThreadIdWorker( TaskIds& ids, std::function<bool(uint)> func );
+		ThreadIdWorker( TaskIds& ids, std::function<bool(uint32_t)> func );
 
 		/** Move operator.
 		 *\param other worker to assign
@@ -80,7 +80,7 @@ namespace sibr
 		 \param ids a list of task ids
 		 \param func a function receiving a task ID as parameter
 		 */
-		void		taskPuller( TaskIds& ids, std::function<bool(uint)> func );
+		void		taskPuller( TaskIds& ids, std::function<bool(uint32_t)> func );
 
 		static std::mutex	g_mutex;	///< used to protect the common shared TaskIds list
 	};
@@ -93,7 +93,7 @@ namespace sibr
 		std::thread(std::move((std::thread&)other)) {
 	}
 
-	inline ThreadIdWorker::ThreadIdWorker( TaskIds& ids, std::function<bool(uint)> func )
+	inline ThreadIdWorker::ThreadIdWorker( TaskIds& ids, std::function<bool(uint32_t)> func )
 		: std::thread( [this, &ids, &func]() { taskPuller(ids, std::move(func)); } ) {
 	}
 
@@ -101,8 +101,8 @@ namespace sibr
 		((std::thread*)this)->operator=(std::move(other)); return *this;
 	}
 
-	inline void ThreadIdWorker::taskPuller( TaskIds& ids, std::function<bool(uint)> func ) {
-		uint id = 0;
+	inline void ThreadIdWorker::taskPuller( TaskIds& ids, std::function<bool(uint32_t)> func ) {
+		uint32_t id = 0;
 		bool stop = false;
 		while (!stop)
 		{

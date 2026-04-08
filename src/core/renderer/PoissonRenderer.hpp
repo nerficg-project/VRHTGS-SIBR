@@ -44,7 +44,7 @@ namespace sibr {
 		* \param w width of highest resolution multigrid level
 		* \param h height of highest resolution multigrid level
 		*/
-		PoissonRenderer ( uint w, uint h );
+		PoissonRenderer ( uint32_t w, uint32_t h );
 
 		/** Perform poisson filling.
 		\param src source rendertarget, black pixels will be filled
@@ -59,7 +59,7 @@ namespace sibr {
 		\param dst destination rendertarget
 		*/
 		void	process(
-			/*input*/	uint texID,
+			/*input*/	uint32_t texID,
 			/*ouput*/	RenderTargetRGBA::Ptr& dst );
 
 		/**
@@ -78,7 +78,7 @@ namespace sibr {
 		* \param tex OpenGL texture handle of input texture
 		* \returns OpenGL texture handle of texture containing Poisson synthesis solution
 		*/
-		uint render( uint tex );
+		uint32_t render( uint32_t tex );
 
 		/** Size defined in the ctor */
 		Vector2i		_size;

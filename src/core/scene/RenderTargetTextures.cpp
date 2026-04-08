@@ -14,7 +14,7 @@
 
 namespace sibr {
 
-	void RTTextureSize::initSize(uint w, uint h, bool force_aspect_ratio)
+	void RTTextureSize::initSize(uint32_t w, uint32_t h, bool force_aspect_ratio)
 	{
 		
 		std::cerr << "RTTextureSize::initSize NEW FORCE ASPECT " << force_aspect_ratio << " : " << w << "x" << h << " " << std::endl;
@@ -27,12 +27,12 @@ namespace sibr {
 			
 			if (w >= h) {
 				aspect = float(w) / float(h);
-				_height = uint(floor(float(_width) / aspect));
+				_height = static_cast<uint32_t>(floor(float(_width) / aspect));
 			}
 			else {
 				_height = _width;
 				aspect = float(w) / float(h);
-				_width = uint(floor(float(_height) * aspect));
+				_width = static_cast<uint32_t>(floor(float(_height) * aspect));
 			}
 			
 		}
@@ -69,9 +69,9 @@ namespace sibr {
 		textureShader.init("Texture",
 			loadFile(Resources::Instance()->getResourceFilePathName("texture.vp")),
 			loadFile(Resources::Instance()->getResourceFilePathName("texture.fp")));
-		uint interpFlag = (SIBR_SCENE_LINEAR_SAMPLING & SIBR_SCENE_LINEAR_SAMPLING) ? SIBR_GPU_LINEAR_SAMPLING : 0; // LINEAR_SAMPLING Set to default
+		uint32_t interpFlag = (SIBR_SCENE_LINEAR_SAMPLING & SIBR_SCENE_LINEAR_SAMPLING) ? SIBR_GPU_LINEAR_SAMPLING : 0; // LINEAR_SAMPLING Set to default
 
-		for (uint i = 0; i < imgs->inputImages().size(); i++) {
+		for (uint32_t i = 0; i < imgs->inputImages().size(); i++) {
 			if (cams->inputCameras()[i]->isActive()) {
 				std::cerr << "." ;
 				ImageRGB img = std::move(imgs->inputImages()[i]->clone());
@@ -113,7 +113,7 @@ namespace sibr {
 
 		proj.init(depthShader, "proj"); // [SP]: ??
 		size.init(depthShader, "size"); // [SP]: ??
-		for (uint i = 0; i < cams->inputCameras().size(); i++) {
+		for (uint32_t i = 0; i < cams->inputCameras().size(); i++) {
 			if (cams->inputCameras()[i]->isActive()) {
 				_inputRGBARenderTextures[i]->bind();
 				glEnable(GL_DEPTH_TEST);
@@ -124,8 +124,8 @@ namespace sibr {
 				if (!proxies->proxy().triangles().empty())
 				{
 
-					const uint w = _inputRGBARenderTextures[i]->w();
-					const uint h = _inputRGBARenderTextures[i]->h();
+					const uint32_t w = _inputRGBARenderTextures[i]->w();
+					const uint32_t h = _inputRGBARenderTextures[i]->h();
 
 					depthShader.begin();
 					size.set((float)w, (float)h);
@@ -160,7 +160,7 @@ namespace sibr {
 			loadFile(Resources::Instance()->getResourceFilePathName("depthonly.vp")),
 			loadFile(Resources::Instance()->getResourceFilePathName("depthonly.fp")));
 
-		const uint interpFlag = (flags & SIBR_SCENE_LINEAR_SAMPLING) ? SIBR_GPU_LINEAR_SAMPLING : 0;
+		const uint32_t interpFlag = (flags & SIBR_SCENE_LINEAR_SAMPLING) ? SIBR_GPU_LINEAR_SAMPLING : 0;
 
 		RenderTargetLum32F depthRT(_width, _height, interpFlag);
 
@@ -168,10 +168,10 @@ namespace sibr {
 		proj.init(depthOnlyShader, "proj");
 
 
-		const uint numCams = (uint)cams->inputCameras().size();
+		const uint32_t numCams = static_cast<uint32_t>(cams->inputCameras().size());
 		_inputDepthMapArrayPtr.reset(new Texture2DArrayLum32F(_width, _height, numCams, flags));
 
-		for (uint i = 0; i < numCams; i++) {
+		for (uint32_t i = 0; i < numCams; i++) {
 			glViewport(0, 0, _width, _height);
 
 			depthRT.bind();

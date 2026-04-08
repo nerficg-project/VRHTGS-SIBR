@@ -42,7 +42,7 @@ namespace sibr
 		/** For each vertex of the unwrapped mesh, the mapping give the index of the corresponding vertex in the input mesh.
 		 * \return a reference to the mapping vector
 		 */
-		const std::vector<uint> & mapping() const;
+		const std::vector<uint32_t> & mapping() const;
 		
 		/** Generate debug visualization by rasterizing the meshes in texture space.
 		 * \return a set of images, one per atlas
@@ -57,7 +57,7 @@ namespace sibr
 		const sibr::Mesh& _mesh; ///< Unwrapped mesh.
 		unsigned int _size; ///< Width of the atlas, detemrine the accuracy of the estimated UVs.
 		xatlas::Atlas* _atlas; ///< Atlas object.
-		std::vector<uint> _mapping; ///< Mapping from the new vertices to the old (some might be duplicated with different UV values).
+		std::vector<uint32_t> _mapping; ///< Mapping from the new vertices to the old (some might be duplicated with different UV values).
 		
 	};
 }

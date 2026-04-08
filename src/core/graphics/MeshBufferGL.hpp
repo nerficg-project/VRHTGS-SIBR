@@ -20,13 +20,13 @@
 namespace sibr
 {
 	template <typename TTo, typename TFrom>
-	static std::vector<TTo> prepareVertexData(const std::vector<TFrom>& fromData, uint numVertices);
+	static std::vector<TTo> prepareVertexData(const std::vector<TFrom>& fromData, uint32_t numVertices);
 
 	template <typename TTo, typename TFrom>
 	static void appendVertexData(std::vector<TTo>& toData, const std::vector<TFrom>& fromData);
 
 	template <typename T>
-	static uint getVectorDataSize(const std::vector<T>& v);
+	static uint32_t getVectorDataSize(const std::vector<T>& v);
 
 
 	class Mesh;
@@ -149,9 +149,9 @@ namespace sibr
 		
 		GLuint 							_vaoId; ///< Vertex array object ID.
 		std::array<GLuint, BUFCOUNT>	_bufferIds; ///< Buffers IDs.
-		uint 							_indexCount; ///< Number of elements in the index buffer.
-		uint							_adjacentIndexCount; ///< Number of elements in the triangles_adjacency index buffer.
-		uint							_vertexCount; ///< Number of elements in the vertex buffer.
+		uint32_t 						_indexCount; ///< Number of elements in the index buffer.
+		uint32_t						_adjacentIndexCount; ///< Number of elements in the triangles_adjacency index buffer.
+		uint32_t						_vertexCount; ///< Number of elements in the vertex buffer.
 
 		bool initVertexBuffer = false,
 			 initIndexBuffer = false,

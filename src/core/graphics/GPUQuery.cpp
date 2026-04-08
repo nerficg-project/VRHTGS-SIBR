@@ -48,7 +48,7 @@ void GPUQuery::end() {
 	_observing = false;
 }
 
-uint64 GPUQuery::value() {
+uint64_t GPUQuery::value() {
 	if (_observing) {
 		SIBR_WRG << "Query still running, ending it first..." << std::endl;
 		end();

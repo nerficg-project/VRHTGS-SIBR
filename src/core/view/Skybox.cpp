@@ -38,7 +38,7 @@ namespace sibr
 
 		std::array<ImageRGB, filenames.size()>	images;
 
-		for (uint i = 0; i < filenames.size(); ++i)
+		for (uint32_t i = 0; i < filenames.size(); ++i)
 		{
 			std::string file = (skyFolder + "/") + filenames[i];
 			if (images[i].load(file) == false)

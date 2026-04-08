@@ -48,21 +48,21 @@ namespace sibr
 		* 
 		* \param camId Integer ID of the camera to be set active
 		*/
-		void	activateCamera(uint camId) override;
+		void	activateCamera(uint32_t camId) override;
 
 		/**
 		* \brief Function to set a camera as inactive.
 		*
 		* \param camId Integer ID of the camera to be set inactive
 		*/
-		void	deactivateCamera(uint camId) override;
+		void	deactivateCamera(uint32_t camId) override;
 
 		/**
 		* \brief Function to mark the cameras used for rendering.
 		* Generally used for debugging purposes
 		* \param selectedCameras list of camera IDs that are used for rendering
 		*/
-		void	debugFlagCameraAsUsed(const std::vector<uint>& selectedCameras) override;
+		void	debugFlagCameraAsUsed(const std::vector<uint32_t>& selectedCameras) override;
 
 		/**
 		* \brief Function to check if the camera is used for rendering.
@@ -104,12 +104,12 @@ namespace sibr
 		return _inputCameras;
 	}
 
-	inline void CalibratedCameras::activateCamera(uint camId)
+	inline void CalibratedCameras::activateCamera(uint32_t camId)
 	{
 		_inputCameras[camId]->setActive(true);
 	}
 
-	inline void CalibratedCameras::deactivateCamera(uint camId)
+	inline void CalibratedCameras::deactivateCamera(uint32_t camId)
 	{
 		_inputCameras[camId]->setActive(false);
 	}

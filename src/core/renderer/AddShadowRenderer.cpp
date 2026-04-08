@@ -24,8 +24,8 @@ namespace sibr {
 	}
 
 	void	AddShadowRenderer::process(
-		uint backgroundTextureID,
-		uint foregroundTextureID,
+		uint32_t backgroundTextureID,
+		uint32_t foregroundTextureID,
 		const Vector2f& textureSize,
 		const Camera& camera,
 

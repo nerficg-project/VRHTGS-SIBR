@@ -54,7 +54,7 @@ namespace Eigen
 	template <typename T, int N, int Options>
 	std::ostream& operator<<( std::ostream& s, const Eigen::Matrix<T, N, 1, Options>& t ) {
 		s << '(';
-		for (uint i=0; i<N; i++) { s << t[i]; if (i < N-1) s << ','; }
+		for (uint32_t i=0; i<N; i++) { s << t[i]; if (i < N-1) s << ','; }
 		s << ')';
 		return (s);
 	}

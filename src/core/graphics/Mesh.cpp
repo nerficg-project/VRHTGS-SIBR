@@ -220,7 +220,7 @@ namespace sibr
 		pMesh->mFaces = new aiFace[_triangles.size()];
 		pMesh->mNumFaces = (unsigned int)(_triangles.size());
 
-		for (uint i = 0; i < _triangles.size(); ++i)
+		for (uint32_t i = 0; i < _triangles.size(); ++i)
 		{
 			const Vector3u& tri = _triangles[i];
 			aiFace& face = pMesh->mFaces[i];
@@ -275,15 +275,15 @@ namespace sibr
 			{
 				if (universal)
 				{
-					file << "property uchar red" << std::endl;
-					file << "property uchar green" << std::endl;
-					file << "property uchar blue" << std::endl;
+					file << "property uint8_t red" << std::endl;
+					file << "property uint8_t green" << std::endl;
+					file << "property uint8_t blue" << std::endl;
 				}
 				else
 				{
-					file << "property ushort red" << std::endl;
-					file << "property ushort green" << std::endl;
-					file << "property ushort blue" << std::endl;
+					file << "property uint16_t red" << std::endl;
+					file << "property uint16_t green" << std::endl;
+					file << "property uint16_t blue" << std::endl;
 				}
 
 			}
@@ -300,13 +300,13 @@ namespace sibr
 			}
 
 			file << "element face " << _triangles.size() << std::endl;
-			file << "property list uchar uint vertex_indices" << std::endl;
+			file << "property list uint8_t uint32_t vertex_indices" << std::endl;
 			file << "end_header" << std::endl;
 
 			/// BINARY version /////
 			ByteStream	bytes;
 
-			for (uint i = 0; i < _vertices.size(); ++i)
+			for (uint32_t i = 0; i < _vertices.size(); ++i)
 			{
 				const Vector3f& v = _vertices[i];
 
@@ -317,14 +317,14 @@ namespace sibr
 					const Vector3f& c = _colors[i];
 					if (universal)
 						bytes
-						<< uint8(c[0] * (UINT8_MAX - 1))
-						<< uint8(c[1] * (UINT8_MAX - 1))
-						<< uint8(c[2] * (UINT8_MAX - 1)); // ! converting colors explicitly
+						<< uint8_t(c[0] * (UINT8_MAX - 1))
+						<< uint8_t(c[1] * (UINT8_MAX - 1))
+						<< uint8_t(c[2] * (UINT8_MAX - 1)); // ! converting colors explicitly
 					else
 						bytes
-						<< uint16(c[0] * (UINT16_MAX - 1))
-						<< uint16(c[1] * (UINT16_MAX - 1))
-						<< uint16(c[2] * (UINT16_MAX - 1)); // ! converting colors explicitly
+						<< uint16_t(c[0] * (UINT16_MAX - 1))
+						<< uint16_t(c[1] * (UINT16_MAX - 1))
+						<< uint16_t(c[2] * (UINT16_MAX - 1)); // ! converting colors explicitly
 				}
 
 				if (hasNormals())
@@ -342,13 +342,13 @@ namespace sibr
 				}
 			}
 
-			for (uint i = 0; i < _triangles.size(); ++i)
+			for (uint32_t i = 0; i < _triangles.size(); ++i)
 			{
 				const Vector3u& tri = _triangles[i];
 
-				bytes << uint8(3);
-				for (uint j = 0; j < 3; ++j)
-					bytes << uint32(tri[j]);
+				bytes << uint8_t(3);
+				for (uint32_t j = 0; j < 3; ++j)
+					bytes << uint32_t(tri[j]);
 			}
 
 			file.write(reinterpret_cast<const char*>(bytes.buffer()), bytes.bufferSize());
@@ -391,15 +391,15 @@ namespace sibr
 			{
 				if (universal)
 				{
-					file << "property uchar red" << std::endl;
-					file << "property uchar green" << std::endl;
-					file << "property uchar blue" << std::endl;
+					file << "property uint8_t red" << std::endl;
+					file << "property uint8_t green" << std::endl;
+					file << "property uint8_t blue" << std::endl;
 				}
 				else
 				{
-					file << "property ushort red" << std::endl;
-					file << "property ushort green" << std::endl;
-					file << "property ushort blue" << std::endl;
+					file << "property uint16_t red" << std::endl;
+					file << "property uint16_t green" << std::endl;
+					file << "property uint16_t blue" << std::endl;
 				}
 			}
 
@@ -417,12 +417,12 @@ namespace sibr
 			}
 
 			file << "element face " << _triangles.size() << std::endl;
-			file << "property list uchar uint vertex_indices" << std::endl;
+			file << "property list uint8_t uint32_t vertex_indices" << std::endl;
 			file << "end_header" << std::endl;
 
 			/////// ASCII version /////
 
-			for (uint i = 0; i < _vertices.size(); ++i)
+			for (uint32_t i = 0; i < _vertices.size(); ++i)
 			{
 				const Vector3f& v = _vertices[i];
 
@@ -463,12 +463,12 @@ namespace sibr
 				file << std::endl;
 			}
 
-			for (uint i = 0; i < _triangles.size(); ++i)
+			for (uint32_t i = 0; i < _triangles.size(); ++i)
 			{
 				const Vector3u& tri = _triangles[i];
 
 				file << 3;
-				for (uint j = 0; j < 3; ++j)
+				for (uint32_t j = 0; j < 3; ++j)
 					file << " " << tri[j];
 				file << std::endl;
 			}
@@ -521,9 +521,9 @@ namespace sibr
 		auto convertVec = [](const aiVector3D& v) { return Vector3f(v.x, v.y, v.z); };
 		_triangles.clear();
 
-		uint offsetVertices = 0;
-		uint offsetFaces = 0;
-		uint matId = 0;
+		uint32_t offsetVertices = 0;
+		uint32_t offsetFaces = 0;
+		uint32_t matId = 0;
 		std::map<std::string, int> matName2Id;
 		Matrix3f converter;
 		converter <<
@@ -531,18 +531,18 @@ namespace sibr
 			0, 1, 0,
 			0, 0, 1;
 
-		for (uint meshId = 0; meshId < scene->mNumMeshes; ++meshId) {
+		for (uint32_t meshId = 0; meshId < scene->mNumMeshes; ++meshId) {
 			const aiMesh* mesh = scene->mMeshes[meshId];
 
 			_vertices.resize(offsetVertices + mesh->mNumVertices);
-			for (uint i = 0; i < mesh->mNumVertices; ++i)
+			for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 				_vertices[offsetVertices + i] = converter * convertVec(mesh->mVertices[i]);
 
 
 			if (mesh->HasVertexColors(0) && mesh->mColors[0])
 			{
 				_colors.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i)
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 				{
 					_colors[offsetVertices + i] = Vector3f(
 						mesh->mColors[0][i].r,
@@ -554,7 +554,7 @@ namespace sibr
 			if (mesh->HasNormals())
 			{
 				_normals.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i) {
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
 					_normals[offsetVertices + i] = converter * convertVec(mesh->mNormals[i]);
 				}
 
@@ -563,7 +563,7 @@ namespace sibr
 			if (mesh->HasTextureCoords(0))
 			{
 				_texcoords.resize(offsetVertices + mesh->mNumVertices);
-				for (uint i = 0; i < mesh->mNumVertices; ++i)
+				for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 					_texcoords[offsetVertices + i] = convertVec(mesh->mTextureCoords[0][i]).xy();
 				// TODO: make a clean function
 				std::string texFileName = dataset_path + "/capreal/" + _textureImageFileName;
@@ -578,10 +578,10 @@ namespace sibr
 					texImg.load(texFileName);
 					std::cout << "Computing vertex colors ..";
 					_colors.resize(offsetVertices + mesh->mNumVertices);
-					for (uint ci = 0; ci < mesh->mNumVertices; ++ci)
+					for (uint32_t ci = 0; ci < mesh->mNumVertices; ++ci)
 					{
 						Vector2f uv = _texcoords[offsetVertices + ci];
-						Vector3ub col = texImg((uv[0]*texImg.w()), uint((1-uv[1])*texImg.h()));
+						Vector3ub col = texImg((uv[0]*texImg.w()), static_cast<uint32_t>((1-uv[1])*texImg.h()));
 						_colors[offsetVertices + ci] = Vector3f(float(col[0]) / 255.0, float(col[1]) / 255.0, float(col[2]) / 255.0);
 					}
 					SIBR_WRG << "Done." << std::endl;
@@ -594,7 +594,7 @@ namespace sibr
 			}
 
 			_triangles.reserve(offsetFaces + mesh->mNumFaces);
-			for (uint i = 0; i < mesh->mNumFaces; ++i)
+			for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
 			{
 				const aiFace* f = &mesh->mFaces[i];
 				if (f->mNumIndices != 3)
@@ -614,8 +614,8 @@ namespace sibr
 				}
 			}
 
-			offsetFaces = (uint)_triangles.size();
-			offsetVertices = (uint)_vertices.size();
+			offsetFaces = static_cast<uint32_t>(_triangles.size());
+			offsetVertices = static_cast<uint32_t>(_vertices.size());
 
 		}
 
@@ -649,16 +649,16 @@ namespace sibr
 		ReadPoints3DBinary(fname, verts, cols, numverts);
 		_triangles.clear();
 
-		uint matId = 0;
+		uint32_t matId = 0;
 
 		_vertices.resize(numverts);
 
-		for (uint i = 0; i < numverts;  ++i)
+		for (uint32_t i = 0; i < numverts;  ++i)
 				_vertices[i] = verts[i];
 
 		_colors.resize(numverts);
 
-		for (uint i = 0; i < numverts; ++i)
+		for (uint32_t i = 0; i < numverts; ++i)
 			_colors[i] = Vector3f(
 				cols[i].x(), cols[i].y(), cols[i].z());
 
@@ -838,7 +838,7 @@ namespace sibr
 		else {
 			// If you encounter problem with the resulting mesh, you can switch
 			// to the ASCII version for easy reading
-			// Meshlab does not support uint16 colors, if you want to use the mesh in such
+			// Meshlab does not support uint16_t colors, if you want to use the mesh in such
 			// program, set 'universal' = true
 			if (universal) {
 				saveToASCIIPLY(filename, true, textureName);
@@ -870,13 +870,13 @@ namespace sibr
 		}
 	}
 
-	void	Mesh::triangles(const std::vector<uint>& triangles)
+	void	Mesh::triangles(const std::vector<uint32_t>& triangles)
 	{
 		_gl.dirtyBufferGL = true;
 		_triangles.clear();
 
 		// iterator for values
-		std::vector<uint>::const_iterator it = triangles.begin();
+		std::vector<uint32_t>::const_iterator it = triangles.begin();
 
 		//
 		while (it != triangles.end())
@@ -964,7 +964,7 @@ namespace sibr
 		}
 
 		_normals.resize(vertexNormals.size());
-		for (uint i = 0; i < _normals.size(); ++i)
+		for (uint32_t i = 0; i < _normals.size(); ++i)
 		{
 			Vector3f n = std::accumulate(vertexNormals[i].begin(), vertexNormals[i].end(), Vector3f(0.f, 0.f, 0.f));
 			n = (n / (float)vertexNormals.size());
@@ -2017,7 +2017,7 @@ namespace sibr
 			}
 		}
 
-		std::vector<uint> indices(6 * (nTheta - 1) * nPhi);
+		std::vector<uint32_t> indices(6 * (nTheta - 1) * nPhi);
 		int triangle_id = 0;
 		for (int t = 0; t < nTheta - 1; ++t) {
 			for (int p = 0; p < nPhi; ++p) {
@@ -2260,7 +2260,7 @@ namespace sibr
 			Colors		colors;
 			UVs			texcoords;
 
-			const uint offset = static_cast<uint>(_vertices.size());
+			const uint32_t offset = static_cast<uint32_t>(_vertices.size());
 			Vector3u	triOffset(offset, offset, offset);
 			Triangles	triangles = other.triangles();
 
@@ -2300,14 +2300,14 @@ namespace sibr
 
 	}
 
-	void		Mesh::eraseTriangles(const std::vector<uint>& faceIDList)
+	void		Mesh::eraseTriangles(const std::vector<uint32_t>& faceIDList)
 	{
-		uint indexMax = 0;
-		for (uint i = 0; i < triangles().size(); ++i)
+		uint32_t indexMax = 0;
+		for (uint32_t i = 0; i < triangles().size(); ++i)
 			indexMax = std::max(indexMax, triangles()[i].maxCoeff());
 
 		std::vector<bool>	faceToErase(triangles().size(), false);
-		for (uint faceID : faceIDList)
+		for (uint32_t faceID : faceIDList)
 			faceToErase[faceID] = true;
 
 
@@ -2318,21 +2318,21 @@ namespace sibr
 		newTris.reserve(triangles().size());
 		newVerts.reserve(vertices().size());
 
-		for (uint i = 0; i < triangles().size(); ++i)
+		for (uint32_t i = 0; i < triangles().size(); ++i)
 		{
 			if (faceToErase[i])
 				continue;
 
 			Vector3u t = triangles()[i];
 			Vector3u newT;
-			for (uint j = 0; j < 3; ++j)
+			for (uint32_t j = 0; j < 3; ++j)
 			{
 				if (indexRemap[t[j]] == -1)
 				{
 					indexRemap[t[j]] = (int)newVerts.size();
 					newVerts.push_back(vertices().at(t[j]));
 				}
-				newT[j] = (uint)indexRemap[t[j]];
+				newT[j] = static_cast<uint32_t>(indexRemap[t[j]]);
 
 			}
 
@@ -2342,7 +2342,7 @@ namespace sibr
 		if (hasColors())
 		{
 			Mesh::Colors	newColors(newVerts.size());
-			for (uint i = 0; i < indexRemap.size(); ++i)
+			for (uint32_t i = 0; i < indexRemap.size(); ++i)
 				if (indexRemap[i] != -1)
 					newColors[indexRemap[i]] = colors().at(i);
 			colors(newColors);
@@ -2351,7 +2351,7 @@ namespace sibr
 		if (hasNormals())
 		{
 			Mesh::Normals	newNormals(newVerts.size());
-			for (uint i = 0; i < indexRemap.size(); ++i)
+			for (uint32_t i = 0; i < indexRemap.size(); ++i)
 				if (indexRemap[i] != -1)
 					newNormals[indexRemap[i]] = normals().at(i);
 			normals(newNormals);
@@ -2361,7 +2361,7 @@ namespace sibr
 		if (hasTexCoords())
 		{
 			Mesh::UVs	newUVs(newVerts.size());
-			for (uint i = 0; i < indexRemap.size(); ++i)
+			for (uint32_t i = 0; i < indexRemap.size(); ++i)
 				if (indexRemap[i] != -1)
 					newUVs[indexRemap[i]] = texCoords().at(i);
 			texCoords(newUVs);

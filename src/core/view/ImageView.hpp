@@ -54,8 +54,8 @@ namespace sibr {
 		 *\param handle the index of the attachment to display
 		 *\warning Will only be valid until the RT is deleted.
 		 */
-		void setRenderTarget(const IRenderTarget & rt, uint handle = 0);
-		
+		void setRenderTarget(const IRenderTarget & rt, uint32_t handle = 0);
+
 		/** Set the texture to display.
 		 *\param tex the texture to display
 		 *\warning Will only be valid until the texture is deleted.

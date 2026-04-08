@@ -46,14 +46,14 @@ namespace sibr {
 		\param dst the destination
 		\param disableTest disable depth testing (depth won't be written)
 		*/
-		void	process( uint textureID, IRenderTarget& dst,
+		void	process( uint32_t textureID, IRenderTarget& dst,
 			bool disableTest=true);
 
 		/** Copy input texture to a window.
 		\param textureID the texture to copy
 		\param dst the destination window
 		*/
-		void	copyToWindow( uint textureID, Window& dst);
+		void	copyToWindow( uint32_t textureID, Window& dst);
 
 		/** \return option to flip the texture when copying. */
 		bool & flip() { return _flip.get(); }

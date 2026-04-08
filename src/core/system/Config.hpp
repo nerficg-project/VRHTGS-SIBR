@@ -184,17 +184,6 @@ namespace sibr
 // Note Visual studio is bugged with multiple statements macro (I avoided them):
 // http://stackoverflow.com/questions/22212737/strange-syntax-error-reported-in-a-range-based-for-loop
 
-//// TYPEDEF ////
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef unsigned uint;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
 using Path = std::filesystem::path;
 
 // This stuff should be in a file gathering all debug tools

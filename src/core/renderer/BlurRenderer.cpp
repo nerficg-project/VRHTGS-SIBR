@@ -22,7 +22,7 @@ namespace sibr {
 		_paramImgSize.init(_shader, "in_image_size");
 	}
 
-	void	BlurRenderer::process( uint textureID, const Vector2f& textureSize, IRenderTarget& dst )
+	void	BlurRenderer::process( uint32_t textureID, const Vector2f& textureSize, IRenderTarget& dst )
 	{
 		dst.bind();
 

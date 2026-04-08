@@ -45,7 +45,7 @@ namespace sibr
 		typedef std::shared_ptr<RTCScene>		RTCScenePtr;
 		typedef std::shared_ptr<Raycaster>		Ptr;
 
-		typedef	uint	geomId;
+		typedef	uint32_t	geomId;
 		/// Stores a number representing an invalid geom id.
 		static const geomId InvalidGeomId; 
 

@@ -185,19 +185,19 @@ namespace sibr {
 
 	MeshData & MeshData::setColorRandom()
 	{
-		static const auto baseHash = [](uint p) {
+		static const auto baseHash = [](uint32_t p) {
 			p = 1103515245U * ((p >> 1U) ^ (p));
-			uint h32 = 1103515245U * ((p) ^ (p >> 3U));
+			uint32_t h32 = 1103515245U * ((p) ^ (p >> 3U));
 			return h32 ^ (h32 >> 16);
 		};
 
-		static const uint mask = 0x7fffffffU;
+		static const uint32_t mask = 0x7fffffffU;
 
 		static int seed_x = 0;
 		
 		++seed_x;
-		
-		uint n = baseHash(uint(seed_x));
+
+		uint32_t n = baseHash(static_cast<uint32_t>(seed_x));
 		Vector3u tmp = Vector3u(n, n * 16807U, n * 48271U);
 		for (int c = 0; c < 3; ++c) {
 			userColor[c] = (tmp[c] & mask) / float(0x7fffffff);
@@ -665,7 +665,7 @@ namespace sibr {
 	MeshData & MultiMeshManager::addLines(const std::string & name, const std::vector<Vector3f>& endPoints, const Vector3f & color)
 	{
 		Mesh::Triangles tris(endPoints.size() / 2);
-		for (uint t = 0; t < tris.size(); ++t) {
+		for (uint32_t t = 0; t < tris.size(); ++t) {
 			tris[t] = Vector3u(2 * t, 2 * t, 2 * t + 1);
 		}
 

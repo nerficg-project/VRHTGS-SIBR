@@ -20,11 +20,11 @@ namespace sibr
 {
 	template <typename TTo, typename TFrom>
 	static std::vector<TTo> 	prepareVertexData( 
-		const std::vector<TFrom>& fromData, uint numVertices )
+		const std::vector<TFrom>& fromData, uint32_t numVertices )
 	{
 		static_assert(sizeof(TFrom) >= sizeof(TTo),
 			"Conversion not automatically managed with these two types");
-		/*constexpr*/ const uint typeSize = sizeof(TFrom)/sizeof(TTo);
+		/*constexpr*/ const uint32_t typeSize = sizeof(TFrom)/sizeof(TTo);
 		static_assert((typeSize*sizeof(TTo)) == sizeof(TFrom),
 			"Provided types have not a correct size");	
 
@@ -50,7 +50,7 @@ namespace sibr
 		if (fromData.empty())
 			return;
 
-		/*constexpr*/ const uint typeSize = sizeof(TFrom)/sizeof(TTo);
+		/*constexpr*/ const uint32_t typeSize = sizeof(TFrom)/sizeof(TTo);
 		static_assert((typeSize*sizeof(TTo)) == sizeof(TFrom),
 			"Provided types have not a correct size");	
 
@@ -60,9 +60,9 @@ namespace sibr
 	}
 
 	template <typename T>
-	static inline uint 	getVectorDataSize( const std::vector<T>& v )
+	static inline uint32_t 	getVectorDataSize( const std::vector<T>& v )
 	{
-		return (uint)(sizeof(T)*v.size());
+		return static_cast<uint32_t>(sizeof(T)*v.size());
 	}
 	//===========================================================================
 
@@ -148,7 +148,7 @@ namespace sibr
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferIds[BUFADJINDEX]);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), indices.data(), GL_STATIC_DRAW);
-			_adjacentIndexCount = (uint)indices.size();
+			_adjacentIndexCount = static_cast<uint32_t>(indices.size());
 
 			CHECK_GL_ERROR;
 		}
@@ -158,7 +158,7 @@ namespace sibr
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferIds[BUFINDEX]);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), indices.data(), GL_STATIC_DRAW);
-			_indexCount = (uint)indices.size();
+			_indexCount = static_cast<uint32_t>(indices.size());
 
 			CHECK_GL_ERROR;
 		}
@@ -181,7 +181,7 @@ namespace sibr
 		if(adjacency)
 			fetchIndices(mesh, true);
 
-		uint numVertices = (uint)mesh.vertices().size();
+		uint32_t numVertices = static_cast<uint32_t>(mesh.vertices().size());
 		_vertexCount = numVertices;
 		//SIBR_DEBUG(mesh.triangles().size());
 		std::vector<GLfloat> vertices = prepareVertexData<GLfloat>(
@@ -200,7 +200,7 @@ namespace sibr
 		//NormalAttribLocation		= 3,
 
 		// Every data (from different types) are all put together into vertexData
-		std::vector<uint8> 	vertexData;
+		std::vector<uint8_t> 	vertexData;
 		vertexData.reserve(
 			getVectorDataSize(vertices)	+
 			getVectorDataSize(colors)	+
@@ -213,7 +213,7 @@ namespace sibr
 		appendVertexData(vertexData, normals);
 
 		glBindBuffer(GL_ARRAY_BUFFER, _bufferIds[BUFVERTEX]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(uint8)*vertexData.size(), vertexData.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uint8_t)*vertexData.size(), vertexData.data(), GL_STATIC_DRAW);
 		CHECK_GL_ERROR;
 
 		glVertexAttribPointer(VertexAttribLocation, 3, GL_FLOAT, GL_FALSE, 0, (uint8_t*)(0));

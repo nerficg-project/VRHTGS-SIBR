@@ -213,7 +213,7 @@ namespace sibr {
 
 	void TrackBall::updateAspectWithViewport(const Viewport & viewport)
 	{
-		fixedCamera.size(static_cast<uint>(viewport.finalWidth()), static_cast<uint>(viewport.finalHeight()));
+		fixedCamera.size(static_cast<uint32_t>(viewport.finalWidth()), static_cast<uint32_t>(viewport.finalHeight()));
 		fixedCamera.aspect(viewport.finalHeight() / viewport.finalWidth());
 	}
 
@@ -578,7 +578,7 @@ namespace sibr {
 		}
 
 		int indices[6] = { 0, 1, 3, 0, 2, 3 };
-		std::vector<uint> indicesBuffer(&indices[0], &indices[0] + 6);
+		std::vector<uint32_t> indicesBuffer(&indices[0], &indices[0] + 6);
 
 		quadMesh->vertices(vertexBuffer);
 		quadMesh->triangles(indicesBuffer);

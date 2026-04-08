@@ -222,7 +222,7 @@ namespace sibr {
 
 			const auto & baseScaleImageLayer = imagesLayers[0];
 			if (baseScaleImageLayer.size() > 0) {
-				if ((uint)images.size() != baseScaleImageLayer[0]->depth()) {
+				if (static_cast<uint32_t>(images.size()) != baseScaleImageLayer[0]->depth()) {
 					SIBR_ERR << "not enough images" << std::endl;
 				}
 			}

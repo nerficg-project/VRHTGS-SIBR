@@ -126,7 +126,7 @@ namespace sibr
 		 *\param screenWidth the width of the rendertarget
 		 *\param screenHeight the height of the rendertarget
 		 */
-		void			bind( uint screenWidth, uint screenHeight ) const;
+		void			bind( uint32_t screenWidth, uint32_t screenHeight ) const;
 
 		/** Bind an OpenGL viewport  whose values are determined based on the viewport final dimensions. */
 		void			bind( void ) const;

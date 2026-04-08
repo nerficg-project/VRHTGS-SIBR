@@ -37,7 +37,7 @@ namespace sibr
 		void												alphaBlendInputImages(const std::vector<sibr::ImageRGB>& back, std::vector<sibr::ImageRGB>& alphas) override;
 
 		const std::vector<sibr::ImageRGB::Ptr>&				inputImages(void) const override;
-		const sibr::ImageRGB& 								image(uint i) override	{	return *_inputImages[i]; }
+		const sibr::ImageRGB& 								image(uint32_t i) override	{	return *_inputImages[i]; }
 
 		~InputImages(){};
 

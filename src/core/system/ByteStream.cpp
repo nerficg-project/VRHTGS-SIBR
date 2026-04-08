@@ -32,28 +32,28 @@ namespace sibr
 		{
 			const int blocksize = 2;
 			for (unsigned j = 0; i < _buffer.size() && j < blocksize; ++j, ++i)
-				std::cout << uint(data[i]);
+				std::cout << static_cast<uint32_t>(data[i]);
 			std::cout << ' ';
 			for (unsigned j = 0; i < _buffer.size() && j < blocksize; ++j, ++i)
-				std::cout << uint(data[i]);
+				std::cout << static_cast<uint32_t>(data[i]);
 			std::cout << ' ';
 			for (unsigned j = 0; i < _buffer.size() && j < blocksize; ++j, ++i)
-				std::cout << uint(data[i]);
+				std::cout << static_cast<uint32_t>(data[i]);
 			std::cout << ' ';
 			for (unsigned j = 0; i < _buffer.size() && j < blocksize; ++j, ++i)
-				std::cout << uint(data[i]);
+				std::cout << static_cast<uint32_t>(data[i]);
 			std::cout << ' ';
 			std::cout << std::endl;
 		}
 		std::cout << std::dec << std::setw(0);
 	}
 
-	uint64	ByteStream::htonll(uint64 n)
+	uint64_t	ByteStream::htonll(uint64_t n)
 	{
 		if (ByteStream::systemIsBigEndian())
 			return n;
 		// Else we are on a little endian system
-		uint32 out = 0;
+		uint32_t out = 0;
 		out |= (n & 0xFF00000000000000) >> 56;
 		out |= (n & 0x00FF000000000000) >> 40;
 		out |= (n & 0x0000FF0000000000) >> 24;
@@ -65,12 +65,12 @@ namespace sibr
 		return out;
 	}
 
-	uint32	ByteStream::htonl( uint32 n ) 
+	uint32_t	ByteStream::htonl( uint32_t n )
 	{
 		if (ByteStream::systemIsBigEndian())
 			return n;
 		// Else we are on a little endian system
-		uint32 out = 0;
+		uint32_t out = 0;
 
 		out |= (n & 0xFF000000) >> 24;
 		out |= (n & 0x00FF0000) >> 8;
@@ -79,12 +79,12 @@ namespace sibr
 		return out;
 	}
 
-	uint16	ByteStream::htons( uint16 n ) 
+	uint16_t	ByteStream::htons( uint16_t n )
 	{
 		if (ByteStream::systemIsBigEndian())
 			return n;
 		// Else we are on a little endian system
-		uint16 out = 0;
+		uint16_t out = 0;
 
 		out |= (n & 0xFF00) >> 8;
 		out |= (n & 0x00FF) << 8;
@@ -93,12 +93,12 @@ namespace sibr
 
 	bool ByteStream::systemIsBigEndian( void ) 
 	{
-		static int16 isBigEndian = -1;
+		static int16_t isBigEndian = -1;
 		if (isBigEndian == -1)
 		{
 			/// \todo TODO: check the compiler is not too smart and that it does not
 			/// optimize this at compile-time with a const.
-			int16 word = 0x0001;
+			int16_t word = 0x0001;
 			char *b = (char *) &word;
 			isBigEndian = (b[0]? 0 /*little endian*/ : 1 /*big endian*/);
 		}
@@ -142,7 +142,7 @@ namespace sibr
 			SIBR_LOG << "ERROR: cannot write to the file '" << filename << "'" << std::endl;
 	}
 
-	void ByteStream::push(const void* data, uint size) 
+	void ByteStream::push(const void* data, uint32_t size) 
 	{
 		assert(data != nullptr && size > 0);
 
@@ -154,66 +154,66 @@ namespace sibr
 
 	ByteStream& ByteStream::operator <<( bool b ) 
 	{
-		return ByteStream::operator << (static_cast<uint8>(b));
+		return ByteStream::operator << (static_cast<uint8_t>(b));
 	}
 
-	ByteStream& ByteStream::operator <<( int8 i ) 
+	ByteStream& ByteStream::operator <<( int8_t i )
 	{
 		push(&i, sizeof(i));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<( int16 i ) 
+	ByteStream& ByteStream::operator <<( int16_t i )
 	{
-		int16 netorder = htons(i);
+		int16_t netorder = htons(i);
 		push(&netorder, sizeof(netorder));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<( int32 i ) 
+	ByteStream& ByteStream::operator <<( int32_t i )
 	{
-		int32 netorder = htonl(i);
+		int32_t netorder = htonl(i);
 		push(&netorder, sizeof(netorder));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<( int64 i )
+	ByteStream& ByteStream::operator <<( int64_t i )
 	{
-		int64 netorder = htonll(i);
+		int64_t netorder = htonll(i);
 		push(&netorder, sizeof(netorder));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<( uint8 i ) 
+	ByteStream& ByteStream::operator <<( uint8_t i )
 	{
 		push(&i, sizeof(i));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<( uint16 i ) 
+	ByteStream& ByteStream::operator <<( uint16_t i )
 	{
-		uint16 netorder = htons(i);
+		uint16_t netorder = htons(i);
 		push(&netorder, sizeof(netorder));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<( uint32 i ) 
+	ByteStream& ByteStream::operator <<( uint32_t i )
 	{
-		uint32 netorder = htonl(i);
+		uint32_t netorder = htonl(i);
 		push(&netorder, sizeof(netorder));
 		return *this;
 	}
 
-	ByteStream& ByteStream::operator <<(uint64 i)
+	ByteStream& ByteStream::operator <<(uint64_t i)
 	{
-		uint64 netorder = htonll(i);
+		uint64_t netorder = htonll(i);
 		push(&netorder, sizeof(netorder));
 		return *this;
 	}
 	
 	ByteStream& ByteStream::operator <<( const std::string& str )
 	{
-		uint32 size = static_cast<uint32_t>(str.size());
+		uint32_t size = static_cast<uint32_t>(str.size());
 		operator << (size);
 		push(str.data(), sizeof(char)*size);
 		return *this;
@@ -221,13 +221,13 @@ namespace sibr
 
 	ByteStream& ByteStream::operator <<( float f )
 	{
-		int32* p = (int32*)&f;
+		int32_t* p = (int32_t*)&f;
 		return ByteStream:: operator<<( *p );
 	}
 
 	ByteStream& ByteStream::operator <<(double d)
 	{
-		int64* p = (int64*)&d;
+		int64_t* p = (int64_t*)&d;
 		return ByteStream:: operator<<(*p);
 	}
 

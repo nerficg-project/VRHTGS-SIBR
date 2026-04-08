@@ -189,7 +189,7 @@ namespace sibr {
 		std::cout << "[distordCrop] average resolution " << avgWidth << "x" << avgHeight << " and nr resolutions given: " << resolutions.size() << "\n";
 
 		// discard images with different resolution
-		std::vector<uint> preExcludedCams;
+		std::vector<uint32_t> preExcludedCams;
 		for (unsigned i = 0; i < resolutions.size(); i++) {
 			bool shrinkHorizontally = ((resolutions[i].x() < avgWidth) && ((avgWidth - resolutions[i].x()) > avgWidth * resolutionThreshold)) ? true : false;
 			bool shrinkVertically = ((resolutions[i].y() < avgHeight) && ((avgHeight - resolutions[i].y()) > avgHeight * resolutionThreshold)) ? true : false;
@@ -216,7 +216,7 @@ namespace sibr {
 			// load images in parallel (OpenMP 2.0 doesn't allow unsigned int as index. must be signed integral type)
 #pragma omp parallel for
 			for (int localImgIndex = 0; localImgIndex < nrItems; localImgIndex++) {
-				const uint globalImgIndex = uint((batchId * batch_size) + localImgIndex);
+				const uint32_t globalImgIndex = static_cast<uint32_t>((batchId * batch_size) + localImgIndex);
 				// if cam was discarded, do nothing
 				if (std::find(preExcludedCams.begin(), preExcludedCams.end(), globalImgIndex) == preExcludedCams.end()) {
 					// only now load the img

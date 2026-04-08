@@ -13,19 +13,19 @@
 #include "IBRBasicUtils.hpp"
 
 namespace sibr {
-	std::vector<uint> IBRBasicUtils::selectCameras(const std::vector<InputCamera::Ptr>& cams, const Camera & eye, uint count)
+	std::vector<uint32_t> IBRBasicUtils::selectCameras(const std::vector<InputCamera::Ptr>& cams, const Camera & eye, uint32_t count)
 	{
 		// Select one method
 		return selectCamerasAngleWeight(cams, eye, count);
 		//return selectCamerasSimpleDist(cams, eye, count);
 	}
 
-	std::vector<uint> IBRBasicUtils::selectCamerasSimpleDist(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera & eye, uint count)
+	std::vector<uint32_t> IBRBasicUtils::selectCamerasSimpleDist(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera & eye, uint32_t count)
 	{
-		std::vector<uint> warped_img_id;
-		std::multimap<float, uint> dist;                 // distance wise closest input cameras
+		std::vector<uint32_t> warped_img_id;
+		std::multimap<float, uint32_t> dist;                 // distance wise closest input cameras
 
-		for (uint i = 0; i < cams.size(); ++i)
+		for (uint32_t i = 0; i < cams.size(); ++i)
 		{
 			if (cams.at(i)->isActive())
 			{
@@ -36,8 +36,8 @@ namespace sibr {
 			}
 		}
 
-		std::multimap<float, uint>::const_iterator	d_it(dist.begin());
-		for (uint i = 0; d_it != dist.end() && i < count; ++d_it, ++i)
+		std::multimap<float, uint32_t>::const_iterator	d_it(dist.begin());
+		for (uint32_t i = 0; d_it != dist.end() && i < count; ++d_it, ++i)
 			warped_img_id.push_back(d_it->second);
 
 		SIBR_ASSERT(warped_img_id.size() <= count);
@@ -45,7 +45,7 @@ namespace sibr {
 		return warped_img_id;
 	}
 
-	std::vector<uint> IBRBasicUtils::selectCamerasAngleWeight(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera & eye, uint count)
+	std::vector<uint32_t> IBRBasicUtils::selectCamerasAngleWeight(const std::vector<InputCamera::Ptr>& cams, const sibr::Camera & eye, uint32_t count)
 	{
 		const Vector3f& position = eye.position();
 		const Quaternionf& rotation = eye.rotation();
@@ -54,7 +54,7 @@ namespace sibr {
 		float maxdist = 0.f;
 		std::vector<float>	sqrDists(cams.size(), 0.f);
 
-		for (uint i = 0; i < cams.size(); ++i)
+		for (uint32_t i = 0; i < cams.size(); ++i)
 		{
 			if (cams.at(i)->isActive())
 			{
@@ -64,8 +64,8 @@ namespace sibr {
 			}
 		}
 
-		std::multimap<float, uint>	factors;
-		for (uint i = 0; i < cams.size(); ++i)
+		std::multimap<float, uint32_t>	factors;
+		for (uint32_t i = 0; i < cams.size(); ++i)
 		{
 			if (cams.at(i)->isActive())
 			{
@@ -83,9 +83,9 @@ namespace sibr {
 			}
 		}
 
-		std::vector<uint> warped_img_id;
-		std::multimap<float, uint>::const_iterator	d_it(factors.begin());
-		for (uint i = 0; d_it != factors.end() && i < count; ++d_it, ++i)
+		std::vector<uint32_t> warped_img_id;
+		std::multimap<float, uint32_t>::const_iterator	d_it(factors.begin());
+		for (uint32_t i = 0; d_it != factors.end() && i < count; ++d_it, ++i)
 			warped_img_id.push_back(d_it->second);
 
 		SIBR_ASSERT(warped_img_id.size() <= count);

@@ -121,7 +121,7 @@ namespace sibr
 
 		{ // Fill vertices of the geometry
 			Vertex* vert = (Vertex*)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 4 * sizeof(float), vertices.size());
-			for (uint i = 0; i < mesh.vertices().size(); ++i)
+			for (uint32_t i = 0; i < mesh.vertices().size(); ++i)
 			{
 				vert[i].x = vertices[i][0];
 				vert[i].y = vertices[i][1];
@@ -133,7 +133,7 @@ namespace sibr
 
 		{ // Fill triangle indices of the geometry
 			Triangle* tri = (Triangle*)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3 * sizeof(int), triangles.size());
-			for (uint i = 0; i < triangles.size(); ++i)
+			for (uint32_t i = 0; i < triangles.size(); ++i)
 			{
 				tri[i].v0 = triangles[i][0];
 				tri[i].v1 = triangles[i][1];
@@ -161,7 +161,7 @@ namespace sibr
 
 		const sibr::Mesh::Vertices& vertices = mesh.vertices();
 		//const sibr::Mesh::Normals& normals = mesh.normals();
-		for (uint i = 0; i < mesh.vertices().size(); ++i)
+		for (uint32_t i = 0; i < mesh.vertices().size(); ++i)
 		{
 			sibr::Vector4f v;
 
@@ -335,7 +335,7 @@ namespace sibr
 					},
 					sibr::Vector3f(rh.hit.Ng_x[r], rh.hit.Ng_y[r], rh.hit.Ng_z[r]),
 					RayHit::Primitive{
-						(uint)rh.hit.primID[r] ,(uint)rh.hit.geomID[r],(uint)rh.hit.instID[r]
+						static_cast<uint32_t>(rh.hit.primID[r]), static_cast<uint32_t>(rh.hit.geomID[r]), static_cast<uint32_t>(rh.hit.instID[r])
 					}
 				};
 		}

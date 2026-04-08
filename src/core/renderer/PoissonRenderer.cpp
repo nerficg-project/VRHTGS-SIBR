@@ -37,7 +37,7 @@ using namespace sibr;
 namespace sibr { 
 	// -----------------------------------------------------------------------
 
-	PoissonRenderer ::PoissonRenderer ( uint w, uint h ) :
+	PoissonRenderer ::PoissonRenderer ( uint32_t w, uint32_t h ) :
 		_size(w, h)
 	{
 		std::string vp = sibr::loadFile(sibr::getShadersDirectory("core") + "/texture.vert");
@@ -53,9 +53,9 @@ namespace sibr {
 		_interp_scale  .init(_interpShader,   "scale");
 
 		_poisson_div_RT.resize(POISSON_LEVELS);
-		for (uint i=0; i<_poisson_div_RT.size(); i++) {
-			uint ww = std::max(1u, uint(w/pow( (float)MULTIGRID_SCALE, (int)i)));
-			uint hh = std::max(1u, uint(h/pow( (float)MULTIGRID_SCALE, (int)i)));
+		for (uint32_t i=0; i<_poisson_div_RT.size(); i++) {
+			uint32_t ww = std::max(1u, static_cast<uint32_t>(w/pow( (float)MULTIGRID_SCALE, (int)i)));
+			uint32_t hh = std::max(1u, static_cast<uint32_t>(h/pow( (float)MULTIGRID_SCALE, (int)i)));
 			_poisson_div_RT[i].reset(new sibr::RenderTargetRGBA(ww,hh, SIBR_CLAMP_UVS));
 		}
 		_poisson_RT.reset(new sibr::RenderTargetRGBA(w,h, SIBR_CLAMP_UVS | SIBR_GPU_LINEAR_SAMPLING));
@@ -66,7 +66,7 @@ namespace sibr {
 
 	// -----------------------------------------------------------------------
 
-	uint PoissonRenderer::render( uint texture )
+	uint32_t PoissonRenderer::render( uint32_t texture )
 	{
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Poisson filling");
 		// divergence of gradient map and dirichlet constraints
@@ -95,7 +95,7 @@ namespace sibr {
 		// perform jacobi iterations and upsample the result to higher level
 		bool isFirst = _enableFix;
 		for (int k=(int)_poisson_div_RT.size()-1; k>=0; k--) {
-			for (uint i=0; i<POISSON_ITERATIONS; i++) {
+			for (uint32_t i=0; i<POISSON_ITERATIONS; i++) {
 				double h   =  pow( (float)MULTIGRID_SCALE, (int)k);            // Jacobi relaxation filter kernel taken from
 				double hsq =  h*h;                               // Real-Time Gradient-Domain Painting, SIGGRAPH '08
 				double xh0 = -2.1532 + 1.5070/h + 0.5882/hsq;    // http://graphics.cs.cmu.edu/projects/gradient-paint/
@@ -159,7 +159,7 @@ namespace sibr {
 		std::swap(dst, _poisson_RT);
 	}
 
-	void	PoissonRenderer::process( uint texID, RenderTargetRGBA::Ptr& dst )
+	void	PoissonRenderer::process( uint32_t texID, RenderTargetRGBA::Ptr& dst )
 	{
 		render(texID);
 		std::swap(dst, _poisson_RT);

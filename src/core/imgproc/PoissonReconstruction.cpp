@@ -277,7 +277,7 @@ void PoissonReconstruction::postProcessing(void)
 				std::vector<sibr::Vector2i> neighbors(getNeighbors(sibr::Vector2i(i, j), _mask.cols, _mask.rows));
 				std::vector<bool> neighIsBlack(neighbors.size(), false);
 				int black_neighbor = false;
-				for (uint n_id = 0; n_id < neighbors.size() && !black_neighbor; n_id++) {
+				for (uint32_t n_id = 0; n_id < neighbors.size() && !black_neighbor; n_id++) {
 					sibr::Vector2i npos(neighbors[n_id]);
 					if (cv::norm(_img_target.at<cv::Vec3f>(npos.y(), npos.x())) == 0.0f) {
 						neighIsBlack[n_id] = true;
@@ -286,7 +286,7 @@ void PoissonReconstruction::postProcessing(void)
 				if (!black_neighbor && neighbors.size() > 0) {
 					cv::Vec3f new_color(0, 0, 0);
 					int count = 0;
-					for (uint n_id = 0; n_id < neighbors.size(); n_id++) {
+					for (uint32_t n_id = 0; n_id < neighbors.size(); n_id++) {
 						if(neighIsBlack[n_id]) {
 							continue;
 						}

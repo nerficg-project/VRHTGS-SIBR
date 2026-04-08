@@ -214,7 +214,7 @@ namespace sibr
 	private:
 		std::string				_dsPath; // path to dataset
 		ViewBase::Ptr			_view; // view to save images
-		uint					_pos; ///< Current camera ID for replay.
+		uint32_t				_pos; ///< Current camera ID for replay.
 		std::vector<Camera>		_cameras; ///< List of recorded cameras.
 		bool					_recording; ///< Are we currently recording.
 		bool					_playing; ///< Are we currently playing.

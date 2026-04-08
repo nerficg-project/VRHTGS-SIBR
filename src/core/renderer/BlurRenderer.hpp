@@ -37,7 +37,7 @@ namespace sibr {
 		\param dst the destination rendertarget
 		*/
 		void	process(
-			/*input*/	uint textureID,
+			/*input*/	uint32_t textureID,
 			/*input*/	const Vector2f& textureSize,
 			/*output*/	IRenderTarget& dst );
 

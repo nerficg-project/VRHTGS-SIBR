@@ -33,15 +33,15 @@ namespace sibr{
 	class RTTextureSize {
 
 	public:
-		RTTextureSize(uint w = 0) : _width(w) {}
+		RTTextureSize(uint32_t w = 0) : _width(w) {}
 
-		void initSize(uint w, uint h, bool force_aspect_ratio = false);
+		void initSize(uint32_t w, uint32_t h, bool force_aspect_ratio = false);
 
 		bool isInit() const;
 
 	protected:
-		uint		_width = 0; //constrained width provided by the command line args, defaults to 0
-		uint		_height = 0; //associated height, computed in initSize
+		uint32_t	_width = 0; //constrained width provided by the command line args, defaults to 0
+		uint32_t	_height = 0; //associated height, computed in initSize
 		bool		_isInit = false;
 		int			_initActiveCam = 0;
 
@@ -104,7 +104,7 @@ namespace sibr{
 	public:
 		SIBR_CLASS_PTR(RenderTargetTextures)
 		
-		RenderTargetTextures(uint w = 0) : RTTextureSize(w) {}
+		RenderTargetTextures(uint32_t w = 0) : RTTextureSize(w) {}
 
 		virtual void initRGBandDepthTextureArrays(ICalibratedCameras::Ptr cams, IInputImages::Ptr imgs, IProxyMesh::Ptr proxies, int textureFlags, unsigned int w, unsigned int h, bool faceCull = true);
 		// TODO: remove this, not needed

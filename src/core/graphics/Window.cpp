@@ -164,8 +164,8 @@ namespace sibr
 		}
 	}
 
-	Window::Window(uint w, uint h, const std::string& title, const WindowArgs & args, const std::string& defaultSettingsFilename) 
-		: _hiddenInit(args), _useGUI(!args.no_gui && !args.offscreen), _shouldClose(false) 
+	Window::Window(uint32_t w, uint32_t h, const std::string& title, const WindowArgs & args, const std::string& defaultSettingsFilename)
+		: _hiddenInit(args), _useGUI(!args.no_gui && !args.offscreen), _shouldClose(false)
 	{
 		
 		setup(w, h, title, args, defaultSettingsFilename);

@@ -16,7 +16,7 @@
 
 namespace sibr
 {
-	void			Viewport::bind( uint screenWidth, uint screenHeight ) const
+	void			Viewport::bind( uint32_t screenWidth, uint32_t screenHeight ) const
 	{
 		glViewport(
 			(GLint)(left()*screenWidth), (GLint)(top()*screenHeight),

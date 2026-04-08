@@ -77,9 +77,9 @@ namespace sibr
 		/// Infos about the object that was hit
 		struct Primitive
 		{
-			uint triID;		///< triangle id of the mesh that was hit
-			uint geomID;	///< mesh id loaded in the raycaster
-			uint instID;	///< id of the instance loaded in the raycaster
+			uint32_t triID;		///< triangle id of the mesh that was hit
+			uint32_t geomID;	///< mesh id loaded in the raycaster
+			uint32_t instID;	///< id of the instance loaded in the raycaster
 		};
 
 		/// Barycentric coordinates

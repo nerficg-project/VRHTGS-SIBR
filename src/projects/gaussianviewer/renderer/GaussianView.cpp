@@ -264,7 +264,7 @@ namespace sibr
 			_height.init(_shader, "height");
 		}
 
-		void process(uint bufferID, IRenderTarget& dst, int width, int height, bool disableTest = true)
+		void process(uint32_t bufferID, IRenderTarget& dst, int width, int height, bool disableTest = true)
 		{
 			if (disableTest)
 				glDisable(GL_DEPTH_TEST);
@@ -315,7 +315,7 @@ std::function<char* (size_t N)> resizeFunctional(void** ptr, size_t& S) {
 	return lambda;
 }
 
-sibr::GaussianView::GaussianView(const sibr::BasicIBRScene::Ptr & ibrScene, uint render_w, uint render_h, const char* file, bool* messageRead, int sh_degree, bool white_bg, bool useInterop, int device) :
+sibr::GaussianView::GaussianView(const sibr::BasicIBRScene::Ptr & ibrScene, uint32_t render_w, uint32_t render_h, const char* file, bool* messageRead, int sh_degree, bool white_bg, bool useInterop, int device) :
 	_scene(ibrScene),
 	_dontshow(messageRead),
 	_sh_degree(sh_degree),
@@ -345,11 +345,11 @@ sibr::GaussianView::GaussianView(const sibr::BasicIBRScene::Ptr & ibrScene, uint
 	_copyRenderer->width() = _resolution.x();
 	_copyRenderer->height() = _resolution.y();
 
-	std::vector<uint> imgs_ulr;
+	std::vector<uint32_t> imgs_ulr;
 	const auto & cams = ibrScene->cameras()->inputCameras();
 	for(size_t cid = 0; cid < cams.size(); ++cid) {
 		if(cams[cid]->isActive()) {
-			imgs_ulr.push_back(uint(cid));
+			imgs_ulr.push_back(uint32_t(cid));
 		}
 	}
 	_scene->cameras()->debugFlagCameraAsUsed(imgs_ulr);
@@ -475,11 +475,11 @@ void sibr::GaussianView::setScene(const sibr::BasicIBRScene::Ptr & newScene)
 	_scene = newScene;
 
 	// Tell the scene we are a priori using all active cameras.
-	std::vector<uint> imgs_ulr;
+	std::vector<uint32_t> imgs_ulr;
 	const auto & cams = newScene->cameras()->inputCameras();
 	for (size_t cid = 0; cid < cams.size(); ++cid) {
 		if (cams[cid]->isActive()) {
-			imgs_ulr.push_back(uint(cid));
+			imgs_ulr.push_back(uint32_t(cid));
 		}
 	}
 	_scene->cameras()->debugFlagCameraAsUsed(imgs_ulr);

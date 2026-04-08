@@ -33,9 +33,9 @@ namespace sibr
 	template<typename T_Type>
 	static Eigen::Matrix<T_Type, 3, 1, Eigen::DontAlign> randomColor(){
 		// We just use rand here, we don't need 'proper' PRNG.
-		const uint8_t r = uint8((std::rand() % 255 + 192) * 0.5f);
-		const uint8_t g = uint8((std::rand() % 255 + 192) * 0.5f);
-		const uint8_t b = uint8((std::rand() % 255 + 192) * 0.5f);
+		const uint8_t r = static_cast<uint8_t>((std::rand() % 255 + 192) * 0.5f);
+		const uint8_t g = static_cast<uint8_t>((std::rand() % 255 + 192) * 0.5f);
+		const uint8_t b = static_cast<uint8_t>((std::rand() % 255 + 192) * 0.5f);
 		const sibr::Vector3ub output(r, g,b);
 		return output.unaryExpr([](float f) { return f * sibr::opencv::imageTypeRange<T_Type>(); }).template cast<T_Type>();
 	}

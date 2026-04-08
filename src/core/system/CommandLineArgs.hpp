@@ -29,18 +29,18 @@ namespace sibr
 	/// Used to wrap a toggle argument in the command line.
 	struct Switch {};
 
-	/// uint contexpr helper, defining the number of command line tokens required to init T
+	/// uint32_t contexpr helper, defining the number of command line tokens required to init T
 	template<typename T>
-	constexpr uint NumberOfArg = 1;
-	/// uint contexpr helper, defining the number of command line tokens required to init T
+	constexpr uint32_t NumberOfArg = 1;
+	/// uint32_t contexpr helper, defining the number of command line tokens required to init T
 	template<>
-	constexpr uint NumberOfArg<bool> = 0;
-	/// uint contexpr helper, defining the number of command line tokens required to init T
+	constexpr uint32_t NumberOfArg<bool> = 0;
+	/// uint32_t contexpr helper, defining the number of command line tokens required to init T
 	template<>
-	constexpr uint NumberOfArg<Switch> = 0;
-	/// uint contexpr helper, defining the number of command line tokens required to init T
-	template<typename T, uint N>
-	constexpr uint NumberOfArg<sibr::Vector<T, N>> = N * NumberOfArg<T>;
+	constexpr uint32_t NumberOfArg<Switch> = 0;
+	/// uint32_t contexpr helper, defining the number of command line tokens required to init T
+	template<typename T, uint32_t N>
+	constexpr uint32_t NumberOfArg<sibr::Vector<T, N>> = N * NumberOfArg<T>;
 
 	/// Helper to extract values from a vector of strings.
 	template<typename T> struct ValueGetter {
@@ -50,7 +50,7 @@ namespace sibr
 		\param n the index of the element to query
 		\return the element corresponding to the N-th string.
 		*/
-		static T get(const std::vector<std::string> & values, uint n);
+		static T get(const std::vector<std::string> & values, uint32_t n);
 
 		/** Convert an element to its string representation.
 		\param value the element to convert
@@ -90,7 +90,7 @@ namespace sibr
 		* \param key the argument keyword
 		* \param default_val the default value to use if not present
 		* */
-		template<typename T, uint N = 0>
+		template<typename T, uint32_t N = 0>
 		T get(const std::string & key, const T & default_val) const {
 			T out;
 			if (getInternal<T,N>(key, out)) {
@@ -104,7 +104,7 @@ namespace sibr
 		* If not available (key not found or not enough token), an error is raised.
 		* \param key the argument keyword
 		* */
-		template<typename T, uint N = 0>
+		template<typename T, uint32_t N = 0>
 		T getRequired(const std::string & key) const {
 			T out;
 			if (!getInternal(key, out)) {
@@ -152,7 +152,7 @@ namespace sibr
 		/** Get the Nth parsed element following -key or --key as a T
 		* If not available (key not found or not enough token), an error is raised.
 		* */
-		template<typename T, uint N = 0>
+		template<typename T, uint32_t N = 0>
 		bool getInternal(const std::string & key, T & val) const {
 			if (contains(key) && (N + 1)*NumberOfArg<T> <= args.at(key).size()) {
 				val = ValueGetter<T>::get(args.at(key), N);
@@ -411,7 +411,7 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<>
 	struct ValueGetter<std::string> {
-		static std::string get(const std::vector<std::string> & values, uint n) {
+		static std::string get(const std::vector<std::string> & values, uint32_t n) {
 			return values[n];
 		}
 		static std::string toString(const std::string & value) {
@@ -423,7 +423,7 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<>
 	struct ValueGetter<bool> {
-		static bool get(const std::vector<std::string> & values, uint n) {
+		static bool get(const std::vector<std::string> & values, uint32_t n) {
 			return true;
 		}
 		static std::string toString(const bool & value) {
@@ -435,7 +435,7 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<>
 	struct ValueGetter<double> {
-		static double get(const std::vector<std::string> & values, uint n) {
+		static double get(const std::vector<std::string> & values, uint32_t n) {
 			return std::stod(values[n]);
 		}
 		static std::string toString(const double & value) {
@@ -447,7 +447,7 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<>
 	struct ValueGetter<float> {
-		static float get(const std::vector<std::string> & values, uint n) {
+		static float get(const std::vector<std::string> & values, uint32_t n) {
 			return std::stof(values[n]);
 		}
 		static std::string toString(const float & value) {
@@ -459,7 +459,7 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<>
 	struct ValueGetter<int> {
-		static int get(const std::vector<std::string> & values, uint n) {
+		static int get(const std::vector<std::string> & values, uint32_t n) {
 			return std::stoi(values[n]);
 		}
 		static std::string toString(const int & value) {
@@ -471,7 +471,7 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<>
 	struct ValueGetter<char> {
-		static char get(const std::vector<std::string> & values, uint n) {
+		static char get(const std::vector<std::string> & values, uint32_t n) {
 			return static_cast<char>(std::stoi(values[n]));
 		}
 		static std::string toString(const char & value) {
@@ -482,29 +482,29 @@ namespace sibr
 	/// Specialization of value getter for unsigned integers.
 	/// \ingroup sibr_system
 	template<>
-	struct ValueGetter<uint> {
-		static uint get(const std::vector<std::string> & values, uint n) {
-			return static_cast<uint>(std::stoi(values[n]));
+	struct ValueGetter<uint32_t> {
+		static uint32_t get(const std::vector<std::string> & values, uint32_t n) {
+			return static_cast<uint32_t>(std::stoi(values[n]));
 		}
-		static std::string toString(const uint & value) {
+		static std::string toString(const uint32_t & value) {
 			return std::to_string(value);
 		}
 	};
 
 	/// Specialization of value getter for arrays.
 	/// \ingroup sibr_system
-	template<typename T, uint N>
+	template<typename T, uint32_t N>
 	struct ValueGetter<std::array<T, N>> {
-		static std::array<T, N> get(const std::vector<std::string> & values, uint n) {
+		static std::array<T, N> get(const std::vector<std::string> & values, uint32_t n) {
 			std::array<T, N> out;
-			for (uint i = 0; i < N; ++i) {
+			for (uint32_t i = 0; i < N; ++i) {
 				out[i] = ValueGetter<T>::get(values, n*N*NumberOfArg<T> + i);
 			}
 			return out;
 		}
 		static std::string toString(const std::array<T, N> & value) {
 			std::string res = "(";
-			for (uint i = 0; i < N; ++i) {
+			for (uint32_t i = 0; i < N; ++i) {
 				res.append(ValueGetter<T>::toString(value[i]));
 				if (i != N - 1) {
 					res.append(",");
@@ -518,16 +518,16 @@ namespace sibr
 	/// \ingroup sibr_system
 	template<typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
 	struct ValueGetter<Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>> {
-		static Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> get(const std::vector<std::string> & values, uint n) {
+		static Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> get(const std::vector<std::string> & values, uint32_t n) {
 			Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> out;
-			for (uint i = 0; i < _Rows*_Cols; ++i) {
+			for (uint32_t i = 0; i < _Rows*_Cols; ++i) {
 				out[i] = ValueGetter<_Scalar>::get(values, n*_Rows*_Cols*NumberOfArg<_Scalar> + i);
 			}
 			return out;
 		}
 		static std::string toString(const Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> & value) {
 			std::string res = "(";
-			for (uint i = 0; i < _Rows*_Cols; ++i) {
+			for (uint32_t i = 0; i < _Rows*_Cols; ++i) {
 				res.append(ValueGetter<_Scalar>::toString(value[i]));
 				if(i != _Rows*_Cols-1) {
 					res.append(",");

@@ -27,7 +27,7 @@ namespace sibr {
 		_paramMVP.init(_shader,"MVP");
 	}
 
-	void	TexturedMeshRenderer::process(const Mesh& mesh, const Camera& eye, uint textureID, IRenderTarget& dst, bool backfaceCull)
+	void	TexturedMeshRenderer::process(const Mesh& mesh, const Camera& eye, uint32_t textureID, IRenderTarget& dst, bool backfaceCull)
 	{
 		dst.bind();
 		_shader.begin();
@@ -39,7 +39,7 @@ namespace sibr {
 
 	}
 
-	void	TexturedMeshRenderer::process(const Mesh& mesh, const Camera& eye, const sibr::Matrix4f& model, uint textureID, IRenderTarget& dst, bool backfaceCull)
+	void	TexturedMeshRenderer::process(const Mesh& mesh, const Camera& eye, const sibr::Matrix4f& model, uint32_t textureID, IRenderTarget& dst, bool backfaceCull)
 	{
 		dst.bind();
 		_shader.begin();

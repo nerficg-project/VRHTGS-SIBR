@@ -38,7 +38,7 @@ namespace sibr
 		\param py pixel source pixel y coordinate
 		\param hit the (potential) hit information
 		*/
-		virtual void	onCast( uint px, uint py, const RayHit& hit ) = 0;
+		virtual void	onCast( uint32_t px, uint32_t py, const RayHit& hit ) = 0;
 
 	};
 
@@ -66,7 +66,7 @@ namespace sibr
 		\param nbProcessors the number of processors in the list
 		\param optLogMessage log message
 		*/
-		void	castForEachPixel( const sibr::InputCamera& cam, ICameraRaycasterProcessor* processors[], uint nbProcessors,
+		void	castForEachPixel( const sibr::InputCamera& cam, ICameraRaycasterProcessor* processors[], uint32_t nbProcessors,
 									const std::string& optLogMessage="Executing camera raycasting");
 
 		/** This function returns the step (in both x- and y-coordinates) between each pixel in the world

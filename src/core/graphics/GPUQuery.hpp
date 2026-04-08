@@ -29,7 +29,7 @@ namespace sibr {
 	 *		mesh.draw();
 	 *		query.end();
 	 * In your GUI loop:
-	 *		const uint64 time = query.value();
+	 *		const uint64_t time = query.value();
 	 *		//... display it.
 	 *	
 	 * \warning Because the query is using buffering to avoid stalling when querying the value, 
@@ -63,7 +63,7 @@ namespace sibr {
 		This allows for buffering from one frame to the next and avoid stalls (except if count is set to 1).
 		\return the query value.
 		*/
-		uint64 value();
+		uint64_t value();
 
 	private:
 		

@@ -235,7 +235,7 @@ namespace sibr
         ImGui::End();
     }
 
-    SwapchainImageRenderTarget::Ptr OpenXRRdrMode::getRenderTarget(uint32_t texture, uint w, uint h)
+    SwapchainImageRenderTarget::Ptr OpenXRRdrMode::getRenderTarget(uint32_t texture, uint32_t w, uint32_t h)
     {
         auto i = m_RTPool.find(texture);
         if (i != m_RTPool.end())

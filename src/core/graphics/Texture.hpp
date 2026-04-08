@@ -41,10 +41,10 @@ namespace sibr
 		virtual GLuint handle(void) const = 0;
 
 		/** \return the texture width. */
-		virtual uint   w(void) const = 0;
+		virtual uint32_t   w(void) const = 0;
 
 		/** \return the texture height. */
-		virtual uint   h(void) const = 0;
+		virtual uint32_t   h(void) const = 0;
 	};
 
 	/** Represent a 2D texture on the GPU, with custom format and type.
@@ -69,13 +69,13 @@ namespace sibr
 		\param img the image to upload to the GPU
 		\param flags options
 		*/
-		template<typename ImageType> Texture2D(const ImageType& img, uint flags = 0);
+		template<typename ImageType> Texture2D(const ImageType& img, uint32_t flags = 0);
 
 		/** Constructor from a list of images, one for each mip level.
 		\param miparray the images to upload to the GPU
 		\param flags options
 		*/
-		Texture2D(const std::vector<PixelImage>& miparray, uint flags = 0);
+		Texture2D(const std::vector<PixelImage>& miparray, uint32_t flags = 0);
 
 		/// Destructor.
 		~Texture2D(void);
@@ -84,10 +84,10 @@ namespace sibr
 		GLuint handle(void) const;
 
 		/** \return the texture width. */
-		uint   w(void) const;
+		uint32_t   w(void) const;
 
 		/** \return the texture height. */
-		uint   h(void) const;
+		uint32_t   h(void) const;
 
 		/** \return a CPU image containing the texture content.
 			\warning Can cause a GPU flush/sync.
@@ -106,9 +106,9 @@ namespace sibr
 
 	private:
 		GLuint  m_Handle = 0; ///< Texture handle.
-		uint    m_W = 0; ///< Texture width.
-		uint    m_H = 0; ///< Texture height.
-		uint    m_Flags = 0; ///< Options.
+		uint32_t    m_W = 0; ///< Texture width.
+		uint32_t    m_H = 0; ///< Texture height.
+		uint32_t    m_Flags = 0; ///< Options.
 		bool	m_autoMIPMAP = false; ///< Should the mipmaps be generated automatically.
 
 		/** Create 2D texture from a generic image (sibr::image or cv::Mat).
@@ -116,28 +116,28 @@ namespace sibr
 		\param flags options
 		\return the handle of the texture
 		*/
-		template<typename ImageType> static GLuint create2D(const ImageType& array, uint flags);
+		template<typename ImageType> static GLuint create2D(const ImageType& array, uint32_t flags);
 
 		/** Create 2D texture with custom mipmaps from a list of generic images (sibr::image or cv::Mat).
 		\param miparray the images
 		\param flags options
 		\return the handle of the texture
 		*/
-		static GLuint create2D(const std::vector<PixelImage>& miparray, uint flags);
+		static GLuint create2D(const std::vector<PixelImage>& miparray, uint32_t flags);
 
 		/** Send the CPU image data to the GPU.
 		\param id the created texture
 		\param array the image data
 		\param flags options
 		*/
-		template<typename ImageType> static void send2D(GLuint id, const ImageType& array, uint flags);
+		template<typename ImageType> static void send2D(GLuint id, const ImageType& array, uint32_t flags);
 
 		/** Send the CPU images data for each mipmap to the GPU.
 		\param id the created texture
 		\param miparray the image data
 		\param flags options
 		*/
-		static void send2Dmipmap(GLuint id, const std::vector<PixelImage>& miparray, uint flags);
+		static void send2Dmipmap(GLuint id, const std::vector<PixelImage>& miparray, uint32_t flags);
 
 	};
 
@@ -156,19 +156,19 @@ namespace sibr
 		virtual ~ITexture2DArray(void) { }
 
 		/** \return the texture handle. */
-		virtual GLuint	handle(void) const = 0;
+		virtual GLuint		handle(void) const = 0;
 
 		/** \return the texture width. */
-		virtual uint	w(void) const = 0;
+		virtual uint32_t	w(void) const = 0;
 
 		/** \return the texture height. */
-		virtual uint	h(void) const = 0;
+		virtual uint32_t	h(void) const = 0;
 
 		/** \return the texture layer count. */
-		virtual uint	depth(void) const = 0;
+		virtual uint32_t	depth(void) const = 0;
 
 		/** \return the number of mipmap levels. */
-		virtual uint	numLODs(void) const = 0;
+		virtual uint32_t	numLODs(void) const = 0;
 
 		/** Read back the value of a given pixel to the CPU.
 		\param i layer
@@ -178,7 +178,7 @@ namespace sibr
 		\return a converted RGBA float color
 		\warning Use only for debugging, can cause a GPU flush/sync.
 		*/
-		virtual Vector4f	readBackPixel(int i, int x, int y, uint lod = 0) const = 0;
+		virtual Vector4f	readBackPixel(int i, int x, int y, uint32_t lod = 0) const = 0;
 	};
 
 	/**
@@ -202,7 +202,7 @@ namespace sibr
 		\param d number of layers
 		\param flags options
 		*/
-		Texture2DArray(const uint d = 0, uint flags = 0);
+		Texture2DArray(const uint32_t d = 0, uint32_t flags = 0);
 
 		/** Constructor.
 		\param w width
@@ -210,14 +210,14 @@ namespace sibr
 		\param d number of layers
 		\param flags options
 		*/
-		Texture2DArray(const uint w, const uint h, const uint d, uint flags = 0);
+		Texture2DArray(const uint32_t w, const uint32_t h, const uint32_t d, uint32_t flags = 0);
 
 		/** Constructor from a set of rendertargets.
 		\param images list of rendertargets, one for each layer
 		\param flags options
 		\warning RTs should be of the same size.
 		*/
-		Texture2DArray(const std::vector<typename PixelRT::Ptr>& images, uint flags = 0);
+		Texture2DArray(const std::vector<typename PixelRT::Ptr>& images, uint32_t flags = 0);
 
 		/** Constructor from a set of CPU images.
 		\param images list of images, one for each layer
@@ -225,7 +225,7 @@ namespace sibr
 		\note All images will be resized to the dimensions of the largest one.
 		*/
 		template<typename ImageType>
-		Texture2DArray(const std::vector<ImageType>& images, uint flags = 0);
+		Texture2DArray(const std::vector<ImageType>& images, uint32_t flags = 0);
 
 		/** Constructor from a set of CPU images that will be resized to a fix size.
 		\param images list of images, one for each layer
@@ -234,7 +234,7 @@ namespace sibr
 		\param flags options
 		*/
 		template<typename ImageType>
-		Texture2DArray(const std::vector<ImageType>& images, uint w, uint h, uint flags = 0);
+		Texture2DArray(const std::vector<ImageType>& images, uint32_t w, uint32_t h, uint32_t flags = 0);
 
 		/** Constructor from a set of CPU images, with custom mipmaps.
 		\param images list of lists of images, one for each mip level, each containing an image for each layer
@@ -242,7 +242,7 @@ namespace sibr
 		\note All images will be resized to the dimensions of the largest one.
 		*/
 		template<typename ImageType>
-		Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint flags = 0);
+		Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint32_t flags = 0);
 
 		/** Constructor from a set of CPU images, with custom mipmaps.
 		\param images list of lists of images, one for each mip level, each containing an image for each layer
@@ -251,7 +251,7 @@ namespace sibr
 		\param flags options
 		*/
 		template<typename ImageType>
-		Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint w, uint h, uint flags = 0);
+		Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint32_t w, uint32_t h, uint32_t flags = 0);
 
 		/** Create the texture from a set of images and send it to GPU.
 		\param images list of images, one for each layer
@@ -259,7 +259,7 @@ namespace sibr
 		\note All images will be resized to the dimensions of the largest one.
 		*/
 		template<typename ImageType>
-		void createFromImages(const std::vector<ImageType>& images, uint flags = 0);
+		void createFromImages(const std::vector<ImageType>& images, uint32_t flags = 0);
 
 		/** Create the texture from a set of images and send it to GPU. images will be resized to the target size.
 		\param images list of images, one for each layer
@@ -268,7 +268,7 @@ namespace sibr
 		\param flags options
 		*/
 		template<typename ImageType>
-		void createFromImages(const std::vector<ImageType>& images, uint w, uint h, uint flags = 0);
+		void createFromImages(const std::vector<ImageType>& images, uint32_t w, uint32_t h, uint32_t flags = 0);
 
 		/** Create the texture from a set of images and send it to GPU while compressing them.
 		\param images list of images, one for each layer
@@ -277,7 +277,7 @@ namespace sibr
 		\note All images will be resized to the dimensions of the largest one.
 		*/
 		template<typename ImageType>
-		void createCompressedFromImages(const std::vector<ImageType>& images, uint compression, uint flags = 0);
+		void createCompressedFromImages(const std::vector<ImageType>& images, uint32_t compression, uint32_t flags = 0);
 
 		/** Create the texture from a set of images and send it to GPU while compressing them. images will be resized to the target size.
 		\param images list of images, one for each layer
@@ -287,7 +287,7 @@ namespace sibr
 		\param flags options
 		*/
 		template<typename ImageType>
-		void createCompressedFromImages(const std::vector<ImageType>& images, uint w, uint h, uint compression, uint flags = 0);
+		void createCompressedFromImages(const std::vector<ImageType>& images, uint32_t w, uint32_t h, uint32_t compression, uint32_t flags = 0);
 
 		/** Create the texture from a set of images with custom mipmaps and send it to GPU.
 		\param images list of lists of images, one for each mip level, each containing an image for each layer
@@ -295,7 +295,7 @@ namespace sibr
 		\note All images will be resized to the dimensions of the largest one.
 		*/
 		template<typename ImageType>
-		void createFromImages(const std::vector<std::vector<ImageType>>& images, uint flags = 0);
+		void createFromImages(const std::vector<std::vector<ImageType>>& images, uint32_t flags = 0);
 
 		/** Create the texture from a set of images with custom mipmaps and send it to GPU.
 		\param images list of lists of images, one for each mip level, each containing an image for each layer
@@ -304,7 +304,7 @@ namespace sibr
 		\param flags options
 		*/
 		template<typename ImageType>
-		void createFromImages(const std::vector<std::vector<ImageType>>& images, uint w, uint h, uint flags = 0);
+		void createFromImages(const std::vector<std::vector<ImageType>>& images, uint32_t w, uint32_t h, uint32_t flags = 0);
 
 		/** Update the content of all layers of the texture.
 		\param images the new content to use
@@ -318,7 +318,7 @@ namespace sibr
 		\param flags options
 		\warning RTs should be of the same size.
 		*/
-		void createFromRTs(const std::vector<typename PixelRT::Ptr>& RTs, uint flags = 0);
+		void createFromRTs(const std::vector<typename PixelRT::Ptr>& RTs, uint32_t flags = 0);
 
 		/** Update the content of specific layers of the texture.
 		\param images the new content to use
@@ -332,19 +332,19 @@ namespace sibr
 		~Texture2DArray(void);
 
 		/** \return the texture handle. */
-		GLuint	handle(void) const;
+		GLuint		handle(void) const;
 
 		/** \return the texture width. */
-		uint	w(void) const;
+		uint32_t	w(void) const;
 
 		/** \return the texture height. */
-		uint	h(void) const;
+		uint32_t	h(void) const;
 
 		/** \return the texture layer count. */
-		uint	depth(void) const;
+		uint32_t	depth(void) const;
 
 		/** \return the number of mipmap levels. */
-		uint	numLODs(void) const;
+		uint32_t	numLODs(void) const;
 
 		/** Read back the value of a given pixel to the CPU.
 		\param i layer
@@ -354,12 +354,12 @@ namespace sibr
 		\return a converted RGBA float color
 		\warning Use only for debugging, can cause a GPU flush/sync.
 		*/
-		Vector4f	readBackPixel(int i, int x, int y, uint lod = 0) const;
+		Vector4f	readBackPixel(int i, int x, int y, uint32_t lod = 0) const;
 
 	private:
 
 		/** Create the texture array. */
-		void createArray(uint compression = 0);
+		void createArray(uint32_t compression = 0);
 
 		/** Upload the images data to the GPU.
 		\param images the data to upload
@@ -389,7 +389,7 @@ namespace sibr
 		template<typename ImageType>
 		std::vector<const ImageType*> applyFlipAndResize(
 			const std::vector<ImageType>& images,
-			std::vector<ImageType>& tmp, uint tw, uint th,
+			std::vector<ImageType>& tmp, uint32_t tw, uint32_t th,
 			const std::vector<int>& slices
 		);
 
@@ -403,15 +403,15 @@ namespace sibr
 		template<typename ImageType>
 		std::vector<const ImageType*> applyFlipAndResize(
 			const std::vector<ImageType>& images,
-			std::vector<ImageType>& tmp, uint tw, uint th
+			std::vector<ImageType>& tmp, uint32_t tw, uint32_t th
 		);
 
-		GLuint  m_Handle = 0; ///< Texture handle.
-		uint    m_W = 0; ///< Texture width.
-		uint    m_H = 0; ///< Texture height.
-		uint    m_Flags = 0; ///< Options.
-		uint	m_Depth = 0; ///< Layers count.
-		uint	m_numLODs = 1; ///< Mipmap level count.
+		GLuint  	m_Handle = 0; ///< Texture handle.
+		uint32_t	m_W = 0; ///< Texture width.
+		uint32_t	m_H = 0; ///< Texture height.
+		uint32_t	m_Flags = 0; ///< Options.
+		uint32_t	m_Depth = 0; ///< Layers count.
+		uint32_t	m_numLODs = 1; ///< Mipmap level count.
 	};
 
 
@@ -429,13 +429,13 @@ namespace sibr
 		virtual ~ITextureCubeMap(void) { }
 
 		/** \return the texture handle. */
-		virtual GLuint	handle(void) const = 0;
+		virtual GLuint		handle(void) const = 0;
 
 		/** \return the texture width. */
-		virtual uint	w(void) const = 0;
+		virtual uint32_t	w(void) const = 0;
 
 		/** \return the texture height. */
-		virtual uint	h(void) const = 0;
+		virtual uint32_t	h(void) const = 0;
 	};
 
 	/**
@@ -464,7 +464,7 @@ namespace sibr
 		\param h height
 		\param flags options
 		*/
-		TextureCubeMap(const uint w, const uint h, uint flags = 0);
+		TextureCubeMap(const uint32_t w, const uint32_t h, uint32_t flags = 0);
 
 		/** Create a cubemap from 6 images.
 		\param xpos positive X face
@@ -477,7 +477,7 @@ namespace sibr
 		*/
 		TextureCubeMap(const PixelImage& xpos, const PixelImage& xneg,
 			const PixelImage& ypos, const PixelImage& yneg,
-			const PixelImage& zpos, const PixelImage& zneg, uint flags = 0);
+			const PixelImage& zpos, const PixelImage& zneg, uint32_t flags = 0);
 
 		/** Create the texture from 6 images.
 		\param xpos positive X face
@@ -490,7 +490,7 @@ namespace sibr
 		*/
 		void createFromImages(const PixelImage& xpos, const PixelImage& xneg,
 			const PixelImage& ypos, const PixelImage& yneg,
-			const PixelImage& zpos, const PixelImage& zneg, uint flags = 0);
+			const PixelImage& zpos, const PixelImage& zneg, uint32_t flags = 0);
 
 		/// Destructor.
 		~TextureCubeMap(void);
@@ -499,10 +499,10 @@ namespace sibr
 		GLuint	handle(void) const;
 
 		/** \return the texture width. */
-		uint	w(void) const;
+		uint32_t	w(void) const;
 
 		/** \return the texture height. */
-		uint	h(void) const;
+		uint32_t	h(void) const;
 
 	private:
 
@@ -521,10 +521,10 @@ namespace sibr
 			const PixelImage& ypos, const PixelImage& yneg,
 			const PixelImage& zpos, const PixelImage& zneg);
 
-		GLuint  m_Handle = 0; ///< Texture handle.
-		uint    m_W = 0; ///< Texture width.
-		uint    m_H = 0; ///< Texture height.
-		uint    m_Flags = 0; ///< Options.
+		GLuint   m_Handle = 0; ///< Texture handle.
+		uint32_t m_W = 0; ///< Texture width.
+		uint32_t m_H = 0; ///< Texture height.
+		uint32_t m_Flags = 0; ///< Options.
 
 	};
 
@@ -687,7 +687,7 @@ namespace sibr
 	// ----DEFINITIONS Texture2D --------------------------------------------------
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	GLuint Texture2D<T_Type, T_NumComp>::create2D(const ImageType& img, uint flags) {
+	GLuint Texture2D<T_Type, T_NumComp>::create2D(const ImageType& img, uint32_t flags) {
 		GLuint id = 0;
 		CHECK_GL_ERROR;
 		glGenTextures(1, &id);
@@ -728,7 +728,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	/*static*/ GLuint Texture2D<T_Type, T_NumComp>::create2D(const std::vector<PixelImage>& miparray, uint flags) {
+	/*static*/ GLuint Texture2D<T_Type, T_NumComp>::create2D(const std::vector<PixelImage>& miparray, uint32_t flags) {
 		GLuint id = 0;
 		CHECK_GL_ERROR;
 		glGenTextures(1, &id);
@@ -750,7 +750,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2D<T_Type, T_NumComp>::send2D(GLuint id, const ImageType& img, uint flags) {
+	void Texture2D<T_Type, T_NumComp>::send2D(GLuint id, const ImageType& img, uint32_t flags) {
 		using FormatInfos = GLTexFormat<ImageType, T_Type, T_NumComp>;
 
 		if (flags & SIBR_GPU_INTEGER) {
@@ -787,7 +787,7 @@ namespace sibr
 
 	// Send 2D texture to GPU memory, each mipmap is specified
 	template<typename T_Type, unsigned int T_NumComp>
-	/*static*/ void Texture2D<T_Type, T_NumComp>::send2Dmipmap(GLuint id, const std::vector<PixelImage>& miparray, uint flags) {
+	/*static*/ void Texture2D<T_Type, T_NumComp>::send2Dmipmap(GLuint id, const std::vector<PixelImage>& miparray, uint32_t flags) {
 		CHECK_GL_ERROR;
 		if (flags & SIBR_GPU_INTEGER) {
 			throw std::runtime_error("Mipmapping on integer texture not supported, probably not even by OpenGL");
@@ -801,14 +801,14 @@ namespace sibr
 		if (flip) {
 			flippedMipArray.resize(miparray.size());
 #pragma omp parallel for
-			for (uint l = 0; l < miparray.size(); l++) {
+			for (uint32_t l = 0; l < miparray.size(); l++) {
 				flippedMipArray[l] = miparray[l].clone();
 				flippedMipArray[l].flipH();
 			}
 		}
 		const std::vector<PixelImage>& sendedMipArray = flip ? flippedMipArray : miparray;
 
-		for (uint l = 0; l < miparray.size(); l++) {
+		for (uint32_t l = 0; l < miparray.size(); l++) {
 			glTexImage2D(GL_TEXTURE_2D,
 				l,
 				GLFormat<typename PixelFormat::Type, PixelFormat::NumComp>::internal_format,
@@ -832,7 +832,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	Texture2D<T_Type, T_NumComp>::Texture2D(const ImageType& img, uint flags) {
+	Texture2D<T_Type, T_NumComp>::Texture2D(const ImageType& img, uint32_t flags) {
 		using TexFormat = GLTexFormat<ImageType, T_Type, T_NumComp>;
 		m_Flags = flags;
 		m_W = TexFormat::width(img);
@@ -842,7 +842,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Texture2D<T_Type, T_NumComp>::Texture2D(const std::vector<PixelImage>& miparray, uint flags) {
+	Texture2D<T_Type, T_NumComp>::Texture2D(const std::vector<PixelImage>& miparray, uint32_t flags) {
 		m_Flags = flags;
 		m_W = miparray[0].w();
 		m_H = miparray[0].h();
@@ -860,9 +860,9 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp>
 	GLuint Texture2D<T_Type, T_NumComp>::handle(void) const { return m_Handle; }
 	template<typename T_Type, unsigned int T_NumComp>
-	uint   Texture2D<T_Type, T_NumComp>::w(void) const { return m_W; }
+	uint32_t   Texture2D<T_Type, T_NumComp>::w(void) const { return m_W; }
 	template<typename T_Type, unsigned int T_NumComp>
-	uint   Texture2D<T_Type, T_NumComp>::h(void) const { return m_H; }
+	uint32_t   Texture2D<T_Type, T_NumComp>::h(void) const { return m_H; }
 
 
 	template<typename T_Type, unsigned int T_NumComp>
@@ -940,13 +940,13 @@ namespace sibr
 	// ----DEFINITIONS Texture2DArray --------------------------------------------------
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const uint d, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const uint32_t d, uint32_t flags) {
 		m_Depth = d;
 		m_Flags = flags;
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const uint w, const uint h, const uint d, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const uint32_t w, const uint32_t h, const uint32_t d, uint32_t flags) {
 		m_W = w;
 		m_H = h;
 		m_Depth = d;
@@ -955,37 +955,37 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<ImageType>& images, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<ImageType>& images, uint32_t flags) {
 		m_Flags = flags;
 		createFromImages(images, flags);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<ImageType>& images, uint w, uint h, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<ImageType>& images, uint32_t w, uint32_t h, uint32_t flags) {
 		m_Flags = flags;
 		createFromImages(images, w, h, flags);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint32_t flags) {
 		m_Flags = flags;
 		createFromImages(images, flags);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint w, uint h, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<std::vector<ImageType>>& images, uint32_t w, uint32_t h, uint32_t flags) {
 		m_Flags = flags;
 		createFromImages(images, w, h, flags);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<typename PixelRT::Ptr>& RTs, uint flags) {
+	Texture2DArray<T_Type, T_NumComp>::Texture2DArray(const std::vector<typename PixelRT::Ptr>& RTs, uint32_t flags) {
 		m_Flags = flags;
 		createFromRTs(RTs, flags);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	void Texture2DArray<T_Type, T_NumComp>::createArray(uint compression) {
+	void Texture2DArray<T_Type, T_NumComp>::createArray(uint32_t compression) {
 		CHECK_GL_ERROR;
 		glGenTextures(1, &m_Handle);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, m_Handle);
@@ -1020,7 +1020,7 @@ namespace sibr
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		uint internal_format = GLFormat<T_Type, T_NumComp>::internal_format;
+		uint32_t internal_format = GLFormat<T_Type, T_NumComp>::internal_format;
 		if (compression)
 			internal_format = compression;
 
@@ -1080,8 +1080,8 @@ namespace sibr
 			assert(m_Depth == images[lid].size());
 
 			// Make sure all images have the same size.
-			const uint dW = m_W / (1 << lid);
-			const uint dH = m_H / (1 << lid);
+			const uint32_t dW = m_W / (1 << lid);
+			const uint32_t dH = m_H / (1 << lid);
 			std::vector<ImageType> tmp;
 			std::vector<const ImageType*> imagesPtrToSend = applyFlipAndResize(images[lid], tmp, dW, dH);
 
@@ -1106,7 +1106,7 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
 	std::vector<const ImageType*> Texture2DArray<T_Type, T_NumComp>::applyFlipAndResize(
 		const std::vector<ImageType>& images,
-		std::vector<ImageType>& tmp, uint tw, uint th,
+		std::vector<ImageType>& tmp, uint32_t tw, uint32_t th,
 		const std::vector<int>& slices)
 	{
 		using ImgTypeInfo = GLTexFormat<ImageType, T_Type, T_NumComp>;
@@ -1141,7 +1141,7 @@ namespace sibr
 	template<typename ImageType>
 	std::vector<const ImageType*> Texture2DArray<T_Type, T_NumComp>::applyFlipAndResize(
 		const std::vector<ImageType>& images,
-		std::vector<ImageType>& tmp, uint tw, uint th
+		std::vector<ImageType>& tmp, uint32_t tw, uint32_t th
 	) {
 		std::vector<int> slices(m_Depth);
 		for (int i = 0; i < (int)m_Depth; ++i) {
@@ -1173,7 +1173,7 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<ImageType>& images, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<ImageType>& images, uint32_t flags) {
 		using ImgTypeInfo = GLTexFormat<ImageType, T_Type, T_NumComp>;
 
 		sibr::Vector2u maxSize(0, 0);
@@ -1184,17 +1184,17 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<ImageType>& images, uint w, uint h, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<ImageType>& images, uint32_t w, uint32_t h, uint32_t flags) {
 		m_W = w;
 		m_H = h;
-		m_Depth = (uint)images.size();
+		m_Depth = static_cast<uint32_t>(images.size());
 		m_Flags = flags;
 		createArray();
 		sendArray(images);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2DArray<T_Type, T_NumComp>::createCompressedFromImages(const std::vector<ImageType>& images, uint compression, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createCompressedFromImages(const std::vector<ImageType>& images, uint32_t compression, uint32_t flags) {
 		using ImgTypeInfo = GLTexFormat<ImageType, T_Type, T_NumComp>;
 
 		sibr::Vector2u maxSize(0, 0);
@@ -1205,17 +1205,17 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2DArray<T_Type, T_NumComp>::createCompressedFromImages(const std::vector<ImageType>& images, uint w, uint h, uint compression, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createCompressedFromImages(const std::vector<ImageType>& images, uint32_t w, uint32_t h, uint32_t compression, uint32_t flags) {
 		m_W = w;
 		m_H = h;
-		m_Depth = (uint)images.size();
+		m_Depth = static_cast<uint32_t>(images.size());
 		m_Flags = flags;
 		createArray(compression);
 		sendArray(images);
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<std::vector<ImageType>>& images, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<std::vector<ImageType>>& images, uint32_t flags) {
 		using ImgTypeInfo = GLTexFormat<ImageType, T_Type, T_NumComp>;
 
 		sibr::Vector2u maxSize(0, 0);
@@ -1226,12 +1226,12 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp> template<typename ImageType>
-	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<std::vector<ImageType>>& images, uint w, uint h, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createFromImages(const std::vector<std::vector<ImageType>>& images, uint32_t w, uint32_t h, uint32_t flags) {
 		m_W = w;
 		m_H = h;
-		m_Depth = uint(images[0].size());
+		m_Depth = static_cast<uint32_t>(images[0].size());
 		m_Flags = flags & ~SIBR_GPU_AUTOGEN_MIPMAP;
-		m_numLODs = uint(images.size());
+		m_numLODs = static_cast<uint32_t>(images.size());
 		createArray();
 
 		sendMipArray(images);
@@ -1296,14 +1296,14 @@ namespace sibr
 	}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	void Texture2DArray<T_Type, T_NumComp>::createFromRTs(const std::vector<typename PixelRT::Ptr>& RTs, uint flags) {
+	void Texture2DArray<T_Type, T_NumComp>::createFromRTs(const std::vector<typename PixelRT::Ptr>& RTs, uint32_t flags) {
 		m_W = 0;
 		m_H = 0;
 		for (const auto& RT : RTs) {
 			m_W = (std::max)(m_W, RT->w());
 			m_H = (std::max)(m_H, RT->h());
 		}
-		m_Depth = (uint)RTs.size();
+		m_Depth = static_cast<uint32_t>(RTs.size());
 		m_Flags = flags;
 		createArray();
 		sendRTarray(RTs);
@@ -1320,19 +1320,19 @@ namespace sibr
 	GLuint Texture2DArray<T_Type, T_NumComp>::handle(void) const { return m_Handle; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint Texture2DArray<T_Type, T_NumComp>::w(void) const { return m_W; }
+	uint32_t Texture2DArray<T_Type, T_NumComp>::w(void) const { return m_W; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint Texture2DArray<T_Type, T_NumComp>::h(void) const { return m_H; }
+	uint32_t Texture2DArray<T_Type, T_NumComp>::h(void) const { return m_H; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint Texture2DArray<T_Type, T_NumComp>::depth(void) const { return m_Depth; }
+	uint32_t Texture2DArray<T_Type, T_NumComp>::depth(void) const { return m_Depth; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint Texture2DArray<T_Type, T_NumComp>::numLODs(void) const { return m_numLODs; }
+	uint32_t Texture2DArray<T_Type, T_NumComp>::numLODs(void) const { return m_numLODs; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	Vector4f	Texture2DArray<T_Type, T_NumComp>::readBackPixel(int i, int x, int y, uint lod) const {
+	Vector4f	Texture2DArray<T_Type, T_NumComp>::readBackPixel(int i, int x, int y, uint32_t lod) const {
 		Vector4f out;
 //#define HEADLESS
 #ifdef HEADLESS
@@ -1344,7 +1344,7 @@ namespace sibr
 		);
 #endif
 		CHECK_GL_ERROR;
-		for (uint c = T_NumComp; c < 4; ++c) {
+		for (uint32_t c = T_NumComp; c < 4; ++c) {
 			out[c] = 0;
 		}
 		return out;
@@ -1357,7 +1357,7 @@ namespace sibr
 	TextureCubeMap<T_Type, T_NumComp>::TextureCubeMap(void) {}
 
 	template<typename T_Type, unsigned int T_NumComp>
-	TextureCubeMap<T_Type, T_NumComp>::TextureCubeMap(const uint w, const uint h, uint flags) {
+	TextureCubeMap<T_Type, T_NumComp>::TextureCubeMap(const uint32_t w, const uint32_t h, uint32_t flags) {
 		m_W = w;
 		m_H = h;
 		m_Flags = flags;
@@ -1367,7 +1367,7 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp>
 	TextureCubeMap<T_Type, T_NumComp>::TextureCubeMap(const PixelImage& xpos, const PixelImage& xneg,
 		const PixelImage& ypos, const PixelImage& yneg,
-		const PixelImage& zpos, const PixelImage& zneg, uint flags) {
+		const PixelImage& zpos, const PixelImage& zneg, uint32_t flags) {
 		m_Flags = flags;
 		createFromImages(xpos, xneg, ypos, yneg, zpos, zneg, flags);
 	}
@@ -1489,7 +1489,7 @@ namespace sibr
 	template<typename T_Type, unsigned int T_NumComp>
 	void TextureCubeMap<T_Type, T_NumComp>::createFromImages(const PixelImage& xpos, const PixelImage& xneg,
 		const PixelImage& ypos, const PixelImage& yneg,
-		const PixelImage& zpos, const PixelImage& zneg, uint flags) {
+		const PixelImage& zpos, const PixelImage& zneg, uint32_t flags) {
 		const int numMipMap = 1;
 		sibr::Vector2u maxSize(0, 0);
 		/// \todo TODO: check if the six images have the same size.
@@ -1512,10 +1512,10 @@ namespace sibr
 	GLuint TextureCubeMap<T_Type, T_NumComp>::handle(void) const { return m_Handle; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint TextureCubeMap<T_Type, T_NumComp>::w(void) const { return m_H; }
+	uint32_t TextureCubeMap<T_Type, T_NumComp>::w(void) const { return m_H; }
 
 	template<typename T_Type, unsigned int T_NumComp>
-	uint TextureCubeMap<T_Type, T_NumComp>::h(void) const { return m_W; }
+	uint32_t TextureCubeMap<T_Type, T_NumComp>::h(void) const { return m_W; }
 
 } // namespace sibr
 
