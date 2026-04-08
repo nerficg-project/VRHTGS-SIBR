@@ -335,7 +335,7 @@ namespace sibr
 					},
 					sibr::Vector3f(rh.hit.Ng_x[r], rh.hit.Ng_y[r], rh.hit.Ng_z[r]),
 					RayHit::Primitive{
-						static_cast<uint32_t>(rh.hit.primID[r]), static_cast<uint32_t>(rh.hit.geomID[r]), static_cast<uint32_t>(rh.hit.instID[r])
+						static_cast<uint32_t>(rh.hit.primID[r]), static_cast<uint32_t>(rh.hit.geomID[r]), static_cast<uint32_t>(rh.hit.instID[0][r])
 					}
 				};
 		}

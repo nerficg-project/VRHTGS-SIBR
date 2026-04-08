@@ -21,7 +21,7 @@ namespace sibr
 	/** Represent an on-screen viewport using normalized coordinates, which can be nested into another viewport.
 	* \ingroup sibr_graphics
 	*/
-	class SIBR_GRAPHICS_EXPORT Viewport
+	class Viewport
 	{
 	public:
 
