@@ -149,7 +149,7 @@ namespace sibr
                                      cam.zfar(camera.zfar());
                                      cam.znear(camera.znear());
                                      cam.fovy(fov.w() - fov.z());
-                                     cam.aspect((fov.y() - fov.x()) / (fov.w() - fov.z()));
+                                     cam.aspect((tan(fov.y()) + tan(abs(fov.x()))) / (tan(fov.w()) + tan(abs(fov.z()))));
                                      cam.boundsOnViewPlane(bounds);
 
                                      // Set eye gaze position and rotation by transforming to camera space
