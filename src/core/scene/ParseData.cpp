@@ -297,6 +297,29 @@ namespace sibr {
 			_meshPath = dataset_path + "/sparse/0/points3d.txt";
 	}
 
+	void ParseData::getParsedColmap3Data(const std::string& dataset_path, const int fovXfovY_flag, const bool capreal_flag) {
+		_basePathName = dataset_path + "/sparse/";
+
+		_camInfos = sibr::InputCamera::loadColmap(_basePathName, 0.2f, 1000.0f, fovXfovY_flag);
+
+		if (_camInfos.empty()) {
+			_camInfos = sibr::InputCamera::loadColmap(_basePathName, 0.2f, 1000.0f, fovXfovY_flag);
+		}
+
+		if (_camInfos.empty()) {
+			SIBR_ERR << "Colmap camera calibration file does not exist at /" + _basePathName + "/sparse/." << std::endl;
+		}
+
+		_imgPath = dataset_path + "/images/";
+
+		populateFromCamInfos();
+
+		_meshPath = dataset_path + "/sparse/points3d.bin";
+
+		if (!std::ifstream(_meshPath).good())
+			_meshPath = dataset_path + "/sparse/points3d.txt";
+    }
+
 	void colmapSave(const std::string& filename, const std::vector<InputCamera::Ptr>& xformPath, float scale) {
 		// save as colmap images.txt file
 		sibr::Matrix3f converter;
@@ -461,6 +484,7 @@ namespace sibr {
 		std::string bundler = myArgs.dataset_path.get() + customPath + "/cameras/bundle.out";
 		std::string colmap = myArgs.dataset_path.get() + "/colmap/stereo/sparse/images.txt";
 		std::string colmap_2 = myArgs.dataset_path.get() + "/sparse/0/images.bin";
+		std::string colmap_3 = myArgs.dataset_path.get() + "/sparse/images.txt";
 		std::string caprealobj = myArgs.dataset_path.get() + "/capreal/mesh.obj";
 		std::string caprealply = myArgs.dataset_path.get() + "/capreal/mesh.ply";
 		std::string nvmscene = myArgs.dataset_path.get() + customPath + "/nvm/scene.nvm";
@@ -547,7 +571,8 @@ namespace sibr {
 			}
 			else if (sibr::fileExists(colmap_2))
 				_datasetType = Type::COLMAP2;
-
+			else if (sibr::fileExists(colmap_3))
+				_datasetType = Type::COLMAP3;
 			else if (sibr::fileExists(chunked))
 			{
 				_datasetType = Type::CHUNKED;
