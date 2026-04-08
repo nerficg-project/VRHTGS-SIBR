@@ -15,6 +15,8 @@
 # include "core/graphics/Config.hpp"
 # include "core/system/Transform3.hpp"
 
+# include <openxr/openxr.h>
+
 
 namespace sibr
 {

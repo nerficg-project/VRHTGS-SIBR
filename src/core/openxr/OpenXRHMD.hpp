@@ -54,6 +54,17 @@ using namespace Eigen;
 
 namespace sibr
 {
+    struct ControllerState {
+        bool confirmState;
+        bool backState;
+        float stickXState;
+        float stickYState;
+
+        bool leftPressed;
+        bool rightPressed;
+        bool upPressed;
+        bool downPressed;
+    };
 
     /**
      *	Class that communicates with the Headed-Mounted display (aka VR headset) through an OpenXR loader.
@@ -94,6 +105,8 @@ namespace sibr
             float measuredFramerate = 0.f;
             std::chrono::time_point<std::chrono::high_resolution_clock> firstFrameTimestamp;
         };
+
+        ControllerState getControllerState() const;
 
         typedef std::function<void(int viewIndex, uint32_t renderTexture)> RenderFunc;
 
@@ -144,6 +157,11 @@ namespace sibr
          * Should be called before each frame loop sequence (waitFrame/submitFrame)
          */
         bool pollEvents();
+
+        /**
+         * @brief Poll the XR runtime for the current controller state
+         */
+        void pollControllers();
 
         /**
          * @brief Callback to be notified when the headset idles the XR session

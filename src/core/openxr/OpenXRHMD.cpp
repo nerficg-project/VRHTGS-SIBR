@@ -320,6 +320,209 @@ namespace sibr
         return Vector2f(centerX, centerY);
     }
 
+    // Controller inputs adapted from OpenXR tutorial https://openxr-tutorial.com/linux/vulkan/4-actions.html
+    static XrActionSet actionSet = XR_NULL_HANDLE;
+    static XrAction confirmAction = XR_NULL_HANDLE;
+    static XrAction backAction = XR_NULL_HANDLE;
+    static XrAction stickXAction = XR_NULL_HANDLE;
+    static XrAction stickYAction = XR_NULL_HANDLE;
+    static XrPath handPaths[2]; // left and right hand paths
+
+    static struct {
+        XrActionStateBoolean confirmState;
+        XrActionStateBoolean backState;
+        XrActionStateFloat stickXState;
+        XrActionStateFloat stickYState;
+        struct {
+            bool was;
+            bool is;
+        } leftPressed, rightPressed, upPressed, downPressed;
+    } controllerStates[2]; // assuming max 2 controllers
+
+    XrPath CreateXrPath(const char *path_string, XrInstance& m_instance) {
+        XrPath xrPath;
+        xrCheck(m_instance, xrStringToPath(m_instance, path_string, &xrPath), "Failed to create XrPath from string.");
+        return xrPath;
+    }
+
+    std::string FromXrPath(XrPath path, XrInstance& m_instance) {
+        uint32_t strl;
+        char text[XR_MAX_PATH_LENGTH];
+        XrResult res;
+        res = xrPathToString(m_instance, path, XR_MAX_PATH_LENGTH, &strl, text);
+        std::string str;
+        if (res == XR_SUCCESS) {
+            str = text;
+        } else {
+            xrCheck(m_instance, res, "Failed to retrieve path.");
+        }
+        return str;
+    }
+
+    void CreateActionSet(XrInstance& m_instance) {
+        XrActionSetCreateInfo actionSetCI{XR_TYPE_ACTION_SET_CREATE_INFO};
+        strncpy(actionSetCI.actionSetName, "basic-inputs", XR_MAX_ACTION_SET_NAME_SIZE);
+        strncpy(actionSetCI.localizedActionSetName, "Basic Input ActionSet", XR_MAX_LOCALIZED_ACTION_SET_NAME_SIZE);
+        actionSetCI.priority = 0;
+
+        xrCheck(m_instance, xrCreateActionSet(m_instance, &actionSetCI, &actionSet), "Failed to create ActionSet.");
+
+        auto CreateAction = [&m_instance](XrAction &xrAction, const char *name, XrActionType xrActionType, std::vector<const char *> subaction_paths = {}) -> void {
+            XrActionCreateInfo actionCI{XR_TYPE_ACTION_CREATE_INFO};
+            actionCI.actionType = xrActionType;
+            std::vector<XrPath> subaction_xrpaths;
+            for (auto p : subaction_paths) {
+                subaction_xrpaths.push_back(CreateXrPath(p, m_instance));
+            }
+            actionCI.countSubactionPaths = (uint32_t)subaction_xrpaths.size();
+            actionCI.subactionPaths = subaction_xrpaths.data();
+            strncpy(actionCI.actionName, name, XR_MAX_ACTION_NAME_SIZE);
+            strncpy(actionCI.localizedActionName, name, XR_MAX_LOCALIZED_ACTION_NAME_SIZE);
+            xrCheck(m_instance, xrCreateAction(actionSet, &actionCI, &xrAction), "Failed to create Action.");
+        };
+
+        // Basic interactions
+        CreateAction(confirmAction, "confirm", XR_ACTION_TYPE_BOOLEAN_INPUT, {"/user/hand/left", "/user/hand/right"});
+        CreateAction(backAction, "back", XR_ACTION_TYPE_BOOLEAN_INPUT, {"/user/hand/left", "/user/hand/right"});
+        CreateAction(stickXAction, "left-right", XR_ACTION_TYPE_FLOAT_INPUT, {"/user/hand/left", "/user/hand/right"});
+        CreateAction(stickYAction, "down-up", XR_ACTION_TYPE_FLOAT_INPUT, {"/user/hand/left", "/user/hand/right"});
+
+        controllerStates[0].backState = {XR_TYPE_ACTION_STATE_BOOLEAN};
+        controllerStates[0].confirmState = {XR_TYPE_ACTION_STATE_BOOLEAN};
+        controllerStates[0].stickXState = {XR_TYPE_ACTION_STATE_FLOAT};
+        controllerStates[0].stickYState = {XR_TYPE_ACTION_STATE_FLOAT};
+        controllerStates[1].backState = {XR_TYPE_ACTION_STATE_BOOLEAN};
+        controllerStates[1].confirmState = {XR_TYPE_ACTION_STATE_BOOLEAN};
+        controllerStates[1].stickXState = {XR_TYPE_ACTION_STATE_FLOAT};
+        controllerStates[1].stickYState = {XR_TYPE_ACTION_STATE_FLOAT};
+
+        // For later convenience we create the XrPaths for the subaction path names.
+        handPaths[0] = CreateXrPath("/user/hand/left", m_instance);
+        handPaths[1] = CreateXrPath("/user/hand/right", m_instance);
+    }
+
+    void SuggestBindings(XrInstance& m_instance) {
+        auto SuggestBindings = [&m_instance](const char *profile_path, std::vector<XrActionSuggestedBinding> bindings) -> bool {
+            // The application can call xrSuggestInteractionProfileBindings once per interaction profile that it supports.
+            XrInteractionProfileSuggestedBinding interactionProfileSuggestedBinding{XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING};
+            interactionProfileSuggestedBinding.interactionProfile = CreateXrPath(profile_path, m_instance);
+            interactionProfileSuggestedBinding.suggestedBindings = bindings.data();
+            interactionProfileSuggestedBinding.countSuggestedBindings = (uint32_t)bindings.size();
+            if (xrSuggestInteractionProfileBindings(m_instance, &interactionProfileSuggestedBinding) == XrResult::XR_SUCCESS)
+                return true;
+
+            std::cerr << "Failed to suggest bindings with " << profile_path << std::endl;
+            return false;
+        };
+
+        // Meta Quest Pro bindings
+        bool any_ok = false;
+        // Each Action here has two paths, one for each SubAction path.
+        any_ok |= SuggestBindings("/interaction_profiles/oculus/touch_controller", {
+            {confirmAction, CreateXrPath("/user/hand/left/input/x/click", m_instance)},
+            {confirmAction, CreateXrPath("/user/hand/right/input/a/click", m_instance)},
+            {backAction, CreateXrPath("/user/hand/left/input/y/click", m_instance)},
+            {backAction, CreateXrPath("/user/hand/right/input/b/click", m_instance)},
+            {stickXAction, CreateXrPath("/user/hand/left/input/thumbstick/x", m_instance)},
+            {stickXAction, CreateXrPath("/user/hand/right/input/thumbstick/x", m_instance)},
+            {stickYAction, CreateXrPath("/user/hand/left/input/thumbstick/y", m_instance)},
+            {stickYAction, CreateXrPath("/user/hand/right/input/thumbstick/y", m_instance)},
+        });
+    }
+
+    void AttachActionSets(XrInstance& m_instance, XrSession& m_session) {
+        // Attach the ActionSet to the session
+        XrSessionActionSetsAttachInfo attachInfo{XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
+        attachInfo.countActionSets = 1;
+        attachInfo.actionSets = &actionSet;
+        xrCheck(m_instance, xrAttachSessionActionSets(m_session, &attachInfo), "Failed to attach ActionSet to session.");
+    }
+
+    void PollActions(XrInstance& m_instance, XrSession& m_session, XrTime predictedDisplayTime) {
+        // Sync action states
+        XrActiveActionSet activeActionSet;
+        activeActionSet.actionSet = actionSet;
+        activeActionSet.subactionPath = XR_NULL_PATH;
+
+        XrActionsSyncInfo syncInfo{XR_TYPE_ACTIONS_SYNC_INFO};
+        syncInfo.countActiveActionSets = 1;
+        syncInfo.activeActionSets = &activeActionSet;
+        xrCheck(m_instance, xrSyncActions(m_session, &syncInfo), "Failed to sync actions.");
+
+        // For each controller (subaction path), get the state of each action
+        for (int i = 0; i < 2; i++) {
+            XrPath subactionPath = handPaths[i];
+
+            // Confirm action
+            XrActionStateGetInfo getInfo{XR_TYPE_ACTION_STATE_GET_INFO};
+            getInfo.action = confirmAction;
+            getInfo.subactionPath = subactionPath;
+            getInfo.next = NULL;
+            xrCheck(m_instance, xrGetActionStateBoolean(m_session, &getInfo, &controllerStates[i].confirmState), "Failed to get confirm action state.");
+
+            // Back action
+            getInfo.action = backAction;
+            xrCheck(m_instance, xrGetActionStateBoolean(m_session, &getInfo, &controllerStates[i].backState), "Failed to get back action state.");
+
+            // Stick X action
+            getInfo.action = stickXAction;
+            xrCheck(m_instance, xrGetActionStateFloat(m_session, &getInfo, &controllerStates[i].stickXState), "Failed to get stick X action state.");
+
+            // Stick Y action
+            getInfo.action = stickYAction;
+            xrCheck(m_instance, xrGetActionStateFloat(m_session, &getInfo, &controllerStates[i].stickYState), "Failed to get stick Y action state.");
+
+            // Move stick direction state to was
+            controllerStates[i].leftPressed.was = controllerStates[i].leftPressed.is;
+            controllerStates[i].rightPressed.was = controllerStates[i].rightPressed.is;
+            controllerStates[i].upPressed.was = controllerStates[i].upPressed.is;
+            controllerStates[i].downPressed.was = controllerStates[i].downPressed.is;
+
+            // Threshold sticks for pressed state
+            constexpr float ATTACK_THRESHOLD = 0.75f;
+            constexpr float RELEASE_THRESHOLD = 0.25f;
+            if (controllerStates[i].stickXState.currentState > ATTACK_THRESHOLD) controllerStates[i].rightPressed.is = true;
+            else if (controllerStates[i].stickXState.currentState < RELEASE_THRESHOLD) controllerStates[i].rightPressed.is = false;
+            if (controllerStates[i].stickXState.currentState < -ATTACK_THRESHOLD) controllerStates[i].leftPressed.is = true;
+            else if (controllerStates[i].stickXState.currentState > -RELEASE_THRESHOLD) controllerStates[i].leftPressed.is = false;
+            if (controllerStates[i].stickYState.currentState > ATTACK_THRESHOLD) controllerStates[i].upPressed.is = true;
+            else if (controllerStates[i].stickYState.currentState < RELEASE_THRESHOLD) controllerStates[i].upPressed.is = false;
+            if (controllerStates[i].stickYState.currentState < -ATTACK_THRESHOLD) controllerStates[i].downPressed.is = true;
+            else if (controllerStates[i].stickYState.currentState > -RELEASE_THRESHOLD) controllerStates[i].downPressed.is = false;
+        }
+    }
+
+    ControllerState OpenXRHMD::getControllerState() const {
+        ControllerState state;
+
+        // We or the boolean states and take the (absolute) max of the stick X/Y values
+        // since we only expect one controller to be in use at a time.
+        state.confirmState = controllerStates[0].confirmState.currentState && controllerStates[0].confirmState.changedSinceLastSync;
+        state.backState = controllerStates[0].backState.currentState && controllerStates[0].backState.changedSinceLastSync;
+        state.confirmState |= controllerStates[1].confirmState.currentState && controllerStates[1].confirmState.changedSinceLastSync;
+        state.backState |= controllerStates[1].backState.currentState && controllerStates[1].backState.changedSinceLastSync;
+
+        if (std::abs(controllerStates[0].stickXState.currentState) > std::abs(controllerStates[1].stickXState.currentState))
+            state.stickXState = controllerStates[0].stickXState.currentState;
+        else
+            state.stickXState = controllerStates[1].stickXState.currentState;
+        if (std::abs(controllerStates[0].stickYState.currentState) > std::abs(controllerStates[1].stickYState.currentState))
+            state.stickYState = controllerStates[0].stickYState.currentState;
+        else
+            state.stickYState = controllerStates[1].stickYState.currentState;
+
+        state.leftPressed = controllerStates[0].leftPressed.is && !controllerStates[0].leftPressed.was;
+        state.rightPressed = controllerStates[0].rightPressed.is && !controllerStates[0].rightPressed.was;
+        state.upPressed = controllerStates[0].upPressed.is && !controllerStates[0].upPressed.was;
+        state.downPressed = controllerStates[0].downPressed.is && !controllerStates[0].downPressed.was;
+        state.leftPressed |= controllerStates[1].leftPressed.is && !controllerStates[1].leftPressed.was;
+        state.rightPressed |= controllerStates[1].rightPressed.is && !controllerStates[1].rightPressed.was;
+        state.upPressed |= controllerStates[1].upPressed.is && !controllerStates[1].upPressed.was;
+        state.downPressed |= controllerStates[1].downPressed.is && !controllerStates[1].downPressed.was;
+
+        return state;
+    }
+
     bool OpenXRHMD::init()
     {
         XrResult result = XR_SUCCESS;
@@ -467,6 +670,9 @@ namespace sibr
         if (!xrCheck(m_instance, result, "Failed to get OpenGL graphics requirements!"))
             return false;
 
+        CreateActionSet(m_instance);
+        SuggestBindings(m_instance);
+
         return true;
     }
 
@@ -569,6 +775,19 @@ namespace sibr
         if (!success) {
             std::cout << "ERROR: Failed to start XR session." << std::endl;
             return false;
+        }
+        AttachActionSets(m_instance, m_session);
+        if (!synchronizeSession()) return false;
+
+        XrInteractionProfileState interactionProfile = {XR_TYPE_INTERACTION_PROFILE_STATE, 0, 0};
+        // for each action, what is the binding?
+        xrCheck(m_instance, xrGetCurrentInteractionProfile(m_session, handPaths[0], &interactionProfile), "Failed to get profile.");
+        if (interactionProfile.interactionProfile) {
+            std::cout << "user/hand/left ActiveProfile " << FromXrPath(interactionProfile.interactionProfile, m_instance).c_str();
+        }
+        xrCheck(m_instance, xrGetCurrentInteractionProfile(m_session, handPaths[1], &interactionProfile), "Failed to get profile.");
+        if (interactionProfile.interactionProfile) {
+            std::cout << "user/hand/right ActiveProfile " << FromXrPath(interactionProfile.interactionProfile, m_instance).c_str();
         }
         return true;
     }
@@ -942,6 +1161,9 @@ namespace sibr
         result = xrLocateViews(m_session, &view_locate_info, &view_state, m_viewCount, &m_viewCount, views);
         if (!xrCheck(m_instance, result, "Could not locate views"))
             return false;
+
+        // Update controller states
+        PollActions(m_instance, m_session, m_lastFrameState.predictedDisplayTime);
 
         XrEyeGazesInfoFB eyeGazesInfo = {};
         eyeGazesInfo.type = XR_TYPE_EYE_GAZES_INFO_FB;

@@ -39,6 +39,10 @@ namespace sibr
 
         sibr::Matrix4f getHeadPose() const;
 
+        ControllerState getControllerState() {
+            return m_openxrHmd->getControllerState();
+        }
+
         /** Get the current rendered image as a CPU image
          *\param current_img will contain the content of the RT */
         void destRT2img(sibr::ImageRGB &current_img)
