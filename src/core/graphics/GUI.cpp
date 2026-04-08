@@ -16,8 +16,7 @@
 #include "core/graphics/Mesh.hpp"
 
 // We extend ImGui functionality so we need the internal definitions.
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui/imgui_internal.h>
+#include "imgui_internal.h"
 
 namespace sibr
 {
@@ -51,7 +50,7 @@ namespace sibr
 			ImGui::SetCursorPos(ImVec2(offset.x(), ImGui::GetTitleBarHeight()+offset.y()));
 			ImGui::InvisibleButton((windowTitle + "--TEXTURE-INVISIBLE_BUTTON").c_str(), ImVec2(size.x(), size.y()));
 			if (!invalidTexture) {
-				::ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)(rt.handle(handle)),
+				::ImGui::GetWindowDrawList()->AddImage(ImTextureID((void*)(intptr_t)(rt.handle(handle))),
 					pos, ImVec2(pos.x + size.x(), pos.y + size.y()),
 					ImVec2(0, 1), ImVec2(1, 0));
 			}
@@ -62,8 +61,8 @@ namespace sibr
 
 			// Hand back the inputs to sibr.
 			if (ImGui::IsItemHovered()) {
-				ImGui::CaptureKeyboardFromApp(false);
-				ImGui::CaptureMouseFromApp(false);
+				ImGui::SetNextFrameWantCaptureKeyboard(false);
+				ImGui::SetNextFrameWantCaptureMouse(false);
 			}
 		}
 		::ImGui::End();
@@ -122,7 +121,7 @@ namespace sibr
 		// Finish the window, then clear the draw list.
 		ImGui::End();
 		ImGui::PopID();
-		drawlist->Clear();
+		// drawlist->Clear();
 		return mesh;
 	}
 
@@ -278,7 +277,7 @@ namespace sibr
 		const sibr::Vector2f& uv0,
 		const sibr::Vector2f& uv1 
 	) {
-		ImGui::Image((void*)(intptr_t)(texture), ImVec2(float(displaySize[0]), float(displaySize[1])), ImVec2(uv0[0], uv0[1]), ImVec2(uv1[0], uv1[1]));
+		ImGui::Image(ImTextureID((void*)(intptr_t)(texture)), ImVec2(float(displaySize[0]), float(displaySize[1])), ImVec2(uv0[0], uv0[1]), ImVec2(uv1[0], uv1[1]));
 	}
 
 	void ImageWithCallback(
@@ -361,7 +360,7 @@ namespace ImGui {
 		ItemSize(total_bb, style.FramePadding.y);
 		if (!ItemAdd(total_bb, 0, &frame_bb))
 			return;
-		const bool hovered = ItemHoverable(inner_bb, 0);
+		const bool hovered = ItemHoverable(inner_bb, 0, ImGui::GetItemFlags());
 
 		// Determine scale from values if not specified
 		if (scale_min == FLT_MAX || scale_max == FLT_MAX)

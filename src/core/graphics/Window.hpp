@@ -18,6 +18,11 @@
 #include "core/graphics/Texture.hpp"
 #include <core/system/CommandLineArgs.hpp>
 
+#include "imgui.h"
+#include "imgui_internal.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 namespace sibr
 {
 
@@ -28,6 +33,7 @@ namespace sibr
 	{
 	public:
 		typedef std::shared_ptr<Window>		Ptr;
+		static constexpr const char* glsl_version = "#version 150";
 
 	public:
 		/** Constructor.
@@ -61,6 +67,7 @@ namespace sibr
 		GLFWwindow *		GLFW(void);
 
 		/** Activate the associated graphics context. */
+		void				makeImguiContextCurrent();
 		void				makeContextCurrent(void);
 		/** \return the context currently in use (represented by a GLFW window) */
 		GLFWwindow *		getContextCurrent(void);
@@ -211,7 +218,13 @@ namespace sibr
 		AutoInitializer		_hiddenInit; ///< nifty counter used to auto-init window system
 		std::string			_defaultImguiSettingsFilename = "imgui_default.ini"; ///< string of default Imgui settings filename
 		std::string			_windowImguiSettingsFilename; ///< string of default Window specific Imgui settings filename
+
+		ImGuiContext* _currentContext = nullptr; ///< ImGui context associated with this window
 	};
+
+	inline void Window::makeImguiContextCurrent() {
+		ImGui::SetCurrentContext(_currentContext);
+	}
 
 	///// INLINES /////
 	inline void		Window::makeContextCurrent(void) {

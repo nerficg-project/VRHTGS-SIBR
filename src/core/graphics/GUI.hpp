@@ -18,7 +18,7 @@
 # include "core/graphics/RenderTarget.hpp"
 # include "core/graphics/Window.hpp"
 
-#include <imgui/imgui.h>
+#include "imgui.h"
 
 namespace sibr
 {

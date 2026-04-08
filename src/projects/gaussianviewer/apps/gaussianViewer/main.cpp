@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <regex>
-#include <imgui/imgui_internal.h>
+#include "imgui_internal.h"
 
 namespace fs = std::filesystem;
 
@@ -127,7 +127,7 @@ int main(int ac, char** av)
 	ImGuiSettingsHandler ini_handler;
 	ini_handler.TypeName = "UserData";
 	ini_handler.UserData = &messageRead;
-	ini_handler.TypeHash = ImHash("UserData", 0, 0);
+	ini_handler.TypeHash = ImHashData("UserData", 0, 0);
 	ini_handler.ReadOpenFn = User_ReadOpen;
 	ini_handler.ReadLineFn = User_ReadLine;
 	ini_handler.WriteAllFn = User_WriteAll;
@@ -239,8 +239,8 @@ int main(int ac, char** av)
 		default:
 			break;
 	}
-	
-	multiViewManager.addIBRSubView("Point view", gaussianView, usedResolution, ImGuiWindowFlags_ResizeFromAnySide | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+	multiViewManager.addIBRSubView("Point view", gaussianView, usedResolution, ImGuiWindowFlags_NoBringToFrontOnFocus);
 	multiViewManager.addCameraForView("Point view", generalCamera);
 
 	// Top view

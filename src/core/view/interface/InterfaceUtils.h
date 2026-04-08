@@ -20,7 +20,7 @@
 
 #include <string>
 
-#include <imgui/imgui.h>
+#include "imgui.h"
 
 namespace sibr {
 

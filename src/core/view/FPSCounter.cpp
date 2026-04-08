@@ -16,9 +16,9 @@
 #include "core/view/FPSCounter.hpp"
 #include "core/assets/Resources.hpp"
 
-#include <imgui/imgui.h>
+#include "imgui.h"
 #include "core/graphics/GUI.hpp"
-#include "imgui/imgui_internal.h"
+#include "imgui_internal.h"
 
 #define SIBR_FPS_SMOOTHING 60
 

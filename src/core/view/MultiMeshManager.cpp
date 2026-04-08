@@ -12,7 +12,7 @@
 
 #include "MultiMeshManager.hpp"
 
-#include <imgui/imgui.h>
+#include "imgui.h"
 
 namespace sibr {
 

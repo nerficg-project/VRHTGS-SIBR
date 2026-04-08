@@ -12,7 +12,7 @@
 
 #include "ImagesGrid.hpp"
 
-#include <imgui/imgui.h>
+#include "imgui.h"
 
 #define GUI_TEXT(txt) { std::stringstream sss; sss << txt << std::endl;  ImGui::Text(sss.str().c_str()); }
 

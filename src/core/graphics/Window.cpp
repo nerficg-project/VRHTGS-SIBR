@@ -15,9 +15,10 @@
 #include "core/graphics/Window.hpp"
 #include "core/graphics/RenderUtility.hpp"
 
-#include "imgui/imgui.cpp" // needed for loading ini settings
-#include "imgui/imgui.h"
-#include "imgui_impl_glfw_gl3.h"
+#include "imgui.h"
+#include "imgui_internal.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 #include <regex>
 
@@ -155,7 +156,8 @@ namespace sibr
 		if (windowCounter == 0)
 		{
 			if(_useGUI) {
-				ImGui_ImplGlfwGL3_Shutdown();	/// \todo TODO: not sure if safe with multi-context
+				ImGui_ImplOpenGL3_Shutdown();
+				ImGui_ImplGlfw_Shutdown();	/// \todo TODO: not sure if safe with multi-context
 				ImGui::DestroyContext();
 			}
 			glfwSetErrorCallback(nullptr);
@@ -204,13 +206,16 @@ namespace sibr
 		if (_useGUI) {
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ImGui interface");
 			ImGui::Render();
-			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			glPopDebugGroup();
 		}
 		glfwSwapBuffers(_glfwWin.get());
 		// Keep the call below in all cases to avoid accumulating all interfaces in one frame.
-		if (_useGUI)
-			ImGui_ImplGlfwGL3_NewFrame();
+		if (_useGUI) {
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+		}
 	}
 	
 	void Window::resetSettingsToDefault() {
@@ -226,33 +231,29 @@ namespace sibr
 		}
 
 		ImGuiContext& g = *ImGui::GetCurrentContext();
-
-		for (int i = 0; i < g.SettingsWindows.Size; i++)
-				IM_DELETE(g.SettingsWindows[i].Name);
-
 		g.SettingsWindows.clear();
 
 		loadSettings();
 
 		for (ImGuiWindow * window: g.Windows) {
-			if (ImGuiWindowSettings* settings = ImGui::FindWindowSettings(window->ID)) {
-				SetWindowPos(window, settings->Pos, ImGuiCond_Always);
-				SetWindowSize(window, settings->Size, ImGuiCond_Always);
-				SetWindowCollapsed(window, settings->Collapsed, ImGuiCond_Always);
+			if (ImGuiWindowSettings* settings = ImGui::FindWindowSettingsByID(window->ID)) {
+				ImGui::SetWindowPos(window, ImVec2(settings->Pos.x, settings->Pos.y), ImGuiCond_Always);
+				ImGui::SetWindowSize(window, ImVec2(settings->Size.x, settings->Size.y), ImGuiCond_Always);
+				ImGui::SetWindowCollapsed(window, settings->Collapsed, ImGuiCond_Always);
 			}
 		}
 	}
 
 	void Window::loadSettings() {
 		// Load defaults from core
-		LoadIniSettingsFromDisk(std::string(getResourcesDirectory() + "/core/" + _defaultImguiSettingsFilename).c_str());
-		
+		ImGui::LoadIniSettingsFromDisk(std::string(getResourcesDirectory() + "/core/" + _defaultImguiSettingsFilename).c_str());
+
 		// Load defaults from Window constructor
 		if(fileExists(_windowImguiSettingsFilename))
-			LoadIniSettingsFromDisk(_windowImguiSettingsFilename.c_str());
+			ImGui::LoadIniSettingsFromDisk(_windowImguiSettingsFilename.c_str());
 
 		// Load user specific settings for this particular window
-		LoadIniSettingsFromDisk(ImGui::GetIO().IniFilename);
+		ImGui::LoadIniSettingsFromDisk(ImGui::GetIO().IniFilename);
 	}
 
 	void Window::setup(int width, int height, const std::string& title, const WindowArgs & args, const std::string& defaultSettingsFilename) {
@@ -341,13 +342,18 @@ namespace sibr
 		if(_useGUI) {
 			//contextId
 			++Window::contextId;
+			makeContextCurrent();
 
 			// Setup ImGui binding
-			ImGui::CreateContext();
-			ImGui_ImplGlfwGL3_Init(_glfwWin.get(), false);
+			_currentContext = ImGui::CreateContext();
+			ImGui::SetCurrentContext(_currentContext);
+			ImGui_ImplGlfw_InitForOpenGL(_glfwWin.get(), false);
+			ImGui_ImplOpenGL3_Init(glsl_version);
 			glfwSetCharCallback(_glfwWin.get(), ImGui_ImplGlfw_CharCallback);
 
-			ImGui_ImplGlfwGL3_NewFrame();
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
 
 			_windowImguiSettingsFilename = defaultSettingsFilename;
 

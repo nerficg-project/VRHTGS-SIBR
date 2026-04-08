@@ -15,7 +15,7 @@
 #include "MeshViewer.h"
 #include <core/view/InteractiveCameraHandler.hpp>
 
-#include <imgui/imgui.h>
+#include "imgui.h"
 
 namespace sibr {
 
