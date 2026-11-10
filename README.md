@@ -24,10 +24,20 @@ If you use this code in a publication, please cite the system as follows:
 
 This branch supports headed-mounted displays through [OpenXR](#use-a-vr-headset).
 
+## Command Line Setup and Build
+
+Open in x64 Native Tools Command Prompt for VS 2022 and type:
+
+```cmd
+cmake --preset vcpkg-release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -S . -B build
+# or use --preset vcpkg-debug to build in debug mode
+cmake --build build
+```
+
 
 ## Setup
 
-**Note**: The current release is for *Windows 11* only. Please not that Visual Studio with c++23 standard is required to compile.
+**Note**: The current release is for *Windows 11* only. Please note that Visual Studio with C++23 standard is required to compile.
 
 #### Binary distribution
 
@@ -38,6 +48,8 @@ Download the distribution from the page: TODO: Add Link (Core, ???Mb); unzip the
 #### Install requirements
 
 All version numbers are the version used in our testing. Other versions of the same software may work, but we cannot offer any support when using different versions.
+
+TODO: Mention vcpkg and how to modify CMakeUserPresets.json.template
 
 - [**Visual Studio 2022**](https://visualstudio.microsoft.com/downloads/)
   (make sure to install the Desktop development with C++ workload as well as the recommended MSVC build tools)
