@@ -26,7 +26,7 @@ This branch supports headed-mounted displays through [OpenXR](#use-a-vr-headset)
 
 ## Command Line Setup and Build
 
-Open in x64 Native Tools Command Prompt for VS 2022 and type:
+Open the repository in `x64 Native Tools Command Prompt for VS 2022` and type:
 
 ```cmd
 cmake --preset vcpkg-release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -S . -B build
@@ -43,7 +43,8 @@ cmake --build build
 
 The easiest way to use SIBR is to download the binary distribution. All steps described below, including all preprocessing for your datasets will work using this code.
 
-Download the distribution from the page: TODO: Add Link (Core, ???Mb); unzip the file and rename the directory "install".
+Download the distribution from the Releases page: TODO: Add Link (Core, ???Mb); unzip the file and rename the directory "install".
+You can also grab a sample model from there, or train your own using [VRHTGS](https://github.com/nerficg-project/VRHTGS).
 
 #### Install requirements
 
