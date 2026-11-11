@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <fstream>
+#include <sstream>
 #include <thread>
 
 #include "boost/asio.hpp"
@@ -5,9 +8,9 @@
 #include <openxr/openxr.h>
 
 #include "core/graphics/GUI.hpp"
-#include "FoveatedHTGSCudaBackend/rasterization/include/inference.h"
-#include "FoveatedHTGSCudaBackend/rasterization/include/utils/rasterization_utils.h"
-#include "FoveatedHTGSCudaBackend/visualization/include/visualization.h"
+#include "VRHTGSCudaBackend/rasterization/include/inference.h"
+#include "VRHTGSCudaBackend/rasterization/include/utils/rasterization_utils.h"
+#include "VRHTGSCudaBackend/visualization/include/visualization.h"
 #include "HTGSCudaBackend/rasterization/include/hybrid_blend/fast_inference.h"
 #include "projects/vrhtgs_viewer/renderer/GaussianView.hpp"
 
@@ -114,41 +117,90 @@ static int loadPly(
     std::vector<sibr::Rot>& rot,
     const float modelScale,
     BackgroundModelType& backgroundModelType,
-    float*& bgModelDataCuda
+    float*& bgModelDataCuda,
+    int2& backgroundTextureResolution
 ) {
     std::ifstream infile(filename, std::ios_base::binary);
     if (!infile.good()) {
         SIBR_ERR << "Unable to find model's PLY file, attempted:\n" << filename << std::endl;
     }
 
-    // "Parse" header (it has to be a specific format anyway)
+    // Parse header: accept comments/obj_info lines and look up vertex properties by name,
+    // so files with or without normals (nx, ny, nz) or extra properties load correctly.
     std::string buff;
     std::getline(infile, buff);
-    std::getline(infile, buff);
+    if (buff.rfind("ply", 0) != 0) {
+        SIBR_ERR << "Not a PLY file: " << filename << std::endl;
+    }
 
-    std::string dummy;
-    std::getline(infile, buff);
-    std::stringstream ss(buff);
-    int count;
-    ss >> dummy >> dummy >> count;
+    int count = 0;
+    bool inVertexElement = false;
+    std::vector<std::string> propertyNames;
+    while (std::getline(infile, buff)) {
+        if (!buff.empty() && buff.back() == '\r') {
+            buff.pop_back();
+        }
+        std::stringstream ss(buff);
+        std::string keyword;
+        ss >> keyword;
+        if (keyword == "end_header") {
+            break;
+        } else if (keyword == "format") {
+            std::string format;
+            ss >> format;
+            if (format != "binary_little_endian") {
+                SIBR_ERR << "Unsupported PLY format '" << format << "' in " << filename << ", expected binary_little_endian" << std::endl;
+            }
+        } else if (keyword == "element") {
+            std::string elementName;
+            ss >> elementName;
+            inVertexElement = (elementName == "vertex");
+            if (inVertexElement) {
+                ss >> count;
+            }
+        } else if (keyword == "property" && inVertexElement) {
+            std::string type, name;
+            ss >> type >> name;
+            if (type != "float" && type != "float32") {
+                SIBR_ERR << "Unsupported PLY property type '" << type << "' for '" << name << "' in " << filename << ", expected float" << std::endl;
+            }
+            propertyNames.push_back(name);
+        }
+        // Other lines (comment, obj_info, ...) are ignored
+    }
 
     // Output number of Gaussians contained
     SIBR_LOG << "Loading " << count << " Gaussian splats" << std::endl;
 
-    while (std::getline(infile, buff)) {
-        if (buff.compare("end_header") == 0) {
-            break;
+    const size_t stride = propertyNames.size();
+    auto propertyIndex = [&](const std::string& name, bool required = true) -> int {
+        auto it = std::find(propertyNames.begin(), propertyNames.end(), name);
+        if (it == propertyNames.end()) {
+            if (required) {
+                SIBR_ERR << "PLY file " << filename << " is missing required property '" << name << "'" << std::endl;
+            }
+            return -1;
         }
+        return static_cast<int>(it - propertyNames.begin());
+    };
+
+    const int SH_N = (D + 1) * (D + 1);
+    const int posIdx[3] = { propertyIndex("x"), propertyIndex("y"), propertyIndex("z") };
+    const int dcIdx[3] = { propertyIndex("f_dc_0"), propertyIndex("f_dc_1"), propertyIndex("f_dc_2") };
+    const int opacityIdx = propertyIndex("opacity");
+    const int scaleIdx[3] = { propertyIndex("scale_0"), propertyIndex("scale_1"), propertyIndex("scale_2") };
+    const int rotIdx[4] = { propertyIndex("rot_0"), propertyIndex("rot_1"), propertyIndex("rot_2"), propertyIndex("rot_3") };
+    std::vector<int> restIdx(3 * (SH_N - 1));
+    for (int j = 0; j < 3 * (SH_N - 1); j++) {
+        restIdx[j] = propertyIndex("f_rest_" + std::to_string(j), false);  // Missing higher-order SHs default to 0
     }
 
-    // Read all Gaussians at once (AoS)
-    std::vector<sibr::RichPoint<D>> points(count);
-    infile.read(reinterpret_cast<char*>(points.data()), count * sizeof(sibr::RichPoint<D>));
-    for (int i = 0; i < count; i++) {
-        points[i].pos *= modelScale;
-        points[i].scale.scale[0] += log(modelScale);
-        points[i].scale.scale[1] += log(modelScale);
-        points[i].scale.scale[2] += log(modelScale);
+    // Read all Gaussians at once (AoS, all float properties)
+    std::vector<float> raw(static_cast<size_t>(count) * stride);
+    infile.read(reinterpret_cast<char*>(raw.data()), raw.size() * sizeof(float));
+    if (static_cast<size_t>(infile.gcount()) != raw.size() * sizeof(float)) {
+        SIBR_ERR << "PLY file " << filename << " is truncated: expected " << count << " vertices with "
+                 << stride << " float properties each" << std::endl;
     }
 
     // Resize our SoA data
@@ -158,38 +210,45 @@ static int loadPly(
     scales.resize(count);
     rot.resize(count);
     opacities.resize(count);
+    std::fill(shsRest.begin(), shsRest.end(), 0.0f);
 
     // Move data from AoS to SoA
-    int SH_N = (D + 1) * (D + 1);
+    const float logModelScale = log(modelScale);
     for (int i = 0; i < count; i++) {
-        pos[i] = points[i].pos;
+        const float* p = raw.data() + static_cast<size_t>(i) * stride;
+
+        pos[i] = sibr::Pos(p[posIdx[0]], p[posIdx[1]], p[posIdx[2]]) * modelScale;
 
         // Normalize quaternion
         float length2 = 0;
         for (int j = 0; j < 4; j++) {
-            length2 += points[i].rot.rot[j] * points[i].rot.rot[j];
+            length2 += p[rotIdx[j]] * p[rotIdx[j]];
         }
         float length = sqrt(length2);
         for (int j = 0; j < 4; j++) {
-            rot[i].rot[j] = points[i].rot.rot[j] / length;
+            rot[i].rot[j] = p[rotIdx[j]] / length;
         }
 
         // Exponentiate scale
-        for(int j = 0; j < 3; j++) {
-            scales[i].scale[j] = exp(points[i].scale.scale[j]);
+        for (int j = 0; j < 3; j++) {
+            scales[i].scale[j] = exp(p[scaleIdx[j]] + logModelScale);
         }
 
         // Activate alpha
-        opacities[i] = sigmoid(points[i].opacity);
+        opacities[i] = sigmoid(p[opacityIdx]);
 
-        shs0[i * 3 + 0] = points[i].shs.shs[0];
-        shs0[i * 3 + 1] = points[i].shs.shs[1];
-        shs0[i * 3 + 2] = points[i].shs.shs[2];
+        shs0[i * 3 + 0] = p[dcIdx[0]];
+        shs0[i * 3 + 1] = p[dcIdx[1]];
+        shs0[i * 3 + 2] = p[dcIdx[2]];
 
+        // f_rest is stored channel-major (all R coeffs, then G, then B); we store coefficient-major (interleaved RGB)
         for (int j = 1; j < SH_N; j++) {
-            shsRest[i * 45 + (j - 1) * 3 + 0] = points[i].shs.shs[3 + (j - 1)];
-            shsRest[i * 45 + (j - 1) * 3 + 1] = points[i].shs.shs[3 + (j - 1) + SH_N - 1];
-            shsRest[i * 45 + (j - 1) * 3 + 2] = points[i].shs.shs[3 + (j - 1) + 2 * (SH_N - 1)];
+            for (int c = 0; c < 3; c++) {
+                const int idx = restIdx[(j - 1) + c * (SH_N - 1)];
+                if (idx >= 0) {
+                    shsRest[i * 45 + (j - 1) * 3 + c] = p[idx];
+                }
+            }
         }
     }
 
@@ -223,9 +282,6 @@ static int loadPly(
         if (!bgImage.load(bgTexturePth.string(), false)) {
             SIBR_ERR << "Unable to load background texture at " << bgTexturePth.string() << "\n";
         }
-        if (bgImage.w() != 2000 || bgImage.h() != 1000) {
-            SIBR_ERR << "Background texture has invalid dimensions at " << bgTexturePth.string() << ", FoveatedHTGS has dimensions of 2000x1000 hard-coded!\n";
-        }
         // Allocate GPU memory and copy data.
         // The host image is HWC (interleaved RGB floats). We want CHW (planar) on the device.
         size_t W = static_cast<size_t>(bgImage.w());
@@ -257,6 +313,7 @@ static int loadPly(
         }
 
         backgroundModelType = BackgroundModelType::TEXTURE;
+        backgroundTextureResolution = make_int2(static_cast<int>(W), static_cast<int>(H));
     } else {
         SIBR_LOG << "No background model data found\n";
         backgroundModelType = BackgroundModelType::NONE;
@@ -444,7 +501,7 @@ void sibr::HTGaussianView::loadModel(const char* file, float modelScale) {
     std::vector<float> opacity;
     std::vector<float> shs0;
     std::vector<float> shsRest;
-    count = loadPly<3>(file, pos, shs0, shsRest, opacity, scale, rot, modelScale, backgroundModelType, bgModelDataCuda);
+    count = loadPly<3>(file, pos, shs0, shsRest, opacity, scale, rot, modelScale, backgroundModelType, bgModelDataCuda, backgroundTextureResolution);
 
     // Free existing GPU data if any
     CUDA_SAFE_CALL_ALWAYS(cudaFree(posCuda));
@@ -500,10 +557,15 @@ void sibr::HTGaussianView::destroyImageBuffer() {
 }
 
 
+// Per-eye slot for the visibility mask arrays (index 0 for mono rendering modes / unexpected view indices)
+static uint32_t eyeSlot(const sibr::Camera& eye) {
+    return eye.viewIndex() < 2 ? eye.viewIndex() : 0;
+}
+
 void sibr::HTGaussianView::updateVisibilityMask(const sibr::Camera& eye, const uint32_t width, const uint32_t height) {
-    const uint32_t side = eye.viewIndex();
-    const uint32_t widthTiles = (width + htgs_foveated::rasterization::config::tile_width_large - 1) / htgs_foveated::rasterization::config::tile_width_large;
-    const uint32_t heightTiles = (height + htgs_foveated::rasterization::config::tile_height_large - 1) / htgs_foveated::rasterization::config::tile_height_large;
+    const uint32_t side = eyeSlot(eye);
+    const uint32_t widthTiles = (width + vrhtgs::rasterization::config::tile_width_large - 1) / vrhtgs::rasterization::config::tile_width_large;
+    const uint32_t heightTiles = (height + vrhtgs::rasterization::config::tile_height_large - 1) / vrhtgs::rasterization::config::tile_height_large;
     if (widthTiles == visibilityMaskSize[side][0] && heightTiles == visibilityMaskSize[side][1]) {
         return;
     }
@@ -544,8 +606,8 @@ void sibr::HTGaussianView::updateVisibilityMask(const sibr::Camera& eye, const u
     for (uint32_t y = 0; y < heightTiles; ++y) {
         for (uint32_t x = 0; x < widthTiles; ++x) {
             // Compute tile center in pixel coordinates
-            float tileCenterX = (x + 0.5f) * htgs_foveated::rasterization::config::tile_width_large;
-            float tileCenterY = (y + 0.5f) * htgs_foveated::rasterization::config::tile_height_large;
+            float tileCenterX = (x + 0.5f) * vrhtgs::rasterization::config::tile_width_large;
+            float tileCenterY = (y + 0.5f) * vrhtgs::rasterization::config::tile_height_large;
 
             // Normalize to [0,1]
             float normX = tileCenterX / static_cast<float>(width);
@@ -588,14 +650,14 @@ void sibr::HTGaussianView::initializeFoveaMask() {
         return;  // Already initialized
     }
 
-    const uint32_t foveaMaskSize = 2 * htgs_foveated::rasterization::config::foveation_radius_tiles;
+    const uint32_t foveaMaskSize = 2 * vrhtgs::rasterization::config::foveation_radius_tiles;
     std::vector<uint8_t> foveaMaskRaw(foveaMaskSize * foveaMaskSize, 0);
 
-    const int32_t radiusSq = htgs_foveated::rasterization::config::foveation_radius_tiles * htgs_foveated::rasterization::config::foveation_radius_tiles;
+    const int32_t radiusSq = vrhtgs::rasterization::config::foveation_radius_tiles * vrhtgs::rasterization::config::foveation_radius_tiles;
     for (uint32_t y = 0; y < foveaMaskSize; ++y) {
         for (uint32_t x = 0; x < foveaMaskSize; ++x) {
-            const int32_t dx = x + 0.5 - htgs_foveated::rasterization::config::foveation_radius_tiles;
-            const int32_t dy = y + 0.5 - htgs_foveated::rasterization::config::foveation_radius_tiles;
+            const int32_t dx = x + 0.5 - vrhtgs::rasterization::config::foveation_radius_tiles;
+            const int32_t dy = y + 0.5 - vrhtgs::rasterization::config::foveation_radius_tiles;
             const uint32_t distSq = dx * dx + dy * dy;
             if (distSq < radiusSq) {
                 foveaMaskRaw[y * foveaMaskSize + x] = 3;
@@ -653,19 +715,19 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
         CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
                 reinterpret_cast<void**>(&imageCuda), &bytes, imageBufferCuda));
 
-        CUDA_SAFE_CALL(htgs_foveated::visualization::clear_image(
+        CUDA_SAFE_CALL(vrhtgs::visualization::clear_image(
             imageCuda,
             _resolution.x(),
             _resolution.y()
         ));
-        CUDA_SAFE_CALL(htgs_foveated::visualization::visualize_gaze_position(
+        CUDA_SAFE_CALL(vrhtgs::visualization::visualize_gaze_position(
             imageCuda,
             _resolution.x(),
             _resolution.y(),
             64,  // radius in pixels
             (float2*)gazePos,
             make_float3(1.0f, 0.0f, 0.0f),  // color
-            htgs_foveated::visualization::GazeVisualizationType::CIRCLE,
+            vrhtgs::visualization::GazeVisualizationType::CIRCLE,
             /*to_chw=*/ true
         ));
 
@@ -781,7 +843,8 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
         };
         const BackgroundModel bgModelData = {
             .data = bgModelDataCuda,
-            .type = backgroundModelType
+            .type = backgroundModelType,
+            .texture_resolution = backgroundTextureResolution
         };
         const Pose pose = {
             .M = (float4*)viewCuda,
@@ -799,12 +862,12 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             .center_y = centerY
         };
         const Masks masks = {
-            .visibility_mask = visibilityMask[eye.viewIndex()],
-            .visibility_mask_area_table = visibilityMaskAreaTable[eye.viewIndex()],
+            .visibility_mask = visibilityMask[eyeSlot(eye)],
+            .visibility_mask_area_table = visibilityMaskAreaTable[eyeSlot(eye)],
             .fovea_mask_area_table = foveaMaskAreaTable
         };
 
-        CUDA_SAFE_CALL(htgs_foveated::rasterization::inference(
+        CUDA_SAFE_CALL(vrhtgs::rasterization::inference(
             buffers,
             (float3*)posCuda,
             (float3*)scaleCuda,

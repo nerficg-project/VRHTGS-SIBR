@@ -302,9 +302,9 @@ namespace sibr
 
 		Transform3f		_transform; ///< The camera pose.
 		Transform3f		_eyeGazeTransform; ///< The eye gaze transform.
-		XrVisibilityMaskKHR	_visibilityMask; ///< The visibility mask.
-		Vector4f		_boundsOnViewPlane; ///< The bounds on the view plane.
-		uint32_t		_viewIndex; ///< The view index for multi-view rendering. LEFT=0, RIGHT=1
+		XrVisibilityMaskKHR	_visibilityMask{XR_TYPE_VISIBILITY_MASK_KHR}; ///< The visibility mask (empty unless set by an OpenXR rendering mode).
+		Vector4f		_boundsOnViewPlane = Vector4f::Zero(); ///< The bounds on the view plane.
+		uint32_t		_viewIndex = 0; ///< The view index for multi-view rendering. LEFT=0, RIGHT=1 (0 for non-stereo rendering modes)
 		float			_fov; ///< The vertical field of view (radians)
 		float			_aspect; ///< Aspect ratio.
 		float			_znear; ///< Near plane.

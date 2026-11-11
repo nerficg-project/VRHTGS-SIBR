@@ -18,8 +18,8 @@
 #include "core/system/Config.hpp"
 #include "core/view/ViewBase.hpp"
 #include "projects/vrhtgs_viewer/renderer/Recording.hpp"
-#include "FoveatedHTGSCudaBackend/rasterization/include/config.h"
-#include "FoveatedHTGSCudaBackend/rasterization/include/utils/rasterization_utils.h"
+#include "VRHTGSCudaBackend/rasterization/include/config.h"
+#include "VRHTGSCudaBackend/rasterization/include/utils/rasterization_utils.h"
 
 
 namespace sibr {
@@ -224,6 +224,7 @@ namespace sibr {
         float* shsRestCuda = nullptr;
         float* bgModelDataCuda = nullptr;
         BackgroundModelType backgroundModelType = BackgroundModelType::NONE;
+        int2 backgroundTextureResolution = {0, 0};  // Only used for texture background models
         sibr::Matrix4f sceneTransform = sibr::Matrix4f::Identity();
 
         // Frame-specific pose data

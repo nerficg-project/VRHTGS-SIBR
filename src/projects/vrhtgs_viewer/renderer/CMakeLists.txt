@@ -2,7 +2,7 @@ set(SIBR_PROJECT "htgs-renderer")
 project(sibr_${SIBR_PROJECT} LANGUAGES CXX CUDA)
 enable_language(CUDA)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/FoveatedHTGSCudaBackend)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/VRHTGSCudaBackend)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/HTGSCudaBackend)
 
 find_package(CUDAToolkit REQUIRED)
@@ -21,8 +21,8 @@ file(GLOB SOURCES "*.cpp" "*.h" "*.hpp" "shaders/*.frag" "shaders/*.vert" "shade
 ## Specify target rules
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
-include_directories(${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${FoveatedHTGSRasterizer_INCLUDE_DIRS} ${HTGSRasterizer_INCLUDE_DIRS} .)
-target_include_directories(${PROJECT_NAME} PUBLIC ${FoveatedHTGSRasterizer_INCLUDE_DIRS} ${HTGSRasterizer_INCLUDE_DIRS} .)
+include_directories(${Boost_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${VRHTGSRasterizer_INCLUDE_DIRS} ${HTGSRasterizer_INCLUDE_DIRS} .)
+target_include_directories(${PROJECT_NAME} PUBLIC ${VRHTGSRasterizer_INCLUDE_DIRS} ${HTGSRasterizer_INCLUDE_DIRS} .)
 target_link_libraries(${PROJECT_NAME}
     CUDA::cudart
     ${Boost_LIBRARIES}
@@ -35,7 +35,7 @@ target_link_libraries(${PROJECT_NAME}
     sibr_view
     sibr_assets
     sibr_renderer
-    FoveatedHTGSRasterizer
+    VRHTGSRasterizer
     HTGSRasterizer
 )
 

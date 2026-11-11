@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
             break;
         case 2:
             openxrMode = std::make_shared<sibr::OpenXRRdrMode>(window);
-            multiViewManager.renderingMode(sibr::IRenderingMode::Ptr(new sibr::OpenXRRdrMode(window)));
+            multiViewManager.renderingMode(openxrMode);
             break;
         default:
             break;

@@ -24,7 +24,6 @@ namespace sibr {
         Arg<int> participantID = { "participant-id", -1, "Participant ID for experiment" };
         Arg<int> startFromCondition = { "start-from-condition", 0, "Condition index to start from (0 = first condition)" };
         Arg<bool> calibrationMode = { "calibration-mode", "Run in calibration mode (allow adjustment of scene scale + position and write calibration results to file in dataset dir)" };
-        Arg<bool> exportVisibilityMask = { "export-visibility-mask", "Export the visibility mask for each eye as a line loop (for debugging and use in NeRFICG framework)" };
         Arg<bool> english = { "english", "Display Questionnaire in English (default is German)" };
     };
 }

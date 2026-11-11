@@ -186,11 +186,6 @@ int main(int argc, char** argv) {
     sibr::BasicIBRScene::Ptr scene = nullptr;
     sibr::ExperimentView::Ptr gaussianView = nullptr;
     sibr::InteractiveCameraHandler::Ptr generalCamera(new sibr::InteractiveCameraHandler());
-    if (myArgs.exportVisibilityMask) {
-        gaussianView->exportVisibilityMask = true;
-        SIBR_LOG << "Visibility mask export enabled. The visibility mask for each eye will be exported as a line loop in a binary file named 'render_mask_view_X.bin' where X is the eye index (0 for left, 1 for right)."
-            << "The files will be saved in the current working directory: " << std::filesystem::current_path() << std::endl;
-    }
 
     // Start experiment loop
     int conditionIndex = 0;

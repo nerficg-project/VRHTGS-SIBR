@@ -1,6 +1,6 @@
 [submodule "src/projects/vrhtgs_viewer/renderer/HTGS"]
 	path = src/projects/vrhtgs_viewer/renderer/HTGSCudaBackend/HTGS
 	url = ../../nerficg-project/HTGS.git
-[submodule "src/projects/vrhtgs_viewer/renderer/FoveatedHTGSCudaBackend"]
-	path = src/projects/vrhtgs_viewer/renderer/FoveatedHTGSCudaBackend
-	url = ../../TrueKuehli/FoveatedHTGSCudaBackend.git
+[submodule "src/projects/vrhtgs_viewer/renderer/VRHTGSCudaBackend/VRHTGS"]
+	path = src/projects/vrhtgs_viewer/renderer/VRHTGSCudaBackend/VRHTGS
+	url = ../../nerficg-project/VRHTGS.git
