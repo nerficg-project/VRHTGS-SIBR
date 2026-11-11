@@ -93,10 +93,11 @@ sibr::ExperimentView::ExperimentView(
     const char* file, float scale, int device, bool calibrationMode
 ) : HTGaussianView(ibrScene, renderW, renderH, file, scale, device, calibrationMode)
 {
-    // Setup ImGui binding
+    // Setup ImGui binding (in a separate context, restoring the window's context afterwards)
+    ImGuiContext* previousContext = ImGui::GetCurrentContext();
     imguiContext = ImGui::CreateContext();
     ImGui::SetCurrentContext(imguiContext);
-    auto io = ImGui::GetIO();
+    auto& io = ImGui::GetIO();
     io.BackendFlags = 0;
     io.BackendPlatformName = "custom_no_backend";
     io.Fonts->AddFontFromFileTTF(
@@ -104,6 +105,7 @@ sibr::ExperimentView::ExperimentView(
         32.0f
     );
     ImGui_ImplOpenGL3_Init("#version 430");
+    ImGui::SetCurrentContext(previousContext);
 
     fb.width  = QUESTIONNAIRE_WIDTH;
     fb.height = QUESTIONNAIRE_HEIGHT;
@@ -160,8 +162,14 @@ sibr::ExperimentView::ExperimentView(
 
 
 sibr::ExperimentView::~ExperimentView() {
+    // Shut down the OpenGL backend of *our* ImGui context, not whichever context is current
+    // (usually the window's, whose backend the window shuts down itself; doing it twice crashes on exit)
+    ImGuiContext* previousContext = ImGui::GetCurrentContext();
+    ImGui::SetCurrentContext(imguiContext);
     ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext(imguiContext);
+    ImGui::SetCurrentContext(previousContext != imguiContext ? previousContext : nullptr);
+    imguiContext = nullptr;
 
     glDeleteFramebuffers(1, &fb.fbo);
     glDeleteTextures(1, &fb.color);

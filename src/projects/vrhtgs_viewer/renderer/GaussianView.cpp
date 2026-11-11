@@ -724,7 +724,7 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             imageCuda,
             _resolution.x(),
             _resolution.y(),
-            64,  // radius in pixels
+            40,  // radius in pixels
             (float2*)gazePos,
             make_float3(1.0f, 0.0f, 0.0f),  // color
             vrhtgs::visualization::GazeVisualizationType::CIRCLE,

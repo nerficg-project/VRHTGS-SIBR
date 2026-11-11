@@ -38,11 +38,10 @@ struct Condition {
 static void logCondition(std::ofstream& logFile, int conditionIndex, const std::tm& condition_tm, const Condition& condition) {
     logFile << "\nCondition " << conditionIndex << " started at: "
             << std::put_time(&condition_tm, "%Y-%m-%d %H:%M:%S") << std::endl;
-    logFile << "  Model Type: " << (condition.modelType == sibr::RasterizerVariant::HTGS_FOVEATED ? "HTGS_Foveated" : "HTGS") << std::endl;
+    logFile << "  Model Type: " << (condition.modelType == sibr::RasterizerVariant::HTGS_FOVEATED ? "VRHTGS" : "HTGS") << std::endl;
     logFile << "  Model Path: " << condition.modelPath << std::endl;
     logFile << "  Anti-Aliasing: " << (condition.antiAliasing ? "True" : "False") << std::endl;
     logFile << "  Blur Periphery: " << (condition.blurPeriphery ? "True" : "False") << std::endl;
-    logFile << "  Periphery Mode: " << "linear" << std::endl;
     logFile.flush();
 }
 
@@ -83,7 +82,84 @@ int main(int argc, char** argv) {
     sibr::Window window(PROGRAM_NAME, sibr::Vector2i(50, 50), myArgs,
             sibr::getResourcesDirectory() + "/gaussians/" + PROGRAM_NAME + ".ini");
 
-    // Set up logging to file
+    // Set up MultiViewManager
+    std::shared_ptr<sibr::OpenXRRdrMode> openxrMode = nullptr;
+    sibr::MultiViewManager multiViewManager(window, false);
+    switch (myArgs.rendering_mode) {
+        case 2:
+            openxrMode = std::make_shared<sibr::OpenXRRdrMode>(window);
+            multiViewManager.renderingMode(openxrMode);
+            break;
+        default:
+            SIBR_ERR << "Only rendering mode 2 (OpenXR) is supported in this experiment." << std::endl;
+            return -1;
+    }
+
+    // Load experiment configuration
+    std::ifstream cfgFile(myArgs.modelPath.get() + "_" + std::to_string(myArgs.participantID.get()) +  ".csv");
+    if (!cfgFile.good())
+    {
+        SIBR_ERR << "Could not find config file '" << myArgs.modelPath.get() << "'." << std::endl;
+    }
+
+    // Read experiment config as CSV with columns MODEL_TYPE,MODEL_PATH,ANTI_ALIASING,BLUR_PERIPHERY
+    // (as written by nerficg/scripts/vrhtgs_create_experiment_config.py), MODEL_TYPE being HTGS or VRHTGS
+    std::string line;
+    std::vector<Condition> conditions;
+
+    // Read experiment conditions
+    while (std::getline(cfgFile, line)) {
+        // Configs written on Windows use CRLF line endings
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        std::stringstream ss(line);
+        std::string item;
+        std::vector<std::string> tokens;
+
+        // Split by comma
+        while (std::getline(ss, item, ',')) {
+            tokens.push_back(item);
+        }
+
+        if (tokens.size() == 0) {
+            continue; // skip empty lines
+        } else if (tokens.size() != 4) {
+            SIBR_ERR << "Invalid config line: '" << line << "'. Expected 4 tokens, got " << tokens.size() << "." << std::endl;
+            continue;
+        }
+
+        Condition cond;
+        if (tokens[0] == "VRHTGS") {
+            cond.modelType = sibr::RasterizerVariant::HTGS_FOVEATED;
+        } else if (tokens[0] == "HTGS") {
+            cond.modelType = sibr::RasterizerVariant::HTGS;
+        } else {
+            SIBR_ERR << "Invalid model type '" << tokens[0] << "' in config line: '" << line << "'. Expected HTGS or VRHTGS." << std::endl;
+            continue;
+        }
+        cond.modelPath = tokens[1];
+        if (!std::filesystem::is_directory(cond.modelPath)) {
+            SIBR_ERR << "Invalid model path: '" << cond.modelPath << "'." << std::endl;
+        }
+        cond.antiAliasing = (tokens[2] == "True") ? true : false;
+        cond.blurPeriphery = (tokens[3] == "True") ? true : false;
+
+        conditions.push_back(cond);
+    }
+
+    if (startFromCondition > 0 && startFromCondition < static_cast<int>(conditions.size())) {
+        conditions.erase(conditions.begin(), conditions.begin() + startFromCondition);
+        SIBR_LOG << "Starting from condition index " << startFromCondition << std::endl;
+    }
+
+    if (conditions.size() == 0) {
+        SIBR_ERR << "No valid experiment conditions found in config file." << std::endl;
+        return -1;
+    }
+
+    // Set up logging to file (only now, so runs rejected during setup don't leave empty logs behind)
     const auto now = std::chrono::system_clock::now();
     const auto time_t = std::chrono::system_clock::to_time_t(now);
     std::tm tm_buf;
@@ -109,70 +185,6 @@ int main(int argc, char** argv) {
     logFile << "========================================" << std::endl;
     logFile.flush();
 
-    // Set up MultiViewManager
-    std::shared_ptr<sibr::OpenXRRdrMode> openxrMode = nullptr;
-    sibr::MultiViewManager multiViewManager(window, false);
-    switch (myArgs.rendering_mode) {
-        case 2:
-            openxrMode = std::make_shared<sibr::OpenXRRdrMode>(window);
-            multiViewManager.renderingMode(openxrMode);
-            break;
-        default:
-            SIBR_ERR << "Only rendering mode 2 (OpenXR) is supported in this experiment." << std::endl;
-            return -1;
-    }
-
-    // Load experiment configuration
-    std::ifstream cfgFile(myArgs.modelPath.get() + "_" + std::to_string(myArgs.participantID.get()) +  ".csv");
-    if (!cfgFile.good())
-    {
-        SIBR_ERR << "Could not find config file '" << myArgs.modelPath.get() << "'." << std::endl;
-    }
-
-    // Read experiment config as CSV with columns MODEL_TYPE,MODEL_PATH,ANTI_ALIASING,BLUR_PERIPEHRY,PERIPHERY_INTERPOLATION_MODE
-    std::string line;
-    std::vector<Condition> conditions;
-
-    // Read experiment conditions
-    while (std::getline(cfgFile, line)) {
-        std::stringstream ss(line);
-        std::string item;
-        std::vector<std::string> tokens;
-
-        // Split by comma
-        while (std::getline(ss, item, ',')) {
-            tokens.push_back(item);
-        }
-
-        if (tokens.size() == 0) {
-            continue; // skip empty lines
-        } else if (tokens.size() != 5) {
-            SIBR_ERR << "Invalid config line: '" << line << "'. Expected 5 tokens, got " << tokens.size() << "." << std::endl;
-            continue;
-        }
-
-        Condition cond;
-        cond.modelType = (tokens[0] == "HTGS_Foveated") ? sibr::RasterizerVariant::HTGS_FOVEATED : sibr::RasterizerVariant::HTGS;
-        cond.modelPath = tokens[1];
-        if (!std::filesystem::is_directory(cond.modelPath)) {
-            SIBR_ERR << "Invalid model path: '" << cond.modelPath << "'." << std::endl;
-        }
-        cond.antiAliasing = (tokens[2] == "True") ? true : false;
-        cond.blurPeriphery = (tokens[3] == "True") ? true : false;
-
-        conditions.push_back(cond);
-    }
-
-    if (startFromCondition > 0 && startFromCondition < static_cast<int>(conditions.size())) {
-        conditions.erase(conditions.begin(), conditions.begin() + startFromCondition);
-        SIBR_LOG << "Starting from condition index " << startFromCondition << std::endl;
-    }
-
-    if (conditions.size() == 0) {
-        SIBR_ERR << "No valid experiment conditions found in config file." << std::endl;
-        return -1;
-    }
-
     // Set up options
     sibr::BasicIBRScene::SceneOptions myOpts;
     myOpts.renderTargets = false;
@@ -189,6 +201,7 @@ int main(int argc, char** argv) {
 
     // Start experiment loop
     int conditionIndex = 0;
+    int completedConditions = 0;  // conditionIndex also counts a condition that was aborted
     bool eyeTrackingShown = false;
     for (const auto& condition : conditions) {
         conditionIndex++;
@@ -223,7 +236,14 @@ int main(int argc, char** argv) {
             scene.reset(new sibr::BasicIBRScene(myArgs, myOpts));
         }
 
-        std::string plyfile = (condition.modelPath / "gaussians.ply").string();
+        std::filesystem::path plyPath = condition.modelPath / "gaussians.ply";
+        if (!std::filesystem::exists(plyPath)) {
+            plyPath = condition.modelPath / "final.ply";  // Name used by nerficg's vrhtgs_export_model.py
+            if (!std::filesystem::exists(plyPath)) {
+                SIBR_ERR << "Could not find 'gaussians.ply' or 'final.ply' in model path " << condition.modelPath << std::endl;
+            }
+        }
+        std::string plyfile = plyPath.string();
 
         // Fix rendering aspect ratio if user provided rendering size
         uint32_t scene_width = scene->cameras()->inputCameras()[0]->w();
@@ -309,8 +329,8 @@ int main(int argc, char** argv) {
         sibr::ExperimentResponses userResponseData;
         userResponseData.english = myArgs.english;
         if (!calibrationMode && !eyeTrackingShown) {
-            std::cout << "Showing eye tracking visualization for the first time. Press SPACE to hide it during the experiment." << std::endl;
-            gaussianView->showGUI();
+            std::cout << "Showing eye tracking visualization for the first time. Press A or X on the controller to hide it." << std::endl;
+            gaussianView->showScene();  // GUI takes precedence over the gaze visualization, so make sure it is hidden
             gaussianView->showGazeVisualization();
             userResponseData.showGazeVisualization = true;
             eyeTrackingShown = true;
@@ -393,7 +413,8 @@ int main(int argc, char** argv) {
                 auto condition_end = std::chrono::system_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(condition_end - condition_start);
 
-                logFile << "  User completed condition (Space pressed)" << std::endl;
+                completedConditions++;
+                logFile << "  User completed condition" << std::endl;
                 logFile << "  Duration: " << duration.count() << " ms" << std::endl;
                 logUserResponses(logFile, userResponseData);
                 logFile.flush();
@@ -407,6 +428,7 @@ int main(int argc, char** argv) {
             }
 
             if (userResponseData.showGazeVisualization) {
+                gaussianView->showScene();
                 gaussianView->showGazeVisualization();
             } else if (userResponseData.conditionHidden) {
                 gaussianView->showGUI();
@@ -456,7 +478,7 @@ int main(int argc, char** argv) {
 
     logFile << "\n========================================" << std::endl;
     logFile << "Experiment ended at: " << std::put_time(&end_tm, "%Y-%m-%d %H:%M:%S") << std::endl;
-    logFile << "Total conditions completed: " << conditionIndex << "/" << conditions.size() << std::endl;
+    logFile << "Total conditions completed: " << completedConditions << "/" << conditions.size() << std::endl;
     logFile.close();
 
     SIBR_LOG << "Experiment log saved to: " << log_filename.str() << std::endl;
