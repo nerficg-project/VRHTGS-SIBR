@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <functional>
 #include <memory>
 
@@ -184,9 +185,25 @@ namespace sibr {
         }
 
         /**
-         * Process controller input for calibration adjustments.
+         * Process controller input for calibration adjustments (scene scale, yaw and position,
+         * written to sceneTransform). Y/B cycles through the modes, see CalibrationControl.
          */
         void handleCalibrationInput(const sibr::ControllerState& controller);
+
+        /**
+         * Process controller input for free locomotion relative to the head direction.
+         * Left stick: move / strafe horizontally. Right stick: x turns (around the head),
+         * y moves up / down. Y/B resets. Does not modify sceneTransform.
+         */
+        void handleLocomotionInput(const sibr::ControllerState& controller);
+
+        /** Undo all locomotion (back to the pose given by sceneTransform). */
+        void resetLocomotion() { locomotionYaw = 0.0f; locomotionTranslation.setZero(); }
+
+        /** What the stick currently adjusts in calibration mode. */
+        enum class CalibrationControl : int { SCALE = 0, YAW = 1, POSITION_HORIZONTAL = 2, HEIGHT = 3, COUNT = 4 };
+        CalibrationControl getCalibrationControl() const { return calibrationControl; }
+        static const char* calibrationControlDescription(CalibrationControl control);
 
         /**
          * Start a new recording session, which stores parameters for each rendered frame,
@@ -251,6 +268,33 @@ namespace sibr {
             std::vector<Scale> scales;
         } calibrationData;
         float heightAdjustment = 0.0f;
+        CalibrationControl calibrationControl = CalibrationControl::SCALE;
+
+        // Locomotion: a yaw around the world's vertical axis plus a translation, applied in world
+        // space on top of sceneTransform (model -> world = L * sceneTransform). Kept as yaw +
+        // translation instead of a matrix so repeated updates can't drift away from a rigid motion.
+        float locomotionYaw = 0.0f;
+        sibr::Vector3f locomotionTranslation = sibr::Vector3f::Zero();
+        float locomotionSpeed = 1.5f;      // m/s at full stick deflection
+        float locomotionTurnSpeed = 90.0f; // deg/s at full stick deflection
+        std::chrono::steady_clock::time_point lastInputTime{};
+        sibr::Matrix4f locomotionTransform() const;
+
+        // Head pose in world space (the frame sceneTransform maps into; with OpenXRRdrMode's
+        // default Y-invert this is +x right, +y down, +z initially forward), taken from the last
+        // rendered eye cameras, so it includes every offset the renderer actually uses.
+        sibr::Vector3f eyeWorldPosition[2] = { sibr::Vector3f::Zero(), sibr::Vector3f::Zero() };
+        sibr::Vector3f eyeWorldForward[2] = { sibr::Vector3f(0, 0, 1), sibr::Vector3f(0, 0, 1) };
+        sibr::Vector3f eyeWorldUp[2] = { sibr::Vector3f(0, -1, 0), sibr::Vector3f(0, -1, 0) };
+        bool stereoEyesSeen = false;  // Only slot 0 is filled in mono (desktop) rendering
+        sibr::Vector3f headWorldPosition() const {
+            return stereoEyesSeen ? sibr::Vector3f(0.5f * (eyeWorldPosition[0] + eyeWorldPosition[1])) : eyeWorldPosition[0];
+        }
+        /** Head-relative horizontal frame: unit forward / right vectors (in the floor plane) and world up. */
+        struct HeadFrame { sibr::Vector3f forward, right, up, position; };
+        HeadFrame headFrame() const;
+        float inputDeltaTime();
+        void uploadScaledModel();
 
         // Rasterization helper buffers
         RasterizationBuffer perPrimitiveBuffer, perTileBuffer, perSubtileBuffer, perInstanceBuffer, blurImageBuffer;

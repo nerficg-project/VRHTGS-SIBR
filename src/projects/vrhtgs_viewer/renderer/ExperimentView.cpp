@@ -645,6 +645,7 @@ bool sibr::ExperimentView::renderExperimenterGui(ExperimentResponses& userRespon
             ImGui::Separator();
             ImGui::Text("Calibration Mode is ON.");
             ImGui::Text("Adjust the model position and scale as needed.");
+            ImGui::TextWrapped("Stick: %s  (Y/B: next mode, A/X: done)", calibrationControlDescription(getCalibrationControl()));
 
             if (ImGui::Button("Submit##Calibration")) {
                 ImGui::End();

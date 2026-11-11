@@ -511,6 +511,11 @@ namespace sibr
         else
             state.stickYState = controllerStates[1].stickYState.currentState;
 
+        state.leftStickX = controllerStates[0].stickXState.currentState;
+        state.leftStickY = controllerStates[0].stickYState.currentState;
+        state.rightStickX = controllerStates[1].stickXState.currentState;
+        state.rightStickY = controllerStates[1].stickYState.currentState;
+
         state.leftPressed = controllerStates[0].leftPressed.is && !controllerStates[0].leftPressed.was;
         state.rightPressed = controllerStates[0].rightPressed.is && !controllerStates[0].rightPressed.was;
         state.upPressed = controllerStates[0].upPressed.is && !controllerStates[0].upPressed.was;

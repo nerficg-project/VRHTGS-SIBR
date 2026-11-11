@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     sibr::HTGaussianView::Ptr gaussianView(
         new sibr::HTGaussianView(scene, sceneResWidth, sceneResHeight,
             reinterpret_cast<const char*>(plyfile.u8string().c_str()),
-            1.0f, device, true /* calibration mode to allow controller inputs for movement */
+            1.0f, device, false
         ));
     if (myArgs.exportVisibilityMask) {
         gaussianView->exportVisibilityMask = true;
@@ -141,9 +141,9 @@ int main(int argc, char** argv) {
             window.close();
         }
         if (openxrMode) {
-            // Poll controller inputs
+            // Head-relative locomotion with the thumbsticks
             auto controller = openxrMode->getControllerState();
-            gaussianView->handleCalibrationInput(controller);
+            gaussianView->handleLocomotionInput(controller);
         }
 
         multiViewManager.onUpdate(sibr::Input::global());

@@ -50,22 +50,12 @@
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 
+#include <core/openxr/ControllerState.hpp>
+
 using namespace Eigen;
 
 namespace sibr
 {
-    struct ControllerState {
-        bool confirmState;
-        bool backState;
-        float stickXState;
-        float stickYState;
-
-        bool leftPressed;
-        bool rightPressed;
-        bool upPressed;
-        bool downPressed;
-    };
-
     /**
      *	Class that communicates with the Headed-Mounted display (aka VR headset) through an OpenXR loader.
      *  The OpenXR loader enumarates all available OpenXR runtimes for the requested form factor (i.e. HMD)

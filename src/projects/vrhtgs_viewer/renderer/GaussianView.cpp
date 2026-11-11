@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
+#include <numbers>
 #include <sstream>
 #include <thread>
 
@@ -8,6 +10,7 @@
 #include <openxr/openxr.h>
 
 #include "core/graphics/GUI.hpp"
+#include "core/openxr/ControllerState.hpp"
 #include "VRHTGSCudaBackend/rasterization/include/inference.h"
 #include "VRHTGSCudaBackend/rasterization/include/utils/rasterization_utils.h"
 #include "VRHTGSCudaBackend/visualization/include/visualization.h"
@@ -38,19 +41,6 @@ static float inverse_sigmoid(const float m1) {
 
 
 namespace sibr {
-    // Can't import from OpenXRHMD.hpp directly due problems with import order
-    struct ControllerState {
-        bool confirmState;
-        bool backState;
-        float stickXState;
-        float stickYState;
-
-        bool leftPressed;
-        bool rightPressed;
-        bool upPressed;
-        bool downPressed;
-    };
-
     // A simple copy renderer class
     class BufferCopyRenderer {
     public:
@@ -681,6 +671,14 @@ void sibr::HTGaussianView::initializeFoveaMask() {
 
 
 void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Camera& eye) {
+    // Remember the eye pose (world space) so controller input can be made head-relative
+    eyeWorldPosition[eyeSlot(eye)] = eye.position();
+    eyeWorldForward[eyeSlot(eye)] = eye.dir();
+    eyeWorldUp[eyeSlot(eye)] = eye.up();
+    if (eye.viewIndex() == 1) {
+        stereoEyesSeen = true;
+    }
+
     // Get focal and center position from eye parameters
     float focalX = 0.5f / std::tan(eye.fovy() / 2.0f) / eye.aspect();
     float focalY = 0.5f / std::tan(eye.fovy() / 2.0f);
@@ -739,7 +737,7 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     }
 
     // Get remaining view parameters for main render path
-    sibr::Matrix4f sceneTransform = this->sceneTransform;
+    sibr::Matrix4f sceneTransform = locomotionTransform() * this->sceneTransform;
     float near = eye.znear();
     float far = eye.zfar();
     float zRange = far - near;
@@ -972,24 +970,10 @@ void sibr::HTGaussianView::onGUI() {
         if (calibrationMode) {
             ImGui::Separator();
             ImGui::Text("Calibration Mode");
+            ImGui::TextWrapped("Stick: %s  (Y/B: next mode)", calibrationControlDescription(calibrationControl));
 
             if (ImGui::DragFloat("Model Scale", &calibrationData.modelScale, 0.001f, 0.001f, 100.0f)) {
-                // Update scales on GPU
-                std::vector<Pos> scaledPositions = calibrationData.positions;
-                std::vector<Scale> scaledScales = calibrationData.scales;
-                for (auto& s : scaledScales) {
-                    s.scale[0] *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                    s.scale[1] *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                    s.scale[2] *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                }
-                for (auto& p : scaledPositions) {
-                    p.x() *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                    p.y() *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                    p.z() *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                }
-
-                CUDA_SAFE_CALL_ALWAYS(cudaMemcpy(scaleCuda, scaledScales.data(), sizeof(Scale) * count, cudaMemcpyHostToDevice));
-                CUDA_SAFE_CALL_ALWAYS(cudaMemcpy(posCuda, scaledPositions.data(), sizeof(Pos) * count, cudaMemcpyHostToDevice));
+                uploadScaledModel();
             }
 
             sibr::Vector3f translation = sceneTransform.block<3,1>(0,3);
@@ -997,74 +981,214 @@ void sibr::HTGaussianView::onGUI() {
                 sceneTransform.block<3,1>(0,3) = translation;
             }
 
-            sibr::Matrix3f rotation = sceneTransform.block<3,3>(0,0);
-            auto eulerAngles = rotation.eulerAngles(0, 1, 2);
-            float yaw = eulerAngles[1];
+            // Yaw = heading of the model's z axis around the world's vertical axis. Read with atan2
+            // (stable over the full circle, unlike Eigen's eulerAngles) and applied as a relative
+            // rotation, so any pitch/roll in the loaded pose is kept.
+            const sibr::Matrix3f rotation = sceneTransform.block<3,3>(0,0);
+            const float currentYaw = std::atan2(rotation(0, 2), rotation(2, 2));
+            float yaw = currentYaw;
             if (ImGui::DragFloat("Starting Yaw", &yaw, 0.001f, -3.14159f, 3.14159f)) {
-                sceneTransform.block<3,3>(0,0) <<
-                    cos(yaw), 0, sin(yaw),
-                    0,        1, 0,
-                    -sin(yaw), 0, cos(yaw);
+                sceneTransform.block<3,3>(0,0) =
+                    Eigen::AngleAxisf(yaw - currentYaw, sibr::Vector3f::UnitY()).toRotationMatrix() * rotation;
+            }
+        } else {
+            ImGui::Separator();
+            ImGui::Text("Locomotion");
+            ImGui::TextWrapped("Left stick: move / strafe. Right stick: turn (x), up / down (y). Y/B: reset.");
+            ImGui::DragFloat("Move Speed", &locomotionSpeed, 0.01f, 0.0f, 20.0f, "%.2f m/s");
+            ImGui::DragFloat("Turn Speed", &locomotionTurnSpeed, 0.5f, 0.0f, 360.0f, "%.0f deg/s");
+            if (ImGui::Button("Reset Position")) {
+                resetLocomotion();
             }
         }
     }
     ImGui::End();
 }
 
-void sibr::HTGaussianView::handleCalibrationInput(const sibr::ControllerState& controller) {
-    static int currentlyModifying = 0;
-
-    if (currentlyModifying == 0) {
-        if (std::abs(controller.stickYState) > 0.01f) {
-            calibrationData.modelScale += controller.stickYState * 0.01f;
-            // Update scales on GPU
-            std::vector<Pos> scaledPositions = calibrationData.positions;
-            std::vector<Scale> scaledScales = calibrationData.scales;
-            for (auto& s : scaledScales) {
-                s.scale[0] *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                s.scale[1] *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                s.scale[2] *= (calibrationData.modelScale / calibrationData.baseModelScale);
-            }
-            for (auto& p : scaledPositions) {
-                p.x() *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                p.y() *= (calibrationData.modelScale / calibrationData.baseModelScale);
-                p.z() *= (calibrationData.modelScale / calibrationData.baseModelScale);
-            }
-
-            CUDA_SAFE_CALL_ALWAYS(cudaMemcpy(scaleCuda, scaledScales.data(), sizeof(Scale) * count, cudaMemcpyHostToDevice));
-            CUDA_SAFE_CALL_ALWAYS(cudaMemcpy(posCuda, scaledPositions.data(), sizeof(Pos) * count, cudaMemcpyHostToDevice));
-        }
-    } else if (currentlyModifying == 1) {
-        if (std::abs(controller.stickXState) > 0.01f) {
-            sibr::Matrix3f rotation = sceneTransform.block<3,3>(0,0);
-            auto eulerAngles = rotation.eulerAngles(0, 1, 2);
-            float yaw = eulerAngles[1];
-            yaw += controller.stickXState * 0.01f;
-            sceneTransform.block<3,3>(0,0) <<
-                cos(yaw), 0, sin(yaw),
-                0,        1, 0,
-                -sin(yaw), 0, cos(yaw);
-        }
-    } else if (currentlyModifying == 2) {
-        sibr::Vector3f translation = sceneTransform.block<3,1>(0,3);
-        if (std::abs(controller.stickXState) > 0.01f) {
-            translation.x() += controller.stickXState * 0.01f;
-        }
-        if (std::abs(controller.stickYState) > 0.01f) {
-            translation.z() += controller.stickYState * 0.01f;
-        }
-        sceneTransform.block<3,1>(0,3) = translation;
-    } else if (currentlyModifying == 3) {
-        sibr::Vector3f translation = sceneTransform.block<3,1>(0,3);
-        if (std::abs(controller.stickYState) > 0.01f) {
-            translation.y() += controller.stickYState * 0.01f;
-        }
-        sceneTransform.block<3,1>(0,3) = translation;
+const char* sibr::HTGaussianView::calibrationControlDescription(CalibrationControl control) {
+    switch (control) {
+        case CalibrationControl::SCALE:               return "Scale (y), around the floor point below the head";
+        case CalibrationControl::YAW:                 return "Turn yourself (x), around the head";
+        case CalibrationControl::POSITION_HORIZONTAL: return "Move yourself horizontally (x / y), relative to the head direction";
+        case CalibrationControl::HEIGHT:              return "Move yourself up / down (y)";
+        default:                                      return "?";
     }
+}
+
+void sibr::HTGaussianView::uploadScaledModel() {
+    if (calibrationData.positions.size() != static_cast<size_t>(count) ||
+        calibrationData.scales.size() != static_cast<size_t>(count)) {
+        return;  // CPU copies only exist in calibration mode
+    }
+
+    const float factor = calibrationData.modelScale / calibrationData.baseModelScale;
+    std::vector<Pos> scaledPositions = calibrationData.positions;
+    std::vector<Scale> scaledScales = calibrationData.scales;
+    for (auto& s : scaledScales) {
+        s.scale[0] *= factor;
+        s.scale[1] *= factor;
+        s.scale[2] *= factor;
+    }
+    for (auto& p : scaledPositions) {
+        p *= factor;
+    }
+
+    CUDA_SAFE_CALL_ALWAYS(cudaMemcpy(scaleCuda, scaledScales.data(), sizeof(Scale) * count, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL_ALWAYS(cudaMemcpy(posCuda, scaledPositions.data(), sizeof(Pos) * count, cudaMemcpyHostToDevice));
+}
+
+float sibr::HTGaussianView::inputDeltaTime() {
+    const auto now = std::chrono::steady_clock::now();
+    float dt = 0.0f;
+    if (lastInputTime.time_since_epoch().count() != 0) {
+        dt = std::chrono::duration<float>(now - lastInputTime).count();
+    }
+    lastInputTime = now;
+    // Don't jump after a stall (model loading, a hitch, the first call)
+    return std::clamp(dt, 0.0f, 0.1f);
+}
+
+sibr::HTGaussianView::HeadFrame sibr::HTGaussianView::headFrame() const {
+    HeadFrame frame;
+    frame.position = headWorldPosition();
+
+    sibr::Vector3f forward = eyeWorldForward[0];
+    sibr::Vector3f up = eyeWorldUp[0];
+    if (stereoEyesSeen) {
+        forward += eyeWorldForward[1];
+        up += eyeWorldUp[1];
+    }
+
+    // The world's vertical axis is y in both the OpenXR (+y up) and the Y-inverted (+y down)
+    // convention; which way is "up" follows from the head's up vector.
+    frame.up = sibr::Vector3f(0.0f, up.y() >= 0.0f ? 1.0f : -1.0f, 0.0f);
+
+    sibr::Vector3f horizontal = forward - forward.dot(frame.up) * frame.up;
+    if (horizontal.norm() < 0.1f * forward.norm()) {
+        // Looking almost straight up or down: the head's up vector points (back)wards instead
+        const sibr::Vector3f upHorizontal = up - up.dot(frame.up) * frame.up;
+        horizontal = (forward.dot(frame.up) < 0.0f ? 1.0f : -1.0f) * upHorizontal;
+    }
+    if (horizontal.norm() < 1e-6f) {
+        horizontal = sibr::Vector3f(0.0f, 0.0f, frame.up.y() < 0.0f ? 1.0f : -1.0f);
+    }
+    frame.forward = horizontal.normalized();
+    frame.right = frame.forward.cross(frame.up);
+    return frame;
+}
+
+sibr::Matrix4f sibr::HTGaussianView::locomotionTransform() const {
+    sibr::Matrix4f transform = sibr::Matrix4f::Identity();
+    transform.block<3,3>(0,0) = Eigen::AngleAxisf(locomotionYaw, sibr::Vector3f::UnitY()).toRotationMatrix();
+    transform.block<3,1>(0,3) = locomotionTranslation;
+    return transform;
+}
+
+static float applyDeadzone(const float value, const float deadzone = 0.15f) {
+    const float magnitude = std::abs(value);
+    if (magnitude <= deadzone) {
+        return 0.0f;
+    }
+    return std::copysign(std::min(1.0f, (magnitude - deadzone) / (1.0f - deadzone)), value);
+}
+
+void sibr::HTGaussianView::handleLocomotionInput(const sibr::ControllerState& controller) {
+    const float dt = inputDeltaTime();
 
     if (controller.backState) {
-        currentlyModifying = (currentlyModifying + 1) % 4;
+        resetLocomotion();
+        return;
     }
+
+    const float moveForward = applyDeadzone(controller.leftStickY);
+    const float moveRight = applyDeadzone(controller.leftStickX);
+    const float turnRight = applyDeadzone(controller.rightStickX);
+    const float moveUp = applyDeadzone(controller.rightStickY);
+    if (moveForward == 0.0f && moveRight == 0.0f && turnRight == 0.0f && moveUp == 0.0f) {
+        return;
+    }
+
+    const HeadFrame head = headFrame();
+
+    // Moving the user by d is moving the scene by -d
+    const sibr::Vector3f userMotion = (moveForward * head.forward + moveRight * head.right + moveUp * head.up)
+                                      * locomotionSpeed * dt;
+    locomotionTranslation -= userMotion;
+
+    // Turning the user right by angle a (forward towards right, i.e. around -up) is turning the
+    // scene by -a around -up = a around up, pivoting at the head so the user stays in place.
+    if (turnRight != 0.0f) {
+        const float angle = turnRight * locomotionTurnSpeed * (std::numbers::pi_v<float> / 180.0f) * dt;
+        const float yawAroundY = angle * head.up.y();  // head.up is +-UnitY
+        const sibr::Matrix3f rotation = Eigen::AngleAxisf(yawAroundY, sibr::Vector3f::UnitY()).toRotationMatrix();
+        locomotionYaw += yawAroundY;
+        locomotionTranslation = head.position + rotation * (locomotionTranslation - head.position);
+    }
+}
+
+void sibr::HTGaussianView::handleCalibrationInput(const sibr::ControllerState& controller) {
+    if (!calibrationMode) {
+        return;  // The CPU copies of the model needed for rescaling only exist in calibration mode
+    }
+
+    const float dt = inputDeltaTime();
+
+    if (controller.backState) {
+        calibrationControl = static_cast<CalibrationControl>(
+            (static_cast<int>(calibrationControl) + 1) % static_cast<int>(CalibrationControl::COUNT));
+        SIBR_LOG << "Calibration: stick now adjusts: " << calibrationControlDescription(calibrationControl) << std::endl;
+        return;
+    }
+
+    const float stickX = applyDeadzone(controller.stickXState);
+    const float stickY = applyDeadzone(controller.stickYState);
+    if (stickX == 0.0f && stickY == 0.0f) {
+        return;
+    }
+
+    // All adjustments are made in world space (i.e. pre-multiplied to sceneTransform), relative to
+    // the user's head, so they behave the same whichever way the user is facing.
+    const HeadFrame head = headFrame();
+    const sibr::Vector3f floorPoint = head.position - head.position.dot(head.up) * head.up;
+    constexpr float MOVE_SPEED = 0.5f;   // m/s at full deflection
+    constexpr float TURN_SPEED = 0.5f;   // rad/s at full deflection
+    constexpr float SCALE_SPEED = 0.5f;  // log-scale units/s at full deflection
+
+    sibr::Vector3f translation = sceneTransform.block<3,1>(0,3);
+    switch (calibrationControl) {
+        case CalibrationControl::SCALE: {
+            if (stickY == 0.0f) break;
+            const float oldScale = calibrationData.modelScale;
+            calibrationData.modelScale = std::clamp(oldScale * std::exp(stickY * SCALE_SPEED * dt), 0.001f, 100.0f);
+            // Keep the scene point on the floor below the head in place
+            const float ratio = calibrationData.modelScale / oldScale;
+            translation = floorPoint + ratio * (translation - floorPoint);
+            uploadScaledModel();
+            break;
+        }
+        case CalibrationControl::YAW: {
+            if (stickX == 0.0f) break;
+            // Feels like turning yourself: stick right turns the user right, i.e. the scene left
+            // (what is to the right comes to the front), around the head
+            const float yawAroundY = stickX * TURN_SPEED * dt * head.up.y();
+            const sibr::Matrix3f rotation = Eigen::AngleAxisf(yawAroundY, sibr::Vector3f::UnitY()).toRotationMatrix();
+            sceneTransform.block<3,3>(0,0) = rotation * sceneTransform.block<3,3>(0,0);
+            translation = floorPoint + rotation * (translation - floorPoint);
+            break;
+        }
+        case CalibrationControl::POSITION_HORIZONTAL:
+            // Feels like moving yourself: stick forward moves the user forward (the scene towards
+            // the user), stick right moves the user right (the scene to the left)
+            translation -= (stickY * head.forward + stickX * head.right) * MOVE_SPEED * dt;
+            break;
+        case CalibrationControl::HEIGHT:
+            // Stick up moves the user up (the scene down)
+            translation -= stickY * head.up * MOVE_SPEED * dt;
+            break;
+        default:
+            break;
+    }
+    sceneTransform.block<3,1>(0,3) = translation;
 }
 
 
