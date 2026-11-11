@@ -342,6 +342,11 @@ namespace sibr
         }
 
     private:
+        /**
+         * Destroy the instance after the runtime reported its loss and mark the session as failed
+         */
+        void handleInstanceLoss();
+
         // Log eye tracking info every 200 frames to assure the experimenter eye tracking is functional
         static constexpr const int LOG_INTERVAL = 200;
 

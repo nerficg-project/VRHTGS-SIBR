@@ -933,8 +933,27 @@ namespace sibr
         return true;
     }
 
+    void OpenXRHMD::handleInstanceLoss()
+    {
+        if (m_instance != XR_NULL_HANDLE)
+        {
+            XrResult result = xrDestroyInstance(m_instance);
+            xrCheck(NULL, result, "Failed to destroy XR instance.");
+        }
+        m_instance = XR_NULL_HANDLE;
+        m_session = XR_NULL_HANDLE;
+        m_playSpace = XR_NULL_HANDLE;
+        m_eyeTracker = XR_NULL_HANDLE;
+        m_status = SessionStatus::FAILURE;
+    }
+
     bool OpenXRHMD::pollEvents()
     {
+        if (m_instance == XR_NULL_HANDLE)
+        {
+            return false;
+        }
+
         // Handle runtime Events
         XrEventDataBuffer runtime_event = {.type = XR_TYPE_EVENT_DATA_BUFFER, .next = NULL};
         XrResult poll_result = xrPollEvent(m_instance, &runtime_event);
@@ -946,16 +965,14 @@ namespace sibr
             {
                 XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtime_event;
                 SIBR_WRG << "EVENT: instance loss pending at " << event->lossTime << "! Destroying instance." << std::endl;
-                XrResult result = xrDestroyInstance(m_instance);
-                if (!xrCheck(NULL, result, "Failed to destroy XR instance."))
-                {
-                    m_status = SessionStatus::FAILURE;
-                }
+                handleInstanceLoss();
+                break;
             }
             case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED:
             {
                 XrEventDataSessionStateChanged *event = (XrEventDataSessionStateChanged *)&runtime_event;
                 updateCurrentSessionState(event->state);
+                break;
             }
             case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED:
             {
@@ -964,11 +981,17 @@ namespace sibr
             }
             default:
                 SIBR_LOG << "EVENT: Unhandled event (type " << runtime_event.type << ")" << std::endl;
+                break;
             }
         }
         else if (poll_result == XR_EVENT_UNAVAILABLE)
         {
             // No new events
+        }
+        else if (poll_result == XR_ERROR_INSTANCE_LOST)
+        {
+            SIBR_WRG << "EVENT: XR instance lost!" << std::endl;
+            handleInstanceLoss();
         }
         else
         {
