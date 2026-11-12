@@ -3,6 +3,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
@@ -216,6 +217,15 @@ namespace sibr {
          */
         void disableRecording();
 
+        /**
+         * Announce the OpenXR timing of the headset frame about to be rendered
+         * (see OpenXRRdrMode::setFrameBeginCallback). If recording, it is written as a
+         * FRAME_BEGIN record before the frame's first FRAME_RENDER record.
+         */
+        void beginXRFrame(int64_t displayTime, int64_t displayPeriod) {
+            pendingFrameBegin = htgs::recording::FrameBeginRecord{displayTime, displayPeriod};
+        }
+
         // Rasterizer settings
         RasterizerVariant modelType = RasterizerVariant::HTGS_FOVEATED;
         bool antiAliasing = true;
@@ -301,6 +311,7 @@ namespace sibr {
 
         // Recording data
         std::unique_ptr<htgs::recording::RecordingWriter> recordingWriter;
+        std::optional<htgs::recording::FrameBeginRecord> pendingFrameBegin;  // written lazily, see beginXRFrame()
         std::string currentModelPath;
         float currentSceneScale = 1.0f;
         int currentConditionIndex = -1;

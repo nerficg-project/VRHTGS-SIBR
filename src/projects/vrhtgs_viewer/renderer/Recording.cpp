@@ -11,6 +11,11 @@ RecordingWriter::RecordingWriter(const std::string& filename) {
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open recording file for writing: " + filename);
     }
+
+    FileHeader header;
+    std::memcpy(header.magic, FILE_MAGIC, sizeof(header.magic));
+    header.version = FORMAT_VERSION;
+    file.write(reinterpret_cast<const char*>(&header), sizeof(header));
 }
 
 RecordingWriter::~RecordingWriter() {
@@ -22,8 +27,6 @@ RecordingWriter::~RecordingWriter() {
 void RecordingWriter::writeSceneChange(int conditionIndex, RasterizerVariant modelType,
                                        const std::string& modelPath, float sceneScale,
                                        bool antiAliasing, bool blurPeriphery) {
-    int peripheryInterpolationMode = 1; // ALWAYS LINEAR
-
     // Write record type
     RecordType recordType = RecordType::SCENE_CHANGE;
     file.write(reinterpret_cast<const char*>(&recordType), sizeof(recordType));
@@ -35,7 +38,6 @@ void RecordingWriter::writeSceneChange(int conditionIndex, RasterizerVariant mod
     record.sceneScale = sceneScale;
     record.antiAliasing = antiAliasing;
     record.blurPeriphery = blurPeriphery;
-    record.peripheryInterpolationMode = peripheryInterpolationMode;
 
     // Copy model path with bounds checking
     std::strncpy(record.modelPath, modelPath.c_str(), sizeof(record.modelPath) - 1);
@@ -63,8 +65,7 @@ void RecordingWriter::writeFoveaMaskUpdate(int widthTiles, int heightTiles,
                tableSize * sizeof(uint32_t));
 }
 
-void RecordingWriter::writeVisibilityMaskUpdate(int widthTiles, int heightTiles,
-                                            const uint32_t* packedMask) {
+void RecordingWriter::writeVisibilityMaskUpdate(int widthTiles, int heightTiles, const uint32_t* packedMask) {
     // Write record type
     RecordType recordType = RecordType::VISIBILITY_MASK_UPDATE;
     file.write(reinterpret_cast<const char*>(&recordType), sizeof(recordType));
@@ -79,6 +80,15 @@ void RecordingWriter::writeVisibilityMaskUpdate(int widthTiles, int heightTiles,
     size_t packedSize = (widthTiles * heightTiles + sizeof(uint32_t) * 8 - 1) / (sizeof(uint32_t) * 8);
     file.write(reinterpret_cast<const char*>(packedMask),
                packedSize * sizeof(uint32_t));
+}
+
+void RecordingWriter::writeFrameBegin(const FrameBeginRecord& record) {
+    // Write record type
+    RecordType recordType = RecordType::FRAME_BEGIN;
+    file.write(reinterpret_cast<const char*>(&recordType), sizeof(recordType));
+
+    // Write record
+    file.write(reinterpret_cast<const char*>(&record), sizeof(record));
 }
 
 void RecordingWriter::writeFrameRenderHTGS(const FrameRenderHTGSRecord& record) {

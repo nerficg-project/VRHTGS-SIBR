@@ -614,9 +614,10 @@ void sibr::HTGaussianView::updateVisibilityMask(const sibr::Camera& eye, const u
     std::vector<uint32_t> visibilityMaskAreaTableHost =
         calculateSummedAreaTable(visibilityMaskRaw, widthTiles, heightTiles);
 
-    // Pack mask into uint32_t array
+    // Pack mask into uint32_t array, 32 tiles per word (tile i -> word i / 32, bit i % 32)
+    constexpr size_t bitsPerWord = sizeof(uint32_t) * 8;
     std::vector<uint32_t> visibilityMaskPacked(
-        (widthTiles * heightTiles + sizeof(uint32_t) - 1) / sizeof(uint32_t),
+        (widthTiles * heightTiles + bitsPerWord - 1) / bitsPerWord,
         0
     );
     for (size_t i = 0; i < visibilityMaskRaw.size(); ++i) {
@@ -899,6 +900,11 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
 
     // Record frame if recording is enabled
     if (recordingWriter) {
+        // Timing of the headset frame this eye belongs to, once before its first eye record
+        if (pendingFrameBegin) {
+            recordingWriter->writeFrameBegin(*pendingFrameBegin);
+            pendingFrameBegin.reset();
+        }
         if (modelType == RasterizerVariant::HTGS) {
             htgs::recording::FrameRenderHTGSRecord record;
             std::memcpy(record.view, viewMat.data(), sizeof(record.view));

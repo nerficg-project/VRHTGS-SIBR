@@ -13,6 +13,7 @@
 #include <core/openxr/OpenXRHMD.hpp>
 #include <core/openxr/SwapchainImageRenderTarget.hpp>
 
+#include <functional>
 #include <map>
 
 namespace sibr
@@ -43,6 +44,11 @@ namespace sibr
             return m_openxrHmd->getControllerState();
         }
 
+        /** Called once per headset frame that will be rendered, after xrWaitFrame and before the
+         *  eyes are rendered, with the frame's predicted display time and display period (ns). */
+        using FrameBeginCallback = std::function<void(int64_t displayTime, int64_t displayPeriod)>;
+        void setFrameBeginCallback(FrameBeginCallback callback) { m_frameBeginCallback = std::move(callback); }
+
         /** Get the current rendered image as a CPU image
          *\param current_img will contain the content of the RT */
         void destRT2img(sibr::ImageRGB &current_img)
@@ -67,6 +73,7 @@ namespace sibr
         bool m_appFocused = false;                               ///< Application is visible and focused in the headset)
         int m_downscaleResolution = 1.0f;                        ///< Downscale rendering resolution to improve performance
         RenderTarget::UPtr _leftRT, _rightRT;                    ///< Only used to implement abstract method lRT andrRT!
+        FrameBeginCallback m_frameBeginCallback;                 ///< Optional, see setFrameBeginCallback()
 
         SwapchainImageRenderTarget::Ptr getRenderTarget(uint32_t texture, uint32_t w, uint32_t h);
     };

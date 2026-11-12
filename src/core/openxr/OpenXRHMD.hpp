@@ -188,6 +188,16 @@ namespace sibr
         bool shouldRender() const;
 
         /**
+         * @brief Predicted display time of the current frame (XrTime, ns), from the last xrWaitFrame
+         */
+        int64_t getPredictedDisplayTime() const { return m_lastFrameState.predictedDisplayTime; }
+
+        /**
+         * @brief Predicted display period (ns between refreshes), from the last xrWaitFrame
+         */
+        int64_t getPredictedDisplayPeriod() const { return m_lastFrameState.predictedDisplayPeriod; }
+
+        /**
          * @brief Submit an empty frame
          */
         bool submitFrame();

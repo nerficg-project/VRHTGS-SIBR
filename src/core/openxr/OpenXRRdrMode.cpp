@@ -104,6 +104,12 @@ namespace sibr
             return;
         }
 
+        // Frames the runtime asks to skip are submitted empty, so only announce rendered ones
+        if (m_frameBeginCallback && m_openxrHmd->shouldRender())
+        {
+            m_frameBeginCallback(m_openxrHmd->getPredictedDisplayTime(), m_openxrHmd->getPredictedDisplayPeriod());
+        }
+
         const int w = m_openxrHmd->getResolution().x();
         const int h = m_openxrHmd->getResolution().y();
 
