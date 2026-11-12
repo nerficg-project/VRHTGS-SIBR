@@ -278,6 +278,12 @@ int main(int argc, char** argv) {
                 new sibr::ExperimentView(scene, sceneResWidth, sceneResHeight, plyfile.c_str(), model_scale, device, calibrationMode)
             );
             gaussianView->enableRecording(recording_filename.str());
+            openxrMode->setFrameBeginCallback(
+                [view = std::weak_ptr<sibr::ExperimentView>(gaussianView)](int64_t displayTime, int64_t displayPeriod) {
+                    if (auto v = view.lock()) {
+                        v->beginXRFrame(displayTime, displayPeriod);
+                    }
+                });
             multiViewManager.addIBRSubView("Point view", gaussianView, usedResolution, ImGuiWindowFlags_NoBringToFrontOnFocus);
             multiViewManager.addCameraForView("Point view", generalCamera);
         } else {

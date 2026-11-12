@@ -162,6 +162,16 @@ find_package(nanoflann REQUIRED)
 
 
 ###################
+## Find tinyexr (reads the raw EXR background textures of VR-HTGS models)
+###################
+# Only the single header is used. The port's library links vcpkg's miniz, which clashes with the
+# miniz copy embedded in kubazip (LNK2005), so the implementation is compiled in vrhtgs_viewer
+# against zlib instead (TINYEXR_USE_MINIZ=0).
+find_path(TINYEXR_INCLUDE_DIRS "tinyexr.h" REQUIRED)
+find_package(ZLIB REQUIRED)
+
+
+###################
 ## Find Picojson and RapidXML
 ###################
 find_path(PICOJSON_INCLUDE_DIRS "picojson/picojson.h")

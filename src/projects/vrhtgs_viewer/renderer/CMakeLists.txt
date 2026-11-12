@@ -37,7 +37,11 @@ target_link_libraries(${PROJECT_NAME}
     sibr_renderer
     VRHTGSRasterizer
     HTGSRasterizer
+    ZLIB::ZLIB
 )
+# tinyexr implementation lives in TinyEXR.cpp, built against zlib (see cmake/windows/dependencies.cmake)
+target_include_directories(${PROJECT_NAME} PUBLIC ${TINYEXR_INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME} PUBLIC TINYEXR_USE_MINIZ=0)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "projects/${SIBR_PROJECT}/renderer")
 

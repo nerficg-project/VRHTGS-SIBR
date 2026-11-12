@@ -25,6 +25,7 @@
     "openxr-loader",
     "picojson",
     "rapidxml",
+    "tinyexr",
     "yaml-cpp"
   ]
 }

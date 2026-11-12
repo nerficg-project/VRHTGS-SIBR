@@ -8,6 +8,7 @@
 #include "boost/asio.hpp"
 #include "imgui_internal.h"
 #include <openxr/openxr.h>
+#include <tinyexr.h>
 
 #include "core/graphics/GUI.hpp"
 #include "core/openxr/ControllerState.hpp"
@@ -246,6 +247,7 @@ static int loadPly(
     std::filesystem::path pth(filename);
     std::filesystem::path bgShPth = pth.parent_path() / "background_sh_coefficients.bin";
     std::filesystem::path bgTexturePth = pth.parent_path() / "background_texture.png";
+    std::filesystem::path bgTextureRawPth = pth.parent_path() / "background_texture.exr";
 
     if (std::filesystem::exists(bgShPth)) {
         SIBR_LOG << "Background SH coefficients found at " << bgShPth.string() << "\n";
@@ -304,6 +306,42 @@ static int loadPly(
 
         backgroundModelType = BackgroundModelType::TEXTURE;
         backgroundTextureResolution = make_int2(static_cast<int>(W), static_cast<int>(H));
+    } else if (std::filesystem::exists(bgTextureRawPth)) {
+        SIBR_LOG << "Raw background texture found at " << bgTextureRawPth.string() << "\n";
+        // Lat-long texture of pre-activation values (the sigmoid is applied by the rasterizer after
+        // interpolation). tinyexr converts the half-float channels to float and returns RGBA
+        // interleaved (A = 1 for an RGB file), rows top to bottom like the PNG path.
+        float* rgba = nullptr;
+        int width = 0;
+        int height = 0;
+        const char* err = nullptr;
+        if (LoadEXR(&rgba, &width, &height, bgTextureRawPth.string().c_str(), &err) != TINYEXR_SUCCESS) {
+            const std::string message = err ? err : "unknown error";
+            FreeEXRErrorMessage(err);
+            SIBR_ERR << "Unable to load raw background texture at " << bgTextureRawPth.string() << ": " << message << "\n";
+        }
+
+        // Upload CHW (planar), like the PNG path.
+        const size_t numPixels = static_cast<size_t>(width) * static_cast<size_t>(height);
+        if (bgModelDataCuda) {
+            CUDA_SAFE_CALL(cudaFree(bgModelDataCuda));
+        }
+        CUDA_SAFE_CALL(cudaMalloc(reinterpret_cast<void**>(&bgModelDataCuda), sizeof(float) * numPixels * 3));
+        for (int c = 0; c < 3; ++c) {
+            CUDA_SAFE_CALL(cudaMemcpy2D(
+                bgModelDataCuda + numPixels * c,  // dst
+                sizeof(float),                    // dpitch
+                rgba + c,                         // src
+                4 * sizeof(float),                // spitch (RGBA interleaved)
+                sizeof(float),                    // width (bytes per row)
+                numPixels,
+                cudaMemcpyHostToDevice
+            ));
+        }
+        free(rgba);
+
+        backgroundModelType = BackgroundModelType::TEXTURE_RAW;
+        backgroundTextureResolution = make_int2(width, height);
     } else {
         SIBR_LOG << "No background model data found\n";
         backgroundModelType = BackgroundModelType::NONE;
