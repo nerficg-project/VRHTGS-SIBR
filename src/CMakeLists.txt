@@ -80,7 +80,7 @@ if (BUILD_SIBR)
   add_subdirectory(core/openxr)
 endif()
 
-set(PROJECTS_ON_AT_FIRST_BUILD "gaussianviewer" "vrhtgs_viewer")
+set(PROJECTS_ON_AT_FIRST_BUILD "vrhtgs_viewer")
 
 foreach(subdir ${SUBDIRS})
   message(STATUS "Adding ${subdir} project")

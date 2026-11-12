@@ -23,7 +23,6 @@ __pycache__/
 hs_err_*
 
 # re include common public projects
-!src/projects/gaussianviewer/
 !src/projects/vrhtgs_viewer/
 
 # more vim garbage

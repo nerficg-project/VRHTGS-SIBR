@@ -103,7 +103,7 @@ TODO: Update this and the VR section with example usage
 
 
 * The new SIBR rendering mode `OpenXRRdrMode` supports head-mounted display (HMD) OpenXR devices.
-* The GaussianViewer can use this rendering mode with the `--rendering-mode 2` option to render a 3D Gaussian Splatting scene to a two-view headset display through the OpenXR stack.
+* The VR-HTGS viewer (`SIBR_FoveatedHTGSViewer_App`) uses this rendering mode with the `--rendering-mode 2` option (the default) to render a scene to a two-view headset display through the OpenXR stack.
 * This mode currently works on Windows only.
 * Further, we've only tested the eye-tracking support with a Meta Quest Pro using the Meta Horizon Link software. **Eye tracking may not work on other headsets using the current code base.**
 
@@ -116,7 +116,7 @@ TODO: Update this and the VR section with example usage
 2. For eye tracking support, you need to enable developer mode in *both* the headset settings *and* the Meta Horizon Link App. Under the developer settings in the Meta Horizon Link App, you should then be able to activate Eye-Tracking via Meta Horizon Link.
 3. We recommend connecting the headset with an official Meta Quest Link cable for stability, as eye tracking sometimes breaks when using AirLink.
 4. Make sure you've activated the link connection in the headset (The headset should be in the Oculus Link Home screen (white grid background)).
-5. Run `gaussianViewer -m <dataset_path> --rendering-mode 2`  TODO: Update command
+5. Run `SIBR_FoveatedHTGSViewer_App -m <model_dir> --rendering-mode 2`
 
 TODO: Update the remaining part of this section
 ![openxr gaussian viewer](./docs/img/openxr_gaussian_viewer.png)
