@@ -168,6 +168,7 @@ namespace sibr {
 
 		_orbit.fromCamera(idealCam, _raycaster);
 		_fpsCamera.fromCamera(idealCam);
+		_icguiCamera.fromCamera(idealCam);
 
 
 		if (_raycaster != nullptr) {
@@ -233,6 +234,9 @@ namespace sibr {
 			break;
 		case NONE:
 			std::cout << "none";
+			break;
+		case ICGUI:
+			std::cout << "ICGui (" << ICGuiCamera::schemeName(_icguiCamera.scheme()) << ")";
 			break;
 		case FPS:
 		default:
@@ -377,7 +381,7 @@ namespace sibr {
 		else if (input.key().isReleased(sibr::Key::Y)) {
 			switchMode(_currentMode == TRACKBALL ? FPS : TRACKBALL);
 		}
-		else if (input.key().isReleased(sibr::Key::Space)) {
+		else if (_currentMode != ICGUI && input.key().isReleased(sibr::Key::Space)) {  // Space moves up in ICGUI mode
 			switchSnapping();
 		}
 		else if (input.key().isReleased(sibr::Key::P)) {
@@ -484,6 +488,10 @@ namespace sibr {
 			case NONE:
 				//do nothing
 				break;
+			case ICGUI:
+				_icguiCamera.update(input, deltaTime, viewport);
+				_currentCamera = _icguiCamera.getCamera();
+				break;
 			case FPS:
 			default:
 				_fpsCamera.update(input, deltaTime);
@@ -494,7 +502,8 @@ namespace sibr {
 				break;
 			}
 
-			if (_shouldSmooth && _currentMode != INTERPOLATION) {
+			// ICGui does not smooth the camera motion
+			if (_shouldSmooth && _currentMode != INTERPOLATION && _currentMode != ICGUI) {
 				const sibr::Camera newcam = sibr::Camera::interpolate(_previousCamera, _currentCamera, IBRVIEW_SMOOTHCAM_POWER);
 				_currentCamera = sibr::InputCamera(newcam, _currentCamera.w(), _currentCamera.h());
 			}
@@ -528,7 +537,7 @@ namespace sibr {
 		if (ImGui::Begin(fullName.c_str())) {
 
 			ImGui::PushScaledItemWidth(130);
-			ImGui::Combo("Mode", (int*)&_currentMode, "FPS\0Orbit\0Interp.\0Trackball\0None\0\0");
+			ImGui::Combo("Mode", (int*)&_currentMode, "FPS\0Orbit\0Interp.\0Trackball\0None\0ICGui\0\0");
 			switchMode(_currentMode);
 			ImGui::SameLine();
 			if (ImGui::Button("Load camera")) {
@@ -721,10 +730,13 @@ namespace sibr {
 			}
 			ImGui::End();
 		}
-		// add the FPS camera controls in the same ImGui window.
-		_fpsCamera.onGUI(suffix);
-		
-
+        
+		// add the FPS / ICGui camera controls in the same ImGui window.
+		if (_currentMode == ICGUI) {
+			_icguiCamera.onGUI(suffix);
+		} else {
+			_fpsCamera.onGUI(suffix);
+		}
 	}
 
 }

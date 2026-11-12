@@ -115,6 +115,19 @@ int main(int argc, char** argv) {
         nullptr
     );
 
+    // Start at the world origin with an identity camera-to-world matrix in COLMAP camera axes (x right, y down,
+    // z forward), i.e. level and looking along +z in nerficg's PCA-aligned worlds (y down, origin at the mean camera
+    // position). The dataset cameras SIBR loads come from the raw COLMAP reconstruction, which doesn't match the
+    // model's world if it was trained with DATASET.APPLY_PCA (on by default), so their poses aren't used.
+    // SIBR cameras use OpenGL axes (x right, y up, z backward): a rotation by 180 degrees around x.
+    sibr::InputCamera startCamera = generalCamera->getCamera();
+    startCamera.position(sibr::Vector3f::Zero());
+    startCamera.rotation(sibr::Quaternionf(0.0f, 1.0f, 0.0f, 0.0f));
+    generalCamera->fromCamera(startCamera, false);
+
+    // Desktop navigation as in nerficg's ICGui (travel speed: ICGuiCamera's fixed default, adjustable with +/-)
+    generalCamera->switchMode(sibr::InteractiveCameraHandler::ICGUI);
+
     // Add views to mvm.
     std::shared_ptr<sibr::OpenXRRdrMode> openxrMode = nullptr;
     sibr::MultiViewManager multiViewManager(window, false);

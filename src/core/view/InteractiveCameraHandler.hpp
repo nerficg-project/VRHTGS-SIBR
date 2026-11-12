@@ -21,6 +21,7 @@
 
 #include "core/view/IBRBasicUtils.hpp"
 #include "core/view/FPSCamera.hpp"
+#include "core/view/ICGuiCamera.hpp"
 #include "core/view/Orbit.hpp"
 #include "core/view/TrackBall.h"
 #include "core/assets/CameraRecorder.hpp"
@@ -48,7 +49,8 @@ namespace sibr {
 
 		/** Current handler interaction mode. */
 		enum InteractionMode {
-			FPS = 0, ORBIT = 1, INTERPOLATION = 2, TRACKBALL = 3, NONE=4
+			FPS = 0, ORBIT = 1, INTERPOLATION = 2, TRACKBALL = 3, NONE=4,
+			ICGUI = 5 ///< nerficg ICGui controls (orbital / walking / flying), see ICGuiCamera
 		};
 
 		/** Constructor.
@@ -158,6 +160,9 @@ namespace sibr {
 		*/
 		void setFPSCameraSpeed(const float speed);
 
+		/** \return the ICGui-style camera used in ICGUI mode, e.g. to set its travel speed. */
+		sibr::ICGuiCamera & icguiCamera() { return _icguiCamera; }
+
 		/// ICameraHandler interface.
 		/** Update function, call at every tick.
 		\param input the input object for the current view.
@@ -212,6 +217,7 @@ namespace sibr {
 		bool _shouldSnap; ///< Currently snapping.
 
 		sibr::FPSCamera _fpsCamera; ///< FPS handler.
+		sibr::ICGuiCamera _icguiCamera; ///< ICGui handler.
 		sibr::Orbit _orbit; ///< Orbit handler.
 		sibr::TrackBall _trackball; ///< Trackball handler.
 
