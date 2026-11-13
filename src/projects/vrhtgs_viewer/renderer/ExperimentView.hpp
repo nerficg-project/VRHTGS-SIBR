@@ -27,7 +27,7 @@ namespace sibr {
         SIBR_CLASS_PTR(ExperimentView);
 
     public:
-        ExperimentView(const sibr::BasicIBRScene::Ptr& ibrScene, uint32_t renderW, uint32_t renderH,
+        ExperimentView(uint32_t renderW, uint32_t renderH,
                        const char* file, float scale = 1.0f, int device = 0, bool calibrationMode = false);
 
         virtual ~ExperimentView() override;

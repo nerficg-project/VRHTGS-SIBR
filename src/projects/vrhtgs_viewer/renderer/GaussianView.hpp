@@ -15,7 +15,6 @@
 #include "core/renderer/CopyRenderer.hpp"
 #include "core/renderer/PointBasedRenderer.hpp"
 #include "core/renderer/RenderMaskHolder.hpp"
-#include "core/scene/BasicIBRScene.hpp"
 #include "core/system/SimpleTimer.hpp"
 #include "core/system/Config.hpp"
 #include "core/view/ViewBase.hpp"
@@ -84,11 +83,10 @@ namespace sibr {
     public:
         /**
          * Constructor
-         * \param ibrScene The scene to use for rendering.
          * \param renderW rendering width
          * \param renderH rendering height
          */
-        HTGaussianView(const sibr::BasicIBRScene::Ptr& ibrScene, uint32_t renderW, uint32_t renderH,
+        HTGaussianView(uint32_t renderW, uint32_t renderH,
                 const char* file, float scale = 1.0f, int device = 0, bool calibrationMode = false);
 
         virtual ~HTGaussianView() override;
@@ -98,12 +96,6 @@ namespace sibr {
          * \param file The PLY file path.
          */
         void loadModel(const char* file, float scale = 1.0f);
-
-        /**
-         * Replace the current scene.
-         * \param newScene the new scene to render
-         */
-        void setScene(const sibr::BasicIBRScene::Ptr& newScene);
 
         /**
          * Perform rendering. Called by the view manager or rendering mode.
@@ -240,8 +232,7 @@ namespace sibr {
         cudaGraphicsResource_t imageBufferCuda;
         BufferCopyRenderer* _copyRenderer;
 
-        // Scene & Model data
-        std::shared_ptr<sibr::BasicIBRScene> _scene;
+        // Model data
         int count;
         float* posCuda = nullptr;
         float* rotCuda = nullptr;

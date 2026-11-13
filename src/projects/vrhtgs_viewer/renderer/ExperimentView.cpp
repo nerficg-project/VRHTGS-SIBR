@@ -89,9 +89,9 @@ static Framebuffer fb;
 
 
 sibr::ExperimentView::ExperimentView(
-    const sibr::BasicIBRScene::Ptr& ibrScene, uint32_t renderW, uint32_t renderH,
+    uint32_t renderW, uint32_t renderH,
     const char* file, float scale, int device, bool calibrationMode
-) : HTGaussianView(ibrScene, renderW, renderH, file, scale, device, calibrationMode)
+) : HTGaussianView(renderW, renderH, file, scale, device, calibrationMode)
 {
     // Setup ImGui binding (in a separate context, restoring the window's context afterwards)
     ImGuiContext* previousContext = ImGui::GetCurrentContext();

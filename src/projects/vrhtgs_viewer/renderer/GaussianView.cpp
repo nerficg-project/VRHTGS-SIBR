@@ -445,10 +445,9 @@ static bool pointInVisibilityMask(std::vector<XrVector2f>& visibilityMaskPoints,
 }
 
 
-sibr::HTGaussianView::HTGaussianView(const sibr::BasicIBRScene::Ptr& ibrScene,
+sibr::HTGaussianView::HTGaussianView(
         uint32_t renderW, uint32_t renderH, const char* file,
         const float scale, int device, bool calibrationMode) :
-    _scene(ibrScene),
     sibr::ViewBase(renderW, renderH),
     calibrationMode(calibrationMode)
 {
@@ -511,10 +510,6 @@ void sibr::HTGaussianView::setResolution(const Vector2i &size) {
         _copyRenderer->width() = _resolution.x();
         _copyRenderer->height() = _resolution.y();
     }
-}
-
-void sibr::HTGaussianView::setScene(const sibr::BasicIBRScene::Ptr& newScene) {
-    _scene = newScene;
 }
 
 void sibr::HTGaussianView::loadModel(const char* file, float modelScale) {

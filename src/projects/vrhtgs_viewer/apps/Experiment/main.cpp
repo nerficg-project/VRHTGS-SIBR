@@ -9,7 +9,6 @@
 #include <string>
 
 #include "imgui_internal.h"
-#include "yaml-cpp/yaml.h"
 
 #include "core/graphics/Window.hpp"
 #include "core/openxr/OpenXRRdrMode.hpp"
@@ -20,6 +19,7 @@
 #include "core/view/SceneDebugView.hpp"
 #include "projects/vrhtgs_viewer/renderer/Config.hpp"
 #include "projects/vrhtgs_viewer/renderer/ExperimentView.hpp"
+#include "projects/vrhtgs_viewer/renderer/ModelConfig.hpp"
 
 
 constexpr const char* PROGRAM_NAME = "VR-HTGS Experiment";
@@ -32,7 +32,15 @@ struct Condition {
     std::filesystem::path modelPath;
     bool antiAliasing;
     bool blurPeriphery;
+    sibr::ModelConfig modelConfig;
+    std::filesystem::path calibrationDir;
 };
+
+
+static bool hasCalibration(const std::filesystem::path& calibrationDir) {
+    return std::filesystem::exists(calibrationDir / "calibration.txt")
+        && std::filesystem::exists(calibrationDir / "default_pose.txt");
+}
 
 
 static void logCondition(std::ofstream& logFile, int conditionIndex, const std::tm& condition_tm, const Condition& condition) {
@@ -42,6 +50,8 @@ static void logCondition(std::ofstream& logFile, int conditionIndex, const std::
     logFile << "  Model Path: " << condition.modelPath << std::endl;
     logFile << "  Anti-Aliasing: " << (condition.antiAliasing ? "True" : "False") << std::endl;
     logFile << "  Blur Periphery: " << (condition.blurPeriphery ? "True" : "False") << std::endl;
+    logFile << "  Calibration: " << condition.calibrationDir
+            << (hasCalibration(condition.calibrationDir) ? "" : " (missing)") << std::endl;
     logFile.flush();
 }
 
@@ -71,12 +81,14 @@ int main(int argc, char** argv) {
     int startFromCondition = myArgs.startFromCondition;
     bool calibrationMode = myArgs.calibrationMode;
 
-    // Rendering size
-    uint32_t rendering_width = myArgs.rendering_size.get()[0];
-    uint32_t rendering_height = myArgs.rendering_size.get()[1];
-    // Window size
-    uint32_t windowWidth = rendering_width; // myArgs.win_width;
-    uint32_t windowHeight = rendering_height; // myArgs.windowHeight;
+    // Desktop rendering size (the headset's swapchain size is used for the participant's view)
+    const sibr::Vector2u usedResolution = sibr::desktopResolution(myArgs.rendering_size.get());
+
+    // Calibrations are stored per dataset, by default in 'calibrations' next to the experiment config
+    // (nerficg's vrhtgs_create_experiment_config.py writes all configs into one shared folder)
+    const std::filesystem::path calibrationRoot = myArgs.calibrationDir.get().empty()
+        ? std::filesystem::path(myArgs.modelPath.get()).parent_path() / "calibrations"
+        : std::filesystem::path(myArgs.calibrationDir.get());
 
     // Window setup
     sibr::Window window(PROGRAM_NAME, sibr::Vector2i(50, 50), myArgs,
@@ -146,6 +158,17 @@ int main(int argc, char** argv) {
         cond.antiAliasing = (tokens[2] == "True") ? true : false;
         cond.blurPeriphery = (tokens[3] == "True") ? true : false;
 
+        cond.modelConfig = sibr::loadModelConfig(cond.modelPath);
+        std::filesystem::path datasetName = cond.modelConfig.datasetName();
+        if (datasetName.empty()) {
+            datasetName = cond.modelPath.filename();
+            SIBR_WRG << (cond.modelConfig.found ? "No DATASET.PATH in the training_config.yaml of "
+                                                : "No usable training_config.yaml in ")
+                     << cond.modelPath << ", so its dataset is unknown. Storing its calibration under the model name "
+                     << datasetName << " instead." << std::endl;
+        }
+        cond.calibrationDir = calibrationRoot / datasetName;
+
         conditions.push_back(cond);
     }
 
@@ -157,6 +180,23 @@ int main(int argc, char** argv) {
     if (conditions.size() == 0) {
         SIBR_ERR << "No valid experiment conditions found in config file." << std::endl;
         return -1;
+    }
+
+    // Warn about datasets without a calibration: they would run at scale 1 with an identity pose, which is easy to miss
+    std::vector<std::filesystem::path> missingCalibrations;
+    for (const auto& condition : conditions) {
+        if (!hasCalibration(condition.calibrationDir)
+            && std::find(missingCalibrations.begin(), missingCalibrations.end(), condition.calibrationDir) == missingCalibrations.end()) {
+            missingCalibrations.push_back(condition.calibrationDir);
+        }
+    }
+    for (const auto& dir : missingCalibrations) {
+        if (calibrationMode) {
+            SIBR_LOG << "No calibration yet in " << dir << ", it will be created." << std::endl;
+        } else {
+            SIBR_WRG << "No calibration found in " << dir << " (calibration.txt / default_pose.txt)."
+                     << " The scene will use scale 1 and the identity pose. Run with --calibration-mode first." << std::endl;
+        }
     }
 
     // Set up logging to file (only now, so runs rejected during setup don't leave empty logs behind)
@@ -183,19 +223,14 @@ int main(int argc, char** argv) {
     logFile << "Experiment Log for Participant " << myArgs.participantID.get() << " - Started at: "
             << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S") << std::endl;
     logFile << "========================================" << std::endl;
+    if (!calibrationMode) {
+        for (const auto& dir : missingCalibrations) {
+            logFile << "WARNING: No calibration found in " << dir << ", using scale 1 and the identity pose." << std::endl;
+        }
+    }
     logFile.flush();
 
-    // Set up options
-    sibr::BasicIBRScene::SceneOptions myOpts;
-    myOpts.renderTargets = false;
-    myOpts.mesh = true;
-    myOpts.images = false;
-    myOpts.cameras = true;
-    myOpts.texture = false;
-    const uint32_t flags = SIBR_GPU_LINEAR_SAMPLING | SIBR_FLIP_TEXTURE;
-
-    // Set up scene
-    sibr::BasicIBRScene::Ptr scene = nullptr;
+    // Set up view
     sibr::ExperimentView::Ptr gaussianView = nullptr;
     sibr::InteractiveCameraHandler::Ptr generalCamera(new sibr::InteractiveCameraHandler());
 
@@ -214,28 +249,6 @@ int main(int argc, char** argv) {
         localtime_s(&condition_tm, &condition_time);
         logCondition(logFile, conditionIndex, condition_tm, condition);
 
-        // Parse and load next scene
-        std::ifstream conditionCfg(condition.modelPath / "training_config.yaml");
-        if (!conditionCfg.good())
-        {
-            SIBR_ERR << "Could not find config file 'training_config.yaml' at " << condition.modelPath;
-        }
-
-        YAML::Node config = YAML::Load(conditionCfg);
-        auto datasetPath = std::filesystem::path(config["DATASET"]["PATH"].as<std::string>());
-        if (!datasetPath.is_absolute()) {
-            datasetPath = std::filesystem::path(myArgs.modelPath.get()).parent_path().parent_path() / datasetPath;
-        }
-        myArgs.dataset_path = datasetPath.string();
-
-        try {
-            scene.reset(new sibr::BasicIBRScene(myArgs, myOpts));
-        } catch (...) {
-            SIBR_LOG << "Did not find specified input folder, loading from model path" << std::endl;
-            myArgs.dataset_path = myArgs.modelPath.get();
-            scene.reset(new sibr::BasicIBRScene(myArgs, myOpts));
-        }
-
         std::filesystem::path plyPath = condition.modelPath / "gaussians.ply";
         if (!std::filesystem::exists(plyPath)) {
             plyPath = condition.modelPath / "final.ply";  // Name used by nerficg's vrhtgs_export_model.py
@@ -245,37 +258,20 @@ int main(int argc, char** argv) {
         }
         std::string plyfile = plyPath.string();
 
-        // Fix rendering aspect ratio if user provided rendering size
-        uint32_t scene_width = scene->cameras()->inputCameras()[0]->w();
-        uint32_t scene_height = scene->cameras()->inputCameras()[0]->h();
-        float scene_aspect_ratio = scene_width * 1.0f / scene_height;
-        float rendering_aspect_ratio = rendering_width * 1.0f / rendering_height;
-        rendering_width = (rendering_width <= 0) ? std::min(1200U, scene_width) : rendering_width;
-        rendering_height = (rendering_height <= 0) ? std::min(1200U, scene_width) / scene_aspect_ratio : rendering_height;
-        if ((rendering_width > 0) && !myArgs.force_aspect_ratio ) {
-            if (abs(scene_aspect_ratio - rendering_aspect_ratio) > 0.001f) {
-                if (scene_width > scene_height) {
-                    rendering_height = rendering_width / scene_aspect_ratio;
-                } else {
-                    rendering_width = rendering_height * scene_aspect_ratio;
-                }
-            }
-        }
-        sibr::Vector2u usedResolution(rendering_width, rendering_height);
-        const unsigned int sceneResWidth = usedResolution.x();
-        const unsigned int sceneResHeight = usedResolution.y();
-
-        std::ifstream calibFile(datasetPath / "calibration.txt");
+        // Load the dataset's calibration (missing calibrations were already warned about at startup)
+        const std::filesystem::path calibPath = condition.calibrationDir / "calibration.txt";
+        const std::filesystem::path posePath = condition.calibrationDir / "default_pose.txt";
+        std::ifstream calibFile(calibPath);
         float model_scale = 1.0f;
         if (calibFile.good()) {
-            SIBR_LOG << "Loading calibration from '" << (datasetPath / "calibration.txt") << "'." << std::endl;
+            SIBR_LOG << "Loading calibration from " << calibPath << "." << std::endl;
             calibFile >> model_scale;
         }
 
         if (!gaussianView) {
-            // Create the ULR view.
+            // Create the view
             gaussianView.reset(
-                new sibr::ExperimentView(scene, sceneResWidth, sceneResHeight, plyfile.c_str(), model_scale, device, calibrationMode)
+                new sibr::ExperimentView(usedResolution.x(), usedResolution.y(), plyfile.c_str(), model_scale, device, calibrationMode)
             );
             gaussianView->enableRecording(recording_filename.str());
             openxrMode->setFrameBeginCallback(
@@ -287,9 +283,6 @@ int main(int argc, char** argv) {
             multiViewManager.addIBRSubView("Point view", gaussianView, usedResolution, ImGuiWindowFlags_NoBringToFrontOnFocus);
             multiViewManager.addCameraForView("Point view", generalCamera);
         } else {
-            // Update the scene and resolution in existing view
-            gaussianView->setScene(scene);
-            gaussianView->setResolution(usedResolution.cast<int>());
             gaussianView->loadModel(plyfile.c_str(), model_scale);
         }
 
@@ -300,16 +293,14 @@ int main(int argc, char** argv) {
         gaussianView->showScene();
         gaussianView->setConditionInfo(conditionIndex, conditions.size(), condition.modelType, condition.modelPath.string(), condition.antiAliasing);
 
-        // Load default camera
-        sibr::InputCamera::Ptr defaultCamera;
-        sibr::Matrix4f scene_transform = sibr::Matrix4f::Identity();
-        defaultCamera.reset(new sibr::InputCamera());
-        defaultCamera->position(sibr::Vector3f(0, 0, 0));
-        if (condition.antiAliasing) {
-            defaultCamera->znear(0.02f);  // AAA Gaussians mode supports closer near plane
-        }
+        // The near plane is fixed per condition (AAA Gaussians mode supports a closer one), independent of the
+        // model's training config, so all conditions of the study are comparable. Only the far plane comes from it.
+        const float znear = condition.antiAliasing ? 0.02f : sibr::DEFAULT_NEAR_PLANE;
+        const float zfar = condition.modelConfig.farPlane.value_or(sibr::DEFAULT_FAR_PLANE);
+        SIBR_LOG << "Near/far planes: " << znear << " / " << zfar << std::endl;
 
-        std::ifstream poseFile(datasetPath / "default_pose.txt");
+        sibr::Matrix4f scene_transform = sibr::Matrix4f::Identity();
+        std::ifstream poseFile(posePath);
         if (poseFile.good()) {
             sibr::Matrix4f transform = sibr::Matrix4f::Identity();
             for (int i = 0; i < 4; ++i) {
@@ -318,16 +309,12 @@ int main(int argc, char** argv) {
                 }
             }
             scene_transform = transform.inverse();
-        } else {
-            SIBR_WRG << "Could not find default camera pose at '" << (datasetPath / "default_pose.txt") << "'." << std::endl;
         }
         gaussianView->setSceneTransform(scene_transform);
 
-        // Reset camera
-        std::vector<sibr::InputCamera::Ptr> cams = scene->cameras()->inputCameras();
-        cams.insert(cams.begin(), defaultCamera);
+        // Reset the camera to the origin (the calibrated scene transform places the scene around it)
         generalCamera->setup(
-            cams,
+            sibr::makeStartCamera(usedResolution, znear, zfar),
             sibr::Viewport(0, 0, static_cast<float>(usedResolution.x()), static_cast<float>(usedResolution.y())),
             nullptr
         );
@@ -459,15 +446,18 @@ int main(int argc, char** argv) {
             sibr::Matrix4f finalTransform = gaussianView->getSceneTransform().inverse();
             float finalModelScale = gaussianView->getCalibratedModelScale();
 
-            std::ofstream calibOut(datasetPath / "calibration.txt");
+            std::filesystem::create_directories(condition.calibrationDir);
+            std::ofstream calibOut(condition.calibrationDir / "calibration.txt");
             if (calibOut.good()) {
                 calibOut << finalModelScale << std::endl;
                 SIBR_LOG << "Saved calibrated model scale: " << finalModelScale << std::endl;
             }
-            std::ofstream poseOut(datasetPath / "default_pose.txt");
+            std::ofstream poseOut(condition.calibrationDir / "default_pose.txt");
             if (poseOut.good()) {
                 poseOut << finalTransform << std::endl;
-                SIBR_LOG << "Saved calibrated default pose to '" << (datasetPath / "default_pose.txt") << "'." << std::endl;
+                SIBR_LOG << "Saved calibrated default pose to " << (condition.calibrationDir / "default_pose.txt") << "." << std::endl;
+            } else {
+                SIBR_WRG << "Could not write the calibration to " << condition.calibrationDir << "." << std::endl;
             }
         }
     }
