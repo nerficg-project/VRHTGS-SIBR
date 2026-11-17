@@ -25,6 +25,7 @@ namespace sibr {
         Arg<int> startFromCondition = { "start-from-condition", 0, "Condition index to start from (0 = first condition)" };
         Arg<bool> calibrationMode = { "calibration-mode", "Run in calibration mode (allow adjustment of scene scale + position and write the results to the dataset's calibration directory)" };
         Arg<bool> english = { "english", "Display Questionnaire in English (default is German)" };
+        Arg<bool> noRecording = { "no-recording", "Don't write the .htgsrec frame recording (the log file is still written)" };
     };
 }
 

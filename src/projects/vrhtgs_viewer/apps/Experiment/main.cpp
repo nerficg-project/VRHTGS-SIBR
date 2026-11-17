@@ -228,6 +228,9 @@ int main(int argc, char** argv) {
             logFile << "WARNING: No calibration found in " << dir << ", using scale 1 and the identity pose." << std::endl;
         }
     }
+    if (myArgs.noRecording) {
+        logFile << "Recording disabled (--no-recording), no .htgsrec file is written." << std::endl;
+    }
     logFile.flush();
 
     // Set up view
@@ -271,7 +274,11 @@ int main(int argc, char** argv) {
             gaussianView.reset(
                 new sibr::ExperimentView(usedResolution.x(), usedResolution.y(), plyfile.c_str(), model_scale, device, calibrationMode)
             );
-            gaussianView->enableRecording(recording_filename.str());
+            if (myArgs.noRecording) {
+                SIBR_LOG << "Recording disabled (--no-recording)." << std::endl;
+            } else {
+                gaussianView->enableRecording(recording_filename.str());
+            }
             openxrMode->setFrameBeginCallback(
                 [view = std::weak_ptr<sibr::ExperimentView>(gaussianView)](int64_t displayTime, int64_t displayPeriod) {
                     if (auto v = view.lock()) {
