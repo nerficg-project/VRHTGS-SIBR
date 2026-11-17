@@ -238,6 +238,7 @@ int main(int argc, char** argv) {
     int conditionIndex = 0;
     int completedConditions = 0;  // conditionIndex also counts a condition that was aborted
     bool eyeTrackingShown = false;
+    bool english = myArgs.english;  // The experimenter GUI can switch the language; keep it across conditions
     for (const auto& condition : conditions) {
         conditionIndex++;
         SIBR_LOG << "Starting condition with model: " << condition.modelPath << std::endl;
@@ -317,7 +318,7 @@ int main(int argc, char** argv) {
         );
 
         sibr::ExperimentResponses userResponseData;
-        userResponseData.english = myArgs.english;
+        userResponseData.english = english;
         if (!calibrationMode && !eyeTrackingShown) {
             std::cout << "Showing eye tracking visualization for the first time. Press A or X on the controller to hide it." << std::endl;
             gaussianView->showScene();  // GUI takes precedence over the gaze visualization, so make sure it is hidden
@@ -343,6 +344,7 @@ int main(int argc, char** argv) {
 
             // Render experiment GUI to experimenter screen
             bool condition_complete = gaussianView->renderExperimenterGui(userResponseData, calibrationMode);
+            english = userResponseData.english;
 
             // Poll controller inputs
             auto controller = openxrMode->getControllerState();
