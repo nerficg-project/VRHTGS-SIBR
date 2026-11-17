@@ -63,8 +63,6 @@ foreach(subdir ${SUBDIRS})
   endif()
 endforeach()
 
-Win3rdPartyGlobalCacheAction()
-
 include_directories(.)
 
 if (BUILD_SIBR)

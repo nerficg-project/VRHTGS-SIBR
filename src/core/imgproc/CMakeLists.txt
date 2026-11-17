@@ -18,7 +18,6 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(
 	${Boost_INCLUDE_DIRS}
-	${mrf_INCLUDE_DIRS}
 )
 if(WIN32)
 target_link_libraries(${PROJECT_NAME}
@@ -26,7 +25,6 @@ target_link_libraries(${PROJECT_NAME}
 	${OpenCV_LIBRARIES}
 	OpenMP::OpenMP_CXX
 	glfw
-	mrf
 	sibr_system
 	sibr_graphics
 	sibr_assets
@@ -38,7 +36,6 @@ target_link_libraries(${PROJECT_NAME}
 	${OpenCV_LIBRARIES}
 	OpenMP::OpenMP_CXX
 	${GLFW_LIBRARY}
-	mrf
 	sibr_system
 	sibr_graphics
 	sibr_assets

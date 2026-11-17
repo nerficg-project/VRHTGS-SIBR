@@ -10,21 +10,12 @@
 
 ## Included once for all sub project.
 ## It contain the whole cmake instructions to find necessary common dependencies.
-## 3rdParty (provided by sibr_addlibrary win3rdParty or from external packages) are then available in cmake sub projects.
+## All 3rdParty libraries come from vcpkg (manifest vcpkg.json) and are then available in cmake sub projects.
 ##
 ## Do not include this file more than once but you can modify it to fit to your own project.
-## So please, read it carefully because you can use on of these dependencies for your project or appen new one.
 ##
 ## As it is included after camke options, you can use conditional if(<CMAKE_PROJ_OPT>)/endif() to encapsulate your 3rdParty.
 ##
-
-## win3rdParty function allowing to auto check/download/update binaries dependencies for current windows compiler
-## Please open this file in order to get more documentation and usage examples.
-include(Win3rdParty)
-
-include(sibr_library)
-
-Win3rdPartyGlobalCacheAction()
 
 ############
 ## Find OpenGL
@@ -183,20 +174,3 @@ find_path(RAPIDXML_INCLUDE_DIRS "rapidxml/rapidxml.hpp")
 ## Find OpenXR
 ###################
 find_package(OpenXR REQUIRED)
-
-
-###################
-## Find mrf and xatlas
-###################
-sibr_gitlibrary(TARGET mrf
-    GIT_REPOSITORY 	"https://gitlab.inria.fr/sibr/libs/mrf.git"
-    GIT_TAG			"564e5e0b395c788d2f8b2cf4f879fed2493faea7"
-)
-
-sibr_gitlibrary(TARGET xatlas
-    GIT_REPOSITORY 	"https://gitlab.inria.fr/sibr/libs/xatlas.git"
-    GIT_TAG			"0fbe06a5368da13fcdc3ee48d4bdb2919ed2a249"
-    INCLUDE_DIRS 	"source/xatlas"
-)
-
-Win3rdPartyGlobalCacheAction()

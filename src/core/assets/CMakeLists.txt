@@ -21,7 +21,6 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 include_directories(
     ${Boost_INCLUDE_DIRS}
-    ${xatlas_INCLUDE_DIRS}
 )
 target_link_libraries(${PROJECT_NAME}
     ${Boost_LIBRARIES}
@@ -31,7 +30,6 @@ target_link_libraries(${PROJECT_NAME}
     ${OpenCV_LIBRARIES}
 	OpenMP::OpenMP_CXX
     sibr_graphics
-    xatlas
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})
