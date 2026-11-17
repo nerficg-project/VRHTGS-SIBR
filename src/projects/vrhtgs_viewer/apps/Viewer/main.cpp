@@ -45,12 +45,9 @@ int main(int argc, char** argv) {
     SIBR_LOG << "Near/far planes: " << znear << " / " << zfar
              << (modelConfig.nearPlane || modelConfig.farPlane ? " (from training_config.yaml)" : " (defaults)") << std::endl;
 
-    std::filesystem::path plyfile = std::filesystem::path(myArgs.modelPath.get()) / "gaussians.ply";
-    if (!std::filesystem::exists(plyfile)) {
-        plyfile = std::filesystem::path(myArgs.modelPath.get()) / "final.ply";
-        if (!std::filesystem::exists(plyfile)) {
-            SIBR_ERR << "Could not find 'gaussians.ply' or 'final.ply' in model path " << myArgs.modelPath.get();
-        }
+    const std::filesystem::path plyfile = sibr::findModelPly(myArgs.modelPath.get());
+    if (plyfile.empty()) {
+        SIBR_ERR << "Could not find 'gaussians.ply', 'final.ply' or another loadable .ply in model path " << myArgs.modelPath.get();
     }
 
     // Create the view

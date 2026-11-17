@@ -1,8 +1,13 @@
 #pragma once
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
+#include <fstream>
 #include <optional>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include "yaml-cpp/yaml.h"
 
@@ -117,5 +122,110 @@ namespace sibr {
             config.farPlane.reset();
         }
         return config;
+    }
+
+    /**
+     * Whether a file looks like a PLY the Gaussian loader (loadPly in GaussianView.cpp) accepts: binary little-endian,
+     * a non-empty vertex element with only float properties, all required 3DGS properties present, and enough data
+     * after the header. Only the header is parsed; the vertex data itself isn't read.
+     */
+    inline bool isLoadableGaussianPly(const std::filesystem::path& file) {
+        std::error_code ec;
+        if (!std::filesystem::is_regular_file(file, ec)) {
+            return false;
+        }
+        std::ifstream in(file, std::ios_base::binary);
+        std::string line;
+        if (!std::getline(in, line) || line.rfind("ply", 0) != 0) {
+            return false;
+        }
+
+        bool binaryLE = false;
+        bool inVertexElement = false;
+        bool endHeader = false;
+        long long count = 0;
+        std::vector<std::string> properties;
+        while (std::getline(in, line)) {
+            if (!line.empty() && line.back() == '\r') {
+                line.pop_back();
+            }
+            std::stringstream ss(line);
+            std::string keyword;
+            ss >> keyword;
+            if (keyword == "end_header") {
+                endHeader = true;
+                break;
+            } else if (keyword == "format") {
+                std::string format;
+                ss >> format;
+                binaryLE = (format == "binary_little_endian");
+            } else if (keyword == "element") {
+                std::string name;
+                ss >> name;
+                inVertexElement = (name == "vertex");
+                if (inVertexElement && !(ss >> count)) {
+                    return false;
+                }
+            } else if (keyword == "property" && inVertexElement) {
+                std::string type, name;
+                ss >> type >> name;
+                if (type != "float" && type != "float32") {
+                    return false;
+                }
+                properties.push_back(name);
+            }
+        }
+        if (!endHeader || !binaryLE || count <= 0) {
+            return false;
+        }
+
+        for (const char* required : { "x", "y", "z", "f_dc_0", "f_dc_1", "f_dc_2", "opacity",
+                                      "scale_0", "scale_1", "scale_2", "rot_0", "rot_1", "rot_2", "rot_3" }) {
+            if (std::find(properties.begin(), properties.end(), required) == properties.end()) {
+                return false;
+            }
+        }
+
+        const std::streamoff headerSize = in.tellg();
+        const auto fileSize = std::filesystem::file_size(file, ec);
+        if (ec || headerSize < 0) {
+            return false;
+        }
+        const unsigned long long dataSize = static_cast<unsigned long long>(count) * properties.size() * sizeof(float);
+        return fileSize >= static_cast<unsigned long long>(headerSize) + dataSize;
+    }
+
+    /**
+     * The Gaussian PLY of a model directory: gaussians.ply, else final.ply (nerficg's vrhtgs_export_model.py),
+     * else the first loadable .ply in the directory in alphanumerical order. Empty if there is none.
+     */
+    inline std::filesystem::path findModelPly(const std::filesystem::path& modelDir) {
+        for (const char* name : { "gaussians.ply", "final.ply" }) {
+            const std::filesystem::path candidate = modelDir / name;
+            if (std::filesystem::exists(candidate)) {
+                return candidate;
+            }
+        }
+
+        std::vector<std::filesystem::path> plyFiles;
+        std::error_code ec;
+        for (const auto& entry : std::filesystem::directory_iterator(modelDir, ec)) {
+            std::string ext = entry.path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+            if (ext == ".ply") {
+                plyFiles.push_back(entry.path());
+            }
+        }
+        std::sort(plyFiles.begin(), plyFiles.end(), [](const auto& a, const auto& b) {
+            return a.filename().native() < b.filename().native();
+        });
+        for (const auto& file : plyFiles) {
+            if (isLoadableGaussianPly(file)) {
+                SIBR_LOG << "No 'gaussians.ply' or 'final.ply' in " << modelDir << ", using " << file.filename() << std::endl;
+                return file;
+            }
+            SIBR_WRG << "Skipping " << file << ": not a binary 3DGS PLY the loader can read." << std::endl;
+        }
+        return {};
     }
 }

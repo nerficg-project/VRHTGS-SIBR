@@ -249,12 +249,9 @@ int main(int argc, char** argv) {
         localtime_s(&condition_tm, &condition_time);
         logCondition(logFile, conditionIndex, condition_tm, condition);
 
-        std::filesystem::path plyPath = condition.modelPath / "gaussians.ply";
-        if (!std::filesystem::exists(plyPath)) {
-            plyPath = condition.modelPath / "final.ply";  // Name used by nerficg's vrhtgs_export_model.py
-            if (!std::filesystem::exists(plyPath)) {
-                SIBR_ERR << "Could not find 'gaussians.ply' or 'final.ply' in model path " << condition.modelPath << std::endl;
-            }
+        const std::filesystem::path plyPath = sibr::findModelPly(condition.modelPath);
+        if (plyPath.empty()) {
+            SIBR_ERR << "Could not find 'gaussians.ply', 'final.ply' or another loadable .ply in model path " << condition.modelPath << std::endl;
         }
         std::string plyfile = plyPath.string();
 
