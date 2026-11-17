@@ -69,8 +69,9 @@ namespace sibr {
             _width.send();
             _height.send();
 
-            dst.clear();
+            // No clear needed: the full-screen copy overwrites every pixel (alpha 1, blending off)
             dst.bind();
+            glDisable(GL_BLEND);
 
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufferID);
 
@@ -493,10 +494,12 @@ sibr::HTGaussianView::HTGaussianView(
     initializeFoveaMask();
 
     // Allocate GPU memory for view parameters
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&viewCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&projCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&invRVPCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&camPosCuda), 3 * sizeof(float)));
+    // One device block for view | proj | invRVP | camPos (offsets are 64-byte aligned for float4 access)
+    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&viewCuda), viewParamsFloats * sizeof(float)));
+    projCuda = viewCuda + 16;
+    invRVPCuda = viewCuda + 32;
+    camPosCuda = viewCuda + 48;
+    CUDA_SAFE_CALL_ALWAYS(cudaMallocHost(reinterpret_cast<void**>(&viewParamsHost), 2 * viewParamsFloats * sizeof(float)));
 }
 
 
@@ -818,10 +821,15 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     updateVisibilityMask(eye, _resolution.x(), _resolution.y());
 
     // Copy frame-dependent data to GPU
-    CUDA_SAFE_CALL(cudaMemcpy(viewCuda, viewMat.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(projCuda, mvp.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(invRVPCuda, invRVP.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(camPosCuda, &eyePos, sizeof(float) * 3, cudaMemcpyHostToDevice));
+    // One async copy from pinned memory instead of four synchronous pageable copies. The rasterizer
+    // synchronizes with the device before it returns, so this eye's staging slot is free again by
+    // the time it is reused.
+    float* staging = viewParamsHost + eyeSlot(eye) * viewParamsFloats;
+    std::memcpy(staging, viewMat.data(), 16 * sizeof(float));
+    std::memcpy(staging + 16, mvp.data(), 16 * sizeof(float));
+    std::memcpy(staging + 32, invRVP.data(), 16 * sizeof(float));
+    std::memcpy(staging + 48, eyePos.data(), 3 * sizeof(float));
+    CUDA_SAFE_CALL(cudaMemcpyAsync(viewCuda, staging, viewParamsFloats * sizeof(float), cudaMemcpyHostToDevice));
 
     // Map OpenGL buffer resource for use with CUDA
     float* imageCuda = nullptr;
@@ -1277,10 +1285,8 @@ sibr::HTGaussianView::~HTGaussianView() {
     cudaFree(shsRestCuda);
     cudaFree(bgModelDataCuda);
 
-    cudaFree(viewCuda);
-    cudaFree(projCuda);
-    cudaFree(invRVPCuda);
-    cudaFree(camPosCuda);
+    cudaFree(viewCuda);  // projCuda / invRVPCuda / camPosCuda point into the same block
+    cudaFreeHost(viewParamsHost);
 
     cudaGraphicsUnregisterResource(imageBufferCuda);
     glDeleteBuffers(1, &imageBuffer);

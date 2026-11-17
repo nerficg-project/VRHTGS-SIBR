@@ -251,6 +251,10 @@ namespace sibr {
         float* projCuda = nullptr;
         float* invRVPCuda = nullptr;
         float* camPosCuda = nullptr;
+        // viewCuda / projCuda / invRVPCuda / camPosCuda point into one device block, uploaded with a
+        // single async copy from this pinned host staging block (one slot per eye)
+        static constexpr size_t viewParamsFloats = 16 * 3 + 4;
+        float* viewParamsHost = nullptr;
 
         // Mask data for foveation / skipping tiles not visible in VR
         bool exportedVisibilityMask[2] = {false, false}; // Track whether we've exported the mask for each eye to avoid redundant exports
