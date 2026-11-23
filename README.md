@@ -25,12 +25,9 @@ For details on the script usage, refer to the scripts'
 > **The performance and quality results in the paper were measured with the nerficg implementation of VR-HTGS
 > ([nerficg-project/VRHTGS](https://github.com/nerficg-project/VRHTGS/)), not with this SIBR viewer.**
 > To reproduce them, use the benchmark scripts in that repository. Numbers from this viewer are not comparable,
-> because:
->
-> - the SIBR viewer is not as optimized as the nerficg code path (it adds the overhead of SIBR's OpenGL/OpenXR
->   rendering loop and CUDA–OpenGL interop, and the Experiment app additionally records every frame for post hoc analysis);
-> - the SIBR viewer does **not** use the faster stereo rendering path of VR-HTGS, which renders both eyes in a
->   single pass. It renders each eye separately with the mono rasterizer.
+> because the SIBR viewer is not as optimized as the nerficg code path (it adds the overhead of SIBR's
+> OpenGL/OpenXR rendering loop and CUDA–OpenGL interop, and the Experiment app additionally records every frame
+> for post hoc analysis).
 
 ## Changes to the SIBR framework
 
@@ -43,7 +40,9 @@ Compared to upstream SIBR core, our main changes include:
   - controller actions (sticks and buttons),
   - a fixed FOV calculation, and robust handling of missing or lost OpenXR instances (the app reports
     "Failed to connect to OpenXR" and exits instead of hanging),
-  - a frame-begin callback that exposes OpenXR's predicted display time and period.
+  - a frame-begin callback that exposes OpenXR's predicted display time and period,
+  - a stereo hook (`ViewBase::onPrepareStereoFrame`), called once per rendered frame with both eye cameras before
+    the per-eye rendering, so a view can render both eyes in one pass.
 - **Build system**:
   - moved dependency management to [vcpkg](https://vcpkg.io) (manifest `vcpkg.json`, static triplet `x64-windows-static`)
     instead of SIBR's downloaded binary packages;
@@ -137,10 +136,14 @@ A model directory for this viewer contains:
 ## Viewer: `SIBR_FoveatedHTGSViewer_App`
 
 ```cmd
-SIBR_FoveatedHTGSViewer_App.exe -m <model dir> [--rendering-mode 0|2] [--device <cuda index>] [--export-visibility-mask]
+SIBR_FoveatedHTGSViewer_App.exe -m <model dir> [--rendering-mode 0|2] [--device <cuda index>] [--no-stereo] [--export-visibility-mask]
 ```
 
 - `--rendering-mode 2` (default) renders to an OpenXR headset, `--rendering-mode 0` to a desktop window.
+- **Stereo rendering** is on by default in VR (`--rendering-mode 2`): with the `HTGS_FOVEATED` (VR-HTGS) rasterizer,
+  both eyes are rendered in a single pass with the backend's stereo path. `--no-stereo` renders each eye separately
+  with the mono rasterizer instead. Stereo only applies to the `HTGS_FOVEATED` rasterizer (`HTGS` has no stereo path)
+  and only in VR (the desktop window only shows a single view). The console reports the mode at startup.
 - `--rendering-size W H` sets the desktop rendering resolution (default 1280×720, 60° vertical FOV). In VR the
   headset's resolution and FOV are used.
 - `--export-visibility-mask` writes each eye's visibility mask as a line loop (`render_mask_view_0.bin` /
@@ -148,9 +151,9 @@ SIBR_FoveatedHTGSViewer_App.exe -m <model dir> [--rendering-mode 0|2] [--device 
   to emulate your specific headset's visibility mask shape.
 
 The **3D Gaussians** window lets you toggle anti-aliasing and peripheral blur, switch between the `HTGS` and
-`HTGS_FOVEATED` rasterizers, and adjust height and locomotion speed. The **OpenXR** window switches between seated
-(default) and free-standing experiences, shows the frame rate and lets you lower the rendering resolution if the
-headset lags.
+`HTGS_FOVEATED` rasterizers, turn stereo rendering on and off at runtime, and adjust height and locomotion speed. The
+**OpenXR** window switches between seated (default) and free-standing experiences, shows the frame rate and lets you
+lower the rendering resolution if the headset lags.
 
 **Desktop controls** (nerficg ICGui style): orbital by default (left drag orbits, right drag pans, wheel zooms).
 Alt or End cycles to walking / flying (WASD, R/Space up, F/Shift/Ctrl down, left drag looks); +/− change the speed.
@@ -162,7 +165,7 @@ In the seated VR experience the desktop camera position offsets the VR view.
 ## Experiment: `SIBR_FoveatedHTGSExperiment_App`
 
 ```cmd
-SIBR_FoveatedHTGSExperiment_App.exe -m <config prefix> --participant-id <id> [--calibration-mode] [--calibration-dir <dir>] [--english] [--start-from-condition <n>] [--no-recording]
+SIBR_FoveatedHTGSExperiment_App.exe -m <config prefix> --participant-id <id> [--calibration-mode] [--calibration-dir <dir>] [--english] [--start-from-condition <n>] [--no-stereo] [--no-recording]
 ```
 
 - Experiment configurations are generated using the `vrhtgs_create_experiment_config.py` script provided in the
@@ -177,6 +180,10 @@ SIBR_FoveatedHTGSExperiment_App.exe -m <config prefix> --participant-id <id> [--
   default; `--english` switches to English.
 - The experimenter window on the desktop mirrors the headset and has buttons for each step. Escape aborts the run.
 - `--start-from-condition <n>` skips the first `n` conditions, e.g. to resume an interrupted session.
+- **Stereo rendering**: `VRHTGS` conditions render both eyes in one pass with the stereo path by default; `HTGS`
+  conditions always render mono. `--no-stereo` renders all conditions mono. The experimenter can also change it during
+  the run with the **Stereo Rendering** checkbox in the "3D Gaussians" window; the setting then applies globally to the
+  rest of the run. The log header records the setting, and each condition records the mode its scene was rendered in.
 - **Calibration**: With `--calibration-mode`, the sticks adjust the model scale as well as the starting rotation and
   position (Y/B cycles through them), and the result is written to `<calibration dir>/<dataset>/` as `calibration.txt`
   and `default_pose.txt`. The calibration directory defaults to `calibrations/` next to the config CSV. This allows
