@@ -5,10 +5,16 @@
 
 
 namespace sibr {
+    /// Arguments shared by the Viewer and the Experiment.
+    struct VRHTGSCommonArgs {
+        // Stereo (both eyes in one VR-HTGS call) is on by default wherever it applies (OpenXR mode, VRHTGS rasterizer)
+        Arg<bool> noStereo = { "no-stereo", "Render each eye separately (mono) instead of both eyes in one stereo pass (OpenXR mode, VRHTGS rasterizer)" };
+    };
+
     /// Arguments for the foveated renderer application.
     // Neither app loads a dataset, so they don't use BasicIBRAppArgs (whose dataset arguments would show up in --help)
     struct VRHTGSViewerAppArgs :
-        virtual WindowAppArgs, virtual RenderingArgs {
+        virtual WindowAppArgs, virtual RenderingArgs, virtual VRHTGSCommonArgs {
         RequiredArg<std::string> modelPath = { "model-path", "Model directory" };
         RequiredArg<std::string> modelPathShort = { "m", "Model directory" };
         Arg<int> device = {"device", 0, "CUDA device index"};
@@ -16,7 +22,7 @@ namespace sibr {
     };
 
     struct VRHTGSExperimentAppArgs :
-        virtual WindowAppArgs, virtual RenderingArgs {
+        virtual WindowAppArgs, virtual RenderingArgs, virtual VRHTGSCommonArgs {
         RequiredArg<std::string> modelPath = { "model-path", "Experiment config prefix (reads <prefix>_<participant-id>.csv)" };
         RequiredArg<std::string> modelPathShort = { "m", "Experiment config prefix (reads <prefix>_<participant-id>.csv)" };
         Arg<std::string> calibrationDir = { "calibration-dir", "", "Directory holding the per-dataset calibrations (default: 'calibrations' next to the experiment config)" };

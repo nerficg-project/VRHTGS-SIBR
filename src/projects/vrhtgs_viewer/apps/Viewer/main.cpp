@@ -90,6 +90,17 @@ int main(int argc, char** argv) {
             break;
     }
 
+    // Stereo (both eyes in one VR-HTGS call) is on by default; only OpenXR mode calls the view's stereo
+    // hook, so elsewhere the setting is ignored.
+    gaussianView->stereoRendering = !myArgs.noStereo;
+    const bool stereoHookCalled = openxrMode != nullptr;
+    if (stereoHookCalled) {
+        SIBR_LOG << "Stereo rendering: " << (gaussianView->stereoRendering ? "on (VRHTGS rasterizer; disable with --no-stereo)" : "off (--no-stereo)") << std::endl;
+    } else {
+        gaussianView->stereoUnavailableReason = "Stereo rendering only applies in OpenXR mode (--rendering-mode 2). This mode renders mono.";
+        SIBR_LOG << "Stereo rendering: " << (myArgs.noStereo ? "off (--no-stereo)" : "ignored, only applies in OpenXR mode (--rendering-mode 2); rendering mono") << std::endl;
+    }
+
     multiViewManager.addIBRSubView("Point view", gaussianView, usedResolution, ImGuiWindowFlags_NoBringToFrontOnFocus);
     multiViewManager.addCameraForView("Point view", generalCamera);
 

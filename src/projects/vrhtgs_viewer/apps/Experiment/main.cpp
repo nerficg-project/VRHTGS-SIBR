@@ -56,6 +56,18 @@ static void logCondition(std::ofstream& logFile, int conditionIndex, const std::
 }
 
 
+/**
+ * The mode a condition's scene renders with: stereo (both eyes in one VR-HTGS call) only for the VRHTGS
+ * rasterizer with stereo enabled. The gaze-dot check and the questionnaire always render mono.
+ */
+static std::string conditionRenderingMode(bool stereoRendering, sibr::RasterizerVariant modelType) {
+    if (modelType != sibr::RasterizerVariant::HTGS_FOVEATED) {
+        return "Mono (the HTGS rasterizer has no stereo path)";
+    }
+    return stereoRendering ? "Stereo" : "Mono (stereo disabled)";
+}
+
+
 static void logUserResponses(std::ofstream& logFile, const sibr::ExperimentResponses& responses) {
     logFile << "  User Responses:" << std::endl;
     logFile << "    Artifacts Noticed: " << responses.ratingArtifactsNoticed << std::endl;
@@ -223,6 +235,10 @@ int main(int argc, char** argv) {
     logFile << "Experiment Log for Participant " << myArgs.participantID.get() << " - Started at: "
             << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S") << std::endl;
     logFile << "========================================" << std::endl;
+    logFile << (myArgs.noStereo
+                ? "Stereo Rendering: disabled (--no-stereo), all conditions render mono"
+                : "Stereo Rendering: enabled, VRHTGS conditions render in stereo, HTGS conditions in mono")
+            << std::endl;
     if (!calibrationMode) {
         for (const auto& dir : missingCalibrations) {
             logFile << "WARNING: No calibration found in " << dir << ", using scale 1 and the identity pose." << std::endl;
@@ -271,6 +287,11 @@ int main(int argc, char** argv) {
             gaussianView.reset(
                 new sibr::ExperimentView(usedResolution.x(), usedResolution.y(), plyfile.c_str(), model_scale, device, calibrationMode)
             );
+            // Stereo is on by default; it only applies to VRHTGS conditions (HTGS always renders mono)
+            gaussianView->stereoRendering = !myArgs.noStereo;
+            SIBR_LOG << "Stereo rendering: " << (gaussianView->stereoRendering
+                ? "on for VRHTGS conditions (HTGS conditions render mono; disable with --no-stereo)"
+                : "off (--no-stereo)") << std::endl;
             gaussianView->enableRecording(recording_filename.str());
             openxrMode->setFrameBeginCallback(
                 [view = std::weak_ptr<sibr::ExperimentView>(gaussianView)](int64_t displayTime, int64_t displayPeriod) {
@@ -290,6 +311,13 @@ int main(int argc, char** argv) {
         gaussianView->modelType = condition.modelType;
         gaussianView->showScene();
         gaussianView->setConditionInfo(conditionIndex, conditions.size(), condition.modelType, condition.modelPath.string(), condition.antiAliasing);
+
+        // The mode this condition's scene renders with. The experimenter GUI can still switch stereo or the
+        // rasterizer at runtime, so changes are logged as they happen (checked once per loop iteration).
+        std::string renderingMode = conditionRenderingMode(gaussianView->stereoRendering, gaussianView->modelType);
+        logFile << "  Rendering Mode: " << renderingMode << std::endl;
+        logFile.flush();
+        SIBR_LOG << "Rendering mode: " << renderingMode << std::endl;
 
         // The near plane is fixed per condition (AAA Gaussians mode supports a closer one), independent of the
         // model's training config, so all conditions of the study are comparable. Only the far plane comes from it.
@@ -428,6 +456,14 @@ int main(int argc, char** argv) {
             } else {
                 gaussianView->showScene();
                 gaussianView->hideGazeVisualization();
+            }
+
+            const std::string currentRenderingMode = conditionRenderingMode(gaussianView->stereoRendering, gaussianView->modelType);
+            if (currentRenderingMode != renderingMode) {
+                renderingMode = currentRenderingMode;
+                logFile << "  Rendering Mode changed in the experimenter GUI to: " << renderingMode << std::endl;
+                logFile.flush();
+                SIBR_LOG << "Rendering mode changed to: " << renderingMode << std::endl;
             }
 
             multiViewManager.onUpdate(sibr::Input::global());

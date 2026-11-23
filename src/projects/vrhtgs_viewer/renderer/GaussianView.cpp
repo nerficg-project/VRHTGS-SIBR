@@ -1211,6 +1211,20 @@ void sibr::HTGaussianView::onGUI() {
             ImGui::EndCombo();
         }
 
+        // Stereo: both eyes in one VR-HTGS call (starts from --no-stereo; mono where it can't apply)
+        const bool stereoUnavailable = !stereoUnavailableReason.empty();
+        const bool stereoDisabled = stereoUnavailable || modelType == RasterizerVariant::HTGS;
+        ImGui::BeginDisabled(stereoDisabled);
+        ImGui::Checkbox("Stereo Rendering", &stereoRendering);
+        ImGui::EndDisabled();
+        if (stereoUnavailable) {
+            ImGui::TextWrapped("%s", stereoUnavailableReason.c_str());
+        } else if (modelType == RasterizerVariant::HTGS) {
+            ImGui::TextWrapped("The HTGS rasterizer always renders mono.");
+        } else if (stereoRendering && gazeVisualization) {
+            ImGui::TextWrapped("Mono while the gaze visualization is shown.");
+        }
+
         if (calibrationMode) {
             ImGui::Separator();
             ImGui::Text("Calibration Mode");

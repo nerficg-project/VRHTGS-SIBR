@@ -177,6 +177,14 @@ namespace sibr
         // Prepare the view to render at a specific resolution
         view.setResolution(sibr::Vector2i(w / m_downscaleResolution, h / m_downscaleResolution));
 
+        // Give the view both eye cameras at once (e.g. to render both eyes in one stereo pass); the
+        // per-eye callbacks below still follow. Same condition as the frame-begin callback, so it pairs
+        // with exactly one frame begin and the two per-eye calls. Views without stereo ignore it.
+        if (m_openxrHmd->shouldRender())
+        {
+            view.onPrepareStereoFrame(buildEyeCamera(0, camera, w, h), buildEyeCamera(1, camera, w, h));
+        }
+
         // The callback is called for each single view (left view then right view) with the texture to render to
         m_openxrHmd->submitFrame([this, w, h, &view, &camera, optDest](int viewIndex, uint32_t texture)
                                  {

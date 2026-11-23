@@ -277,6 +277,9 @@ namespace sibr {
         bool blurPeriphery = true;
         bool exportVisibilityMask = false; // If true, will export the visibility mask for each eye as a line loop
         bool stereoRendering = true;  // Render both eyes in one stereo call when the stereo hook is called and stereo applies
+        // Set by the app when its rendering mode never calls the stereo hook (e.g. desktop mode): the
+        // "Stereo rendering" checkbox is then disabled and shows this text. Empty = the hook is called.
+        std::string stereoUnavailableReason;
 
     protected:
         // OpenGL / CUDA resources
