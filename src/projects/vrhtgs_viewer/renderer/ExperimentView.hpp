@@ -68,6 +68,9 @@ namespace sibr {
         bool guiVisible = false;
         VRImguiRenderer* _vrImguiRenderer;
 
+        /** No stereo render while the questionnaire is shown (onRenderIBR draws the GUI instead). */
+        bool stereoApplies() const override { return !guiVisible && HTGaussianView::stereoApplies(); }
+
         sibr::Matrix4f headPose = sibr::Matrix4f::Identity();  // <- Used for placing the GUI window in VR
     };
 }

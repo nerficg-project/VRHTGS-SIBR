@@ -67,11 +67,36 @@ namespace sibr {
         char* data = nullptr;
         size_t size = 0;
 
-        ~RasterizationBuffer() {
+        RasterizationBuffer() = default;
+        RasterizationBuffer(const RasterizationBuffer&) = delete;  // resizeFunc captures this buffer's address
+        RasterizationBuffer& operator=(const RasterizationBuffer&) = delete;
+
+        void release() {
             if (data) {
                 cudaFree(data);
             }
+            data = nullptr;
+            size = 0;
         }
+
+        ~RasterizationBuffer() { release(); }
+    };
+
+    /**
+     * GPU state one eye's rasterization needs: pose buffers, rasterizer helper buffers and the GL
+     * image buffer (with its CUDA registration) the eye's image ends up in.
+     * HTGaussianView keeps two, indexed by eye slot. Mono rendering only uses slot 0; slot 1 is
+     * allocated on first stereo use.
+     */
+    struct EyeGpuState {
+        bool allocated = false;
+        float* viewCuda = nullptr;
+        float* projCuda = nullptr;
+        float* invRVPCuda = nullptr;
+        float* camPosCuda = nullptr;
+        RasterizationBuffer perPrimitiveBuffer, perTileBuffer, perSubtileBuffer, perInstanceBuffer, blurImageBuffer;
+        GLuint imageBuffer = 0;
+        cudaGraphicsResource_t imageBufferCuda = nullptr;
     };
 
     /**
@@ -123,6 +148,14 @@ namespace sibr {
          * \param eye The novel viewpoint.
          */
         void onRenderIBR(sibr::IRenderTarget& dst, const sibr::Camera& eye) override;
+
+        /**
+         * Stereo hook: called once per frame with both eye cameras before the two per-eye
+         * onRenderIBR calls. If stereo applies (see stereoApplies()), renders both eyes with one
+         * VR-HTGS stereo call and marks both eye images as ready; onRenderIBR then only shows the
+         * ready image for its eye. Otherwise does nothing and onRenderIBR renders mono.
+         */
+        void onPrepareStereoFrame(const sibr::Camera& left, const sibr::Camera& right) override;
 
         /**
          * Update inputs (do nothing).
@@ -243,14 +276,29 @@ namespace sibr {
         bool antiAliasing = true;
         bool blurPeriphery = true;
         bool exportVisibilityMask = false; // If true, will export the visibility mask for each eye as a line loop
+        bool stereoRendering = true;  // Render both eyes in one stereo call when the stereo hook is called and stereo applies
 
     protected:
         // OpenGL / CUDA resources
         int _device = 0;
-        GLuint imageBuffer = 0;
-        GLuint intermediateImageBuffer = 0;
-        cudaGraphicsResource_t imageBufferCuda;
         BufferCopyRenderer* _copyRenderer;
+
+        // Per-eye GPU state, indexed by eye slot (eyeSlot(), never a raw view index).
+        // Slot 0 is used by mono rendering; slot 1 is allocated on first stereo use.
+        EyeGpuState eyeGpu[2];
+
+        // Stereo frame state: set by onPrepareStereoFrame, consumed by onRenderIBR
+        struct StereoReadyImage {
+            bool ready = false;
+            EyeRenderParams params;  // Params the image was rendered with (must match the per-eye call)
+            RasterizerVariant modelType = RasterizerVariant::HTGS_FOVEATED;
+            bool antiAliasing = false;
+            bool blurPeriphery = false;
+        };
+        StereoReadyImage stereoReady[2];
+
+        /** Whether the stereo hook renders this frame in stereo. ExperimentView adds its own conditions. */
+        virtual bool stereoApplies() const;
 
         // Model data
         int count;
@@ -267,10 +315,6 @@ namespace sibr {
 
         // Frame-specific pose data
         bool gazeVisualization = false;
-        float* viewCuda = nullptr;
-        float* projCuda = nullptr;
-        float* invRVPCuda = nullptr;
-        float* camPosCuda = nullptr;
 
         // Mask data for foveation / skipping tiles not visible in VR
         bool exportedVisibilityMask[2] = {false, false}; // Track whether we've exported the mask for each eye to avoid redundant exports
@@ -317,9 +361,6 @@ namespace sibr {
         float inputDeltaTime();
         void uploadScaledModel();
 
-        // Rasterization helper buffers
-        RasterizationBuffer perPrimitiveBuffer, perTileBuffer, perSubtileBuffer, perInstanceBuffer, blurImageBuffer;
-
         // Recording data
         std::unique_ptr<htgs::recording::RecordingWriter> recordingWriter;
         std::optional<htgs::recording::FrameBeginRecord> pendingFrameBegin;  // written lazily, see beginXRFrame()
@@ -327,8 +368,18 @@ namespace sibr {
         float currentSceneScale = 1.0f;
         int currentConditionIndex = -1;
 
-        void createImageBuffer();
-        void destroyImageBuffer();
+        void allocateEyeGpuState(EyeGpuState& state);
+        void freeEyeGpuState(EyeGpuState& state);
+        void createImageBuffer(EyeGpuState& state);
+        void destroyImageBuffer(EyeGpuState& state);
+        void invalidateStereoImages() { stereoReady[0].ready = stereoReady[1].ready = false; }
+
+        /**
+         * Render one eye with the mono rasterizer (HTGS or VR-HTGS) into state's image buffer.
+         */
+        void rasterizeMono(const EyeRenderParams& params, EyeGpuState& state);
+        /** Render both eyes with one VR-HTGS stereo call into eyeGpu[0] / eyeGpu[1]. */
+        void rasterizeStereo(const EyeRenderParams& left, const EyeRenderParams& right);
 
         /** Per-eye parameters for the current resolution, scene transform and locomotion. */
         EyeRenderParams computeEyeRenderParams(const sibr::Camera& eye) const;

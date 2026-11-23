@@ -11,14 +11,16 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 set(CUDA_BACKEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/VRHTGS/VRHTGSCudaBackend/VRHTGSCudaBackend)
 
 # Only the plain CUDA sources (the *_api.cu files are PyTorch bindings).
-# inference_stereo.cu is left out because the viewer only uses mono inference.
+# The viewer uses both mono (inference.cu) and stereo (inference_stereo.cu) inference.
 file(GLOB SOURCES
     "${CUDA_BACKEND_DIR}/rasterization/include/config.h"
     "${CUDA_BACKEND_DIR}/rasterization/include/inference.h"
+    "${CUDA_BACKEND_DIR}/rasterization/include/inference_stereo.h"
     "${CUDA_BACKEND_DIR}/rasterization/include/kernels/*.cuh"
     "${CUDA_BACKEND_DIR}/rasterization/include/utils/*.h"
     "${CUDA_BACKEND_DIR}/rasterization/include/utils/*.cuh"
     "${CUDA_BACKEND_DIR}/rasterization/src/inference.cu"
+    "${CUDA_BACKEND_DIR}/rasterization/src/inference_stereo.cu"
     "${CUDA_BACKEND_DIR}/visualization/include/enums.h"
     "${CUDA_BACKEND_DIR}/visualization/include/visualization.h"
     "${CUDA_BACKEND_DIR}/visualization/include/visualization_config.h"

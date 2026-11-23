@@ -13,6 +13,7 @@
 #include "core/graphics/GUI.hpp"
 #include "core/openxr/ControllerState.hpp"
 #include "VRHTGSCudaBackend/rasterization/include/inference.h"
+#include "VRHTGSCudaBackend/rasterization/include/inference_stereo.h"
 #include "VRHTGSCudaBackend/rasterization/include/utils/rasterization_utils.h"
 #include "VRHTGSCudaBackend/visualization/include/visualization.h"
 #include "HTGSCudaBackend/rasterization/include/hybrid_blend/fast_inference.h"
@@ -344,6 +345,11 @@ static int loadPly(
         backgroundTextureResolution = make_int2(width, height);
     } else {
         SIBR_LOG << "No background model data found\n";
+        // Free a previous model's background data
+        if (bgModelDataCuda) {
+            CUDA_SAFE_CALL(cudaFree(bgModelDataCuda));
+            bgModelDataCuda = nullptr;
+        }
         backgroundModelType = BackgroundModelType::NONE;
     }
 
@@ -471,32 +477,61 @@ sibr::HTGaussianView::HTGaussianView(
         SIBR_WRG << "Code has not been tested with compute capability < 8.9! Results may vary.";
     }
 
-    // Set up resize functions for our buffers
-    perPrimitiveBuffer.resizeFunc = getBufferGrowFunction(&perPrimitiveBuffer);
-    perTileBuffer.resizeFunc = getBufferGrowFunction(&perTileBuffer);
-    perSubtileBuffer.resizeFunc = getBufferGrowFunction(&perSubtileBuffer);
-    // Since this is the only buffer that changes while rendering the same scene,
-    //   we overallocate by 1.25x to reduce the number of necessary resizes.
-    perInstanceBuffer.resizeFunc = getBufferGrowFunction(&perInstanceBuffer, 1.25);
-    // Special buffer to contain the intermediate image for blurring
-    blurImageBuffer.resizeFunc = getBufferResizeFunction(&blurImageBuffer, 1.1, 0.75);
-
     // Initialize copy renderer
     _copyRenderer = new BufferCopyRenderer();
     _copyRenderer->flip() = true;
     _copyRenderer->width() = _resolution.x();
     _copyRenderer->height() = _resolution.y();
 
-    // Load model and set up rendering buffers
+    // Load model and set up rendering buffers (eye slot 1 is allocated on first stereo use)
     loadModel(file, scale);
-    createImageBuffer();
+    allocateEyeGpuState(eyeGpu[0]);
     initializeFoveaMask();
+}
 
-    // Allocate GPU memory for view parameters
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&viewCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&projCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&invRVPCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&camPosCuda), 3 * sizeof(float)));
+
+void sibr::HTGaussianView::allocateEyeGpuState(EyeGpuState& state) {
+    if (state.allocated) {
+        return;
+    }
+
+    // Set up resize functions for the rasterizer buffers
+    state.perPrimitiveBuffer.resizeFunc = getBufferGrowFunction(&state.perPrimitiveBuffer);
+    state.perTileBuffer.resizeFunc = getBufferGrowFunction(&state.perTileBuffer);
+    state.perSubtileBuffer.resizeFunc = getBufferGrowFunction(&state.perSubtileBuffer);
+    // Since this is the only buffer that changes while rendering the same scene,
+    //   we overallocate by 1.25x to reduce the number of necessary resizes.
+    state.perInstanceBuffer.resizeFunc = getBufferGrowFunction(&state.perInstanceBuffer, 1.25);
+    // Special buffer to contain the intermediate image for blurring
+    state.blurImageBuffer.resizeFunc = getBufferResizeFunction(&state.blurImageBuffer, 1.1, 0.75);
+
+    // GPU memory for view parameters
+    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.viewCuda), sizeof(sibr::Matrix4f)));
+    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.projCuda), sizeof(sibr::Matrix4f)));
+    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.invRVPCuda), sizeof(sibr::Matrix4f)));
+    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.camPosCuda), 3 * sizeof(float)));
+
+    createImageBuffer(state);
+    state.allocated = true;
+}
+
+void sibr::HTGaussianView::freeEyeGpuState(EyeGpuState& state) {
+    if (!state.allocated) {
+        return;
+    }
+
+    destroyImageBuffer(state);
+    cudaFree(state.viewCuda);
+    cudaFree(state.projCuda);
+    cudaFree(state.invRVPCuda);
+    cudaFree(state.camPosCuda);
+    state.viewCuda = state.projCuda = state.invRVPCuda = state.camPosCuda = nullptr;
+    state.perPrimitiveBuffer.release();
+    state.perTileBuffer.release();
+    state.perSubtileBuffer.release();
+    state.perInstanceBuffer.release();
+    state.blurImageBuffer.release();
+    state.allocated = false;
 }
 
 
@@ -504,8 +539,13 @@ void sibr::HTGaussianView::setResolution(const Vector2i &size) {
     if (size != getResolution()) {
         SIBR_LOG << "Set resolution => " << size << std::endl;
         ViewBase::setResolution(size);
-        destroyImageBuffer();
-        createImageBuffer();
+        invalidateStereoImages();
+        for (EyeGpuState& state : eyeGpu) {
+            if (state.allocated) {
+                destroyImageBuffer(state);
+                createImageBuffer(state);
+            }
+        }
 
         _copyRenderer->width() = _resolution.x();
         _copyRenderer->height() = _resolution.y();
@@ -513,6 +553,8 @@ void sibr::HTGaussianView::setResolution(const Vector2i &size) {
 }
 
 void sibr::HTGaussianView::loadModel(const char* file, float modelScale) {
+    invalidateStereoImages();
+
     // Track current model for recording
     currentModelPath = file;
     currentSceneScale = modelScale;
@@ -557,26 +599,27 @@ void sibr::HTGaussianView::loadModel(const char* file, float modelScale) {
 }
 
 
-void sibr::HTGaussianView::createImageBuffer() {
+void sibr::HTGaussianView::createImageBuffer(EyeGpuState& state) {
     // Create GL buffer ready for CUDA/GL interop
-    glCreateBuffers(1, &imageBuffer);
-    glCreateBuffers(1, &intermediateImageBuffer);
-    glNamedBufferStorage(imageBuffer, _resolution.x() * _resolution.y() * 3 * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
-    glNamedBufferStorage(intermediateImageBuffer, _resolution.x() * _resolution.y() * 3 * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
+    glCreateBuffers(1, &state.imageBuffer);
+    glNamedBufferStorage(state.imageBuffer, _resolution.x() * _resolution.y() * 3 * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
     if (cudaPeekAtLastError() != cudaSuccess) {
         SIBR_ERR << "A CUDA error occurred in setup:" << cudaGetErrorString(cudaGetLastError()) << ". Please rerun in Debug to find the exact line!";
     }
-    cudaGraphicsGLRegisterBuffer(&imageBufferCuda, imageBuffer, cudaGraphicsRegisterFlagsWriteDiscard);
+    cudaGraphicsGLRegisterBuffer(&state.imageBufferCuda, state.imageBuffer, cudaGraphicsRegisterFlagsWriteDiscard);
     if (cudaPeekAtLastError() != cudaSuccess) {
         SIBR_ERR << "A CUDA error occurred in setup:" << cudaGetErrorString(cudaGetLastError()) << ". Please rerun in Debug to find the exact line!";
     }
 }
 
-void sibr::HTGaussianView::destroyImageBuffer() {
-    cudaGraphicsUnregisterResource(imageBufferCuda);
-    glDeleteBuffers(1, &imageBuffer);
-    imageBuffer = 0;
+void sibr::HTGaussianView::destroyImageBuffer(EyeGpuState& state) {
+    if (state.imageBufferCuda) {
+        cudaGraphicsUnregisterResource(state.imageBufferCuda);
+        state.imageBufferCuda = nullptr;
+    }
+    glDeleteBuffers(1, &state.imageBuffer);
+    state.imageBuffer = 0;
 }
 
 
@@ -785,69 +828,68 @@ sibr::EyeRenderParams sibr::HTGaussianView::computeEyeRenderParams(const sibr::C
 }
 
 
-void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Camera& eye) {
-    // Remember the eye pose (world space) so controller input can be made head-relative
-    eyeWorldPosition[eyeSlot(eye)] = eye.position();
-    eyeWorldForward[eyeSlot(eye)] = eye.dir();
-    eyeWorldUp[eyeSlot(eye)] = eye.up();
-    if (eye.viewIndex() == 1) {
-        stereoEyesSeen = true;
-    }
+// Backend argument structs for one eye (VR-HTGS mono and stereo calls)
+static Buffers makeBuffers(sibr::EyeGpuState& state) {
+    return Buffers{
+        .per_primitive_buffers_func = state.perPrimitiveBuffer.resizeFunc,
+        .per_tile_buffers_func = state.perTileBuffer.resizeFunc,
+        .per_subtile_buffers_func = state.perSubtileBuffer.resizeFunc,
+        .per_instance_buffers_func = state.perInstanceBuffer.resizeFunc
+    };
+}
 
-    const EyeRenderParams params = computeEyeRenderParams(eye);
+static Pose makePose(const sibr::EyeGpuState& state, const sibr::EyeRenderParams& params) {
+    return Pose{
+        .M = (float4*)state.viewCuda,
+        .VPM = (float4*)state.projCuda,
+        .VPR_inv = (float4*)state.invRVPCuda,
+        .cam_position = (float3*)state.camPosCuda,
+        .gaze_position = (float2*)params.gazePos
+    };
+}
 
-    // If in gaze visualization mode, skip main rendering & render gaze position instead
-    if (gazeVisualization) {
-        float* imageCuda = nullptr;
-        size_t bytes;
+static Intrinsics makeIntrinsics(const sibr::EyeRenderParams& params, const sibr::Vector2i& resolution) {
+    return Intrinsics{
+        .width = resolution.x(),
+        .height = resolution.y(),
+        .focal_x = params.focalX,
+        .focal_y = params.focalY,
+        .center_x = params.centerX,
+        .center_y = params.centerY
+    };
+}
 
-        CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &imageBufferCuda));
-        CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
-                reinterpret_cast<void**>(&imageCuda), &bytes, imageBufferCuda));
+static void uploadPose(sibr::EyeGpuState& state, const sibr::EyeRenderParams& params) {
+    CUDA_SAFE_CALL(cudaMemcpy(state.viewCuda, params.view.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(state.projCuda, params.viewProj.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(state.invRVPCuda, params.invRVP.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(state.camPosCuda, params.eyePos.data(), sizeof(float) * 3, cudaMemcpyHostToDevice));
+}
 
-        CUDA_SAFE_CALL(vrhtgs::visualization::clear_image(
-            imageCuda,
-            _resolution.x(),
-            _resolution.y()
-        ));
-        CUDA_SAFE_CALL(vrhtgs::visualization::visualize_gaze_position(
-            imageCuda,
-            _resolution.x(),
-            _resolution.y(),
-            40,  // radius in pixels
-            (float2*)params.gazePos,
-            make_float3(1.0f, 0.0f, 0.0f),  // color
-            vrhtgs::visualization::GazeVisualizationType::CIRCLE,
-            /*to_chw=*/ true
-        ));
+// Whether a stereo image rendered with a was rendered for the same eye pose/projection/gaze as b
+static bool sameEyeRender(const sibr::EyeRenderParams& a, const sibr::EyeRenderParams& b) {
+    return a.slot == b.slot && a.eyeIndex == b.eyeIndex
+        && a.focalX == b.focalX && a.focalY == b.focalY && a.centerX == b.centerX && a.centerY == b.centerY
+        && a.gazePos[0] == b.gazePos[0] && a.gazePos[1] == b.gazePos[1]
+        && a.view == b.view && a.viewProj == b.viewProj && a.invRVP == b.invRVP && a.eyePos == b.eyePos
+        && a.zNear == b.zNear && a.zFar == b.zFar;
+}
 
-        // Copy image contents to framebuffer
-        _copyRenderer->process(imageBuffer, dst, _resolution.x(), _resolution.y());
-        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &imageBufferCuda));
 
-        return;
-    }
-
-    // Update visibility mask if needed
-    updateVisibilityMask(eye, _resolution.x(), _resolution.y());
-
-    // Copy frame-dependent data to GPU
-    CUDA_SAFE_CALL(cudaMemcpy(viewCuda, params.view.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(projCuda, params.viewProj.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(invRVPCuda, params.invRVP.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(camPosCuda, params.eyePos.data(), sizeof(float) * 3, cudaMemcpyHostToDevice));
+void sibr::HTGaussianView::rasterizeMono(const EyeRenderParams& params, EyeGpuState& state) {
+    uploadPose(state, params);
 
     // Map OpenGL buffer resource for use with CUDA
     float* imageCuda = nullptr;
     float* intermediateImageCuda = nullptr;
     size_t bytes;
-    CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &imageBufferCuda));
+    CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &state.imageBufferCuda));
     CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
-            reinterpret_cast<void**>(&imageCuda), &bytes, imageBufferCuda));
+            reinterpret_cast<void**>(&imageCuda), &bytes, state.imageBufferCuda));
 
     // If peripheral blur is enabled, we need to allocate a secondary buffer
     if (blurPeriphery && modelType == RasterizerVariant::HTGS_FOVEATED) {
-        intermediateImageCuda = reinterpret_cast<float*>(blurImageBuffer.resizeFunc(
+        intermediateImageCuda = reinterpret_cast<float*>(state.blurImageBuffer.resizeFunc(
             _resolution.x() * _resolution.y() * 3 * sizeof(float))
         );
     } else {
@@ -857,18 +899,18 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     // Choose rasterizer and launch
     if (modelType == RasterizerVariant::HTGS) {
         CUDA_SAFE_CALL(htgs::rasterization::hybrid_blend::fast_inference(
-            perPrimitiveBuffer.resizeFunc,
-            perTileBuffer.resizeFunc,
-            perInstanceBuffer.resizeFunc,
+            state.perPrimitiveBuffer.resizeFunc,
+            state.perTileBuffer.resizeFunc,
+            state.perInstanceBuffer.resizeFunc,
             (float3*)posCuda,
             (float3*)scaleCuda,
             (float4*)rotCuda,
             opacityCuda,
             (float3*)shs0Cuda,
             (float3*)shsRestCuda,
-            (float4*)viewCuda,
-            (float4*)projCuda,
-            (float3*)camPosCuda,
+            (float4*)state.viewCuda,
+            (float4*)state.projCuda,
+            (float3*)state.camPosCuda,
             imageCuda,
             /*K=*/ 16,
             /*n_primitives=*/ count,
@@ -881,31 +923,10 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             /*to_chw=*/ true
         ));
     } else if (modelType == RasterizerVariant::HTGS_FOVEATED) {
-        const Buffers buffers = {
-            .per_primitive_buffers_func = perPrimitiveBuffer.resizeFunc,
-            .per_tile_buffers_func = perTileBuffer.resizeFunc,
-            .per_subtile_buffers_func = perSubtileBuffer.resizeFunc,
-            .per_instance_buffers_func = perInstanceBuffer.resizeFunc
-        };
         const BackgroundModel bgModelData = {
             .data = bgModelDataCuda,
             .type = backgroundModelType,
             .texture_resolution = backgroundTextureResolution
-        };
-        const Pose pose = {
-            .M = (float4*)viewCuda,
-            .VPM = (float4*)projCuda,
-            .VPR_inv = (float4*)invRVPCuda,
-            .cam_position = (float3*)camPosCuda,
-            .gaze_position = (float2*)params.gazePos
-        };
-        const Intrinsics intrinsics = {
-            .width = _resolution.x(),
-            .height = _resolution.y(),
-            .focal_x = params.focalX,
-            .focal_y = params.focalY,
-            .center_x = params.centerX,
-            .center_y = params.centerY
         };
         const Masks masks = {
             .visibility_mask = visibilityMask[params.slot],
@@ -914,7 +935,7 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
         };
 
         CUDA_SAFE_CALL(vrhtgs::rasterization::inference(
-            buffers,
+            makeBuffers(state),
             (float3*)posCuda,
             (float3*)scaleCuda,
             (float4*)rotCuda,
@@ -922,8 +943,8 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             (float3*)shs0Cuda,
             (float3*)shsRestCuda,
             bgModelData,
-            pose,
-            intrinsics,
+            makePose(state, params),
+            makeIntrinsics(params, _resolution),
             masks,
             intermediateImageCuda,
             imageCuda,
@@ -943,7 +964,177 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     }
 
     // Unmap OpenGL resource for use with OpenGL
-    CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &imageBufferCuda));
+    CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &state.imageBufferCuda));
+}
+
+
+void sibr::HTGaussianView::rasterizeStereo(const EyeRenderParams& left, const EyeRenderParams& right) {
+    EyeGpuState& stateLeft = eyeGpu[0];
+    EyeGpuState& stateRight = eyeGpu[1];
+    uploadPose(stateLeft, left);
+    uploadPose(stateRight, right);
+
+    // Map both eyes' OpenGL buffers for use with CUDA
+    cudaGraphicsResource_t resources[2] = { stateLeft.imageBufferCuda, stateRight.imageBufferCuda };
+    float* imageCuda[2] = { nullptr, nullptr };
+    float* intermediateImageCuda[2] = { nullptr, nullptr };
+    size_t bytes;
+    CUDA_SAFE_CALL(cudaGraphicsMapResources(2, resources));
+    for (int i = 0; i < 2; ++i) {
+        CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
+                reinterpret_cast<void**>(&imageCuda[i]), &bytes, resources[i]));
+        // If peripheral blur is enabled, the eye needs a secondary buffer
+        intermediateImageCuda[i] = blurPeriphery
+            ? reinterpret_cast<float*>(eyeGpu[i].blurImageBuffer.resizeFunc(_resolution.x() * _resolution.y() * 3 * sizeof(float)))
+            : imageCuda[i];
+    }
+
+    const BackgroundModel bgModelData = {
+        .data = bgModelDataCuda,
+        .type = backgroundModelType,
+        .texture_resolution = backgroundTextureResolution
+    };
+    const Masks masksLeft = {
+        .visibility_mask = visibilityMask[0],
+        .visibility_mask_area_table = visibilityMaskAreaTable[0],
+        .fovea_mask_area_table = foveaMaskAreaTable
+    };
+    const Masks masksRight = {
+        .visibility_mask = visibilityMask[1],
+        .visibility_mask_area_table = visibilityMaskAreaTable[1],
+        .fovea_mask_area_table = foveaMaskAreaTable
+    };
+
+    // Both eyes share the scalar parameters (near/far come from the same SIBR camera)
+    CUDA_SAFE_CALL(vrhtgs::rasterization::inference_stereo(
+        makeBuffers(stateLeft),
+        makeBuffers(stateRight),
+        (float3*)posCuda,
+        (float3*)scaleCuda,
+        (float4*)rotCuda,
+        opacityCuda,
+        (float3*)shs0Cuda,
+        (float3*)shsRestCuda,
+        bgModelData,
+        makePose(stateLeft, left),
+        makePose(stateRight, right),
+        makeIntrinsics(left, _resolution),
+        makeIntrinsics(right, _resolution),
+        masksLeft,
+        masksRight,
+        intermediateImageCuda[0],
+        imageCuda[0],
+        intermediateImageCuda[1],
+        imageCuda[1],
+        /*K=*/ 16,
+        /*n_primitives=*/ count,
+        /*active_sh_bases=*/ 15,
+        /*total_sh_bases=*/ 15,           // max degree 3 = 15 bases (16-sh0)
+        /*near_plane=*/ left.zNear,
+        /*far_plane=*/ left.zFar,
+        /*scale_modifier=*/ 1.0f,
+        /*to_chw=*/ true,
+        blurPeriphery,
+        antiAliasing
+    ));
+
+    CUDA_SAFE_CALL(cudaGraphicsUnmapResources(2, resources));
+}
+
+
+bool sibr::HTGaussianView::stereoApplies() const {
+    return stereoRendering && modelType == RasterizerVariant::HTGS_FOVEATED && !gazeVisualization;
+}
+
+
+void sibr::HTGaussianView::onPrepareStereoFrame(const sibr::Camera& left, const sibr::Camera& right) {
+    invalidateStereoImages();
+    if (!stereoApplies() || eyeSlot(left) != 0 || eyeSlot(right) != 1) {
+        return;
+    }
+
+    if (!eyeGpu[1].allocated) {
+        SIBR_LOG << "Stereo rendering: allocating GPU state for the second eye" << std::endl;
+        allocateEyeGpuState(eyeGpu[1]);
+    }
+
+    const EyeRenderParams params[2] = { computeEyeRenderParams(left), computeEyeRenderParams(right) };
+    updateVisibilityMask(left, _resolution.x(), _resolution.y());
+    updateVisibilityMask(right, _resolution.x(), _resolution.y());
+
+    rasterizeStereo(params[0], params[1]);
+
+    for (int i = 0; i < 2; ++i) {
+        stereoReady[i].ready = true;
+        stereoReady[i].params = params[i];
+        stereoReady[i].modelType = modelType;
+        stereoReady[i].antiAliasing = antiAliasing;
+        stereoReady[i].blurPeriphery = blurPeriphery;
+    }
+
+    if (cudaPeekAtLastError() != cudaSuccess) {
+        SIBR_ERR << "A CUDA error occurred during stereo rendering:" << cudaGetErrorString(cudaGetLastError()) << ". Please rerun in Debug to find the exact line!";
+    }
+}
+
+
+void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Camera& eye) {
+    // Remember the eye pose (world space) so controller input can be made head-relative
+    eyeWorldPosition[eyeSlot(eye)] = eye.position();
+    eyeWorldForward[eyeSlot(eye)] = eye.dir();
+    eyeWorldUp[eyeSlot(eye)] = eye.up();
+    if (eye.viewIndex() == 1) {
+        stereoEyesSeen = true;
+    }
+
+    const EyeRenderParams params = computeEyeRenderParams(eye);
+    EyeGpuState& monoState = eyeGpu[0];
+
+    // If in gaze visualization mode, skip main rendering & render gaze position instead
+    if (gazeVisualization) {
+        float* imageCuda = nullptr;
+        size_t bytes;
+
+        CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &monoState.imageBufferCuda));
+        CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
+                reinterpret_cast<void**>(&imageCuda), &bytes, monoState.imageBufferCuda));
+
+        CUDA_SAFE_CALL(vrhtgs::visualization::clear_image(
+            imageCuda,
+            _resolution.x(),
+            _resolution.y()
+        ));
+        CUDA_SAFE_CALL(vrhtgs::visualization::visualize_gaze_position(
+            imageCuda,
+            _resolution.x(),
+            _resolution.y(),
+            40,  // radius in pixels
+            (float2*)params.gazePos,
+            make_float3(1.0f, 0.0f, 0.0f),  // color
+            vrhtgs::visualization::GazeVisualizationType::CIRCLE,
+            /*to_chw=*/ true
+        ));
+
+        // Copy image contents to framebuffer
+        _copyRenderer->process(monoState.imageBuffer, dst, _resolution.x(), _resolution.y());
+        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &monoState.imageBufferCuda));
+
+        return;
+    }
+
+    // Update visibility mask if needed
+    updateVisibilityMask(eye, _resolution.x(), _resolution.y());
+
+    // Show this eye's stereo image if the stereo hook rendered one for exactly this eye and these
+    // settings; otherwise render mono (never show a stale image)
+    StereoReadyImage& ready = stereoReady[params.slot];
+    const bool useStereoImage = ready.ready && sameEyeRender(ready.params, params) && ready.modelType == modelType
+                                && ready.antiAliasing == antiAliasing && ready.blurPeriphery == blurPeriphery;
+    ready.ready = false;
+    EyeGpuState& shownState = useStereoImage ? eyeGpu[params.slot] : monoState;
+    if (!useStereoImage) {
+        rasterizeMono(params, monoState);
+    }
 
     // Record frame if recording is enabled
     if (recordingWriter) {
@@ -987,7 +1178,7 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     }
 
     // Copy image contents to framebuffer
-    _copyRenderer->process(imageBuffer, dst, _resolution.x(), _resolution.y());
+    _copyRenderer->process(shownState.imageBuffer, dst, _resolution.x(), _resolution.y());
 
     if (cudaPeekAtLastError() != cudaSuccess) {
         SIBR_ERR << "A CUDA error occurred during rendering:" << cudaGetErrorString(cudaGetLastError()) << ". Please rerun in Debug to find the exact line!";
@@ -1073,6 +1264,7 @@ void sibr::HTGaussianView::uploadScaledModel() {
         calibrationData.scales.size() != static_cast<size_t>(count)) {
         return;  // CPU copies only exist in calibration mode
     }
+    invalidateStereoImages();
 
     const float factor = calibrationData.modelScale / calibrationData.baseModelScale;
     std::vector<Pos> scaledPositions = calibrationData.positions;
@@ -1291,13 +1483,9 @@ sibr::HTGaussianView::~HTGaussianView() {
     cudaFree(shsRestCuda);
     cudaFree(bgModelDataCuda);
 
-    cudaFree(viewCuda);
-    cudaFree(projCuda);
-    cudaFree(invRVPCuda);
-    cudaFree(camPosCuda);
-
-    cudaGraphicsUnregisterResource(imageBufferCuda);
-    glDeleteBuffers(1, &imageBuffer);
+    for (EyeGpuState& state : eyeGpu) {
+        freeEyeGpuState(state);
+    }
 
     delete _copyRenderer;
 }
