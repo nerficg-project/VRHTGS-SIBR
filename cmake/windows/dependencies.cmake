@@ -42,13 +42,6 @@ find_package(ASSIMP REQUIRED)
 include_directories(${ASSIMP_INCLUDE_DIR})
 
 
-################
-## Find FFMPEG
-################
-find_package(FFMPEG QUIET)
-include_directories(${FFMPEG_INCLUDE_DIR})
-
-
 ###################
 ## Find embree3
 ###################

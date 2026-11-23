@@ -4,7 +4,6 @@
     "boost",
     "eigen3",
     "embree3",
-    "ffmpeg",
     "glew",
     "glfw3",
     {

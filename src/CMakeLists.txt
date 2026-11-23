@@ -74,7 +74,6 @@ if (BUILD_SIBR)
   add_subdirectory(core/scene)
   add_subdirectory(core/assets)
   add_subdirectory(core/imgproc)
-  add_subdirectory(core/video)
   add_subdirectory(core/openxr)
 endif()
 

@@ -41,7 +41,6 @@ target_link_libraries(${PROJECT_NAME}
 	sibr_assets
 	sibr_raycaster
 	sibr_scene
-	sibr_video
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SIBR_FOLDER})

@@ -35,7 +35,8 @@ set_target_properties(HTGSRasterizer PROPERTIES CUDA_ARCHITECTURES "${VRHTGS_CUD
 set_target_properties(HTGSRasterizer PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(HTGSRasterizer PROPERTIES FOLDER "extlibs")
 
+option(VRHTGS_CUDA_LINE_INFO "Embed CUDA source line info (compute-sanitizer, Nsight; embeds absolute source paths)" ON)
 target_compile_options(HTGSRasterizer PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-  --generate-line-info
+  $<$<BOOL:${VRHTGS_CUDA_LINE_INFO}>:--generate-line-info>
   --use_fast_math
 >)
