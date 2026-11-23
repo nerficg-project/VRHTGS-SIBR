@@ -29,8 +29,10 @@ For details on the script usage, refer to the scripts'
 >
 > - the SIBR viewer is not as optimized as the nerficg code path (it adds the overhead of SIBR's OpenGL/OpenXR
 >   rendering loop and CUDA–OpenGL interop, and the Experiment app additionally records every frame for post hoc analysis);
-> - the SIBR viewer does **not** use the faster stereo rendering path of VR-HTGS, which renders both eyes in a
->   single pass. It renders each eye separately with the mono rasterizer.
+> - on this branch, the SIBR viewer does **not** use the faster stereo rendering path of VR-HTGS, which renders
+>   both eyes in a single pass. It renders each eye separately with the mono rasterizer. Experimental stereo rendering
+>   support is available on the [`stereo-rendering`](https://github.com/nerficg-project/VRHTGS-SIBR/tree/stereo-rendering)
+>   branch, where both apps use it by default in VR.
 
 ## Changes to the SIBR framework
 
