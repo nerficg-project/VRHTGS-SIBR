@@ -696,13 +696,6 @@ namespace sibr {
 					}
 				}
 
-				//ImGui::SameLine();
-				ImGui::Checkbox("Save video (from playing)", (&_saveFrame));
-				if (_saveFrame) {
-					_cameraRecorder.savingVideo(_saveFrame);
-				}
-				
-				ImGui::SameLine();
 				const bool saveFrameOld = _saveFrameVideo;
 				ImGui::Checkbox("Save frames (from playing)", (&_saveFrameVideo));
 				if (_saveFrameVideo && !saveFrameOld) {

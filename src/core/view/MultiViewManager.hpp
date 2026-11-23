@@ -29,7 +29,6 @@
 # include "core/view/ViewBase.hpp"
 # include "core/graphics/Shader.hpp"
 # include "core/view/FPSCounter.hpp"
-#include "core/video/FFmpegVideoEncoder.hpp"
 #include "InteractiveCameraHandler.hpp"
 #include <random>
 #include <map>
@@ -376,7 +375,6 @@ namespace sibr
 		Vector2i _defaultViewResolution; ///< Default view resolution.
 
 		std::string _exportPath; ///< Capture output path.
-		std::vector<cv::Mat> _videoFrames; ///< Video frames.
 
 		std::chrono::time_point<std::chrono::steady_clock> _timeLastFrame; ///< Last frame time point.
 		float _deltaTime; ///< Elapsed time.

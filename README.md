@@ -54,7 +54,7 @@ Compared to upstream SIBR core, our main changes include:
   - **Windows only**: removed Linux support and dynamic linking, since the Meta Quest headsets we target are
     not supported under Linux anyway.
 - **Modernized code base**: C++23 (`std::filesystem` instead of `boost::filesystem`, `std::print`, standard
-  integer types), and fixes for newer versions of ImGui, ffmpeg and nativefiledialog.
+  integer types), and fixes for newer versions of ImGui and nativefiledialog.
 - **Desktop camera**: a new `ICGUI` mode of `InteractiveCameraHandler` (`src/core/view/ICGuiCamera.*`) that mimics
   the camera controls of nerficg's ICGui (orbital, walking and flying modes) to provide more intuitive controls in
   the desktop viewer.
@@ -62,8 +62,8 @@ Compared to upstream SIBR core, our main changes include:
 ## Setup
 
 **Note**: This fork runs on *Windows 11* only and needs Visual Studio 2022 with C++23 support and an NVIDIA GPU with
-CUDA. The CUDA backends are compiled for compute capability 8.6 (`CUDA_ARCHITECTURES` is set to `86` in
-`src/projects/vrhtgs_viewer/renderer/*CudaBackend/CMakeLists.txt`); change it there for other GPUs.
+CUDA. The CUDA backends are compiled for the build machine's GPU by default. For binaries that run on other GPUs, pass
+a list, e.g. `-DVRHTGS_CUDA_ARCHITECTURES="61-real;75-real;86-real;89-real;120-real;120-virtual"`.
 
 ### Binary distribution
 

@@ -219,18 +219,14 @@ namespace sibr
 			const Viewport renderViewport(0.0, 0.0, (float)subview.rt->w(), (float)subview.rt->h());
 			subview.render(_renderingMode, renderViewport);
 
-			// Offline video dumping, continued. We ignore additional rendering as those often are GUI overlays.
-			if (subview.handler != NULL && (subview.handler->getCamera().needVideoSave() || subview.handler->getCamera().needSave())) {
-				
+			// Offline frame dumping. We ignore additional rendering as those often are GUI overlays.
+			if (subview.handler != NULL && subview.handler->getCamera().needSave()) {
+
 				ImageRGB frame;
 
 				subview.rt->readBack(frame);
-				
-				if (subview.handler->getCamera().needSave()) {
-					frame.save(subview.handler->getCamera().savePath());
-				}
-				_videoFrames.push_back(frame.toOpenCVBGR());
-				
+				frame.save(subview.handler->getCamera().savePath());
+
 			}
 			
 			// Additional rendering.
@@ -612,25 +608,6 @@ namespace sibr
 				for (auto & subview : _ibrSubViews) {
 					if (ImGui::MenuItem(subview.first.c_str())) {
 						captureView(subview.second, _exportPath);
-					}
-				}
-
-				if (ImGui::MenuItem("Export Video")) {
-					std::string saveFile;
-					if (showFilePicker(saveFile, FilePickerMode::Save)) {
-						const std::string outputVideo = saveFile + ".mp4";
-						if(!_videoFrames.empty()) {
-							SIBR_LOG << "Exporting video to : " << outputVideo << " ..." << std::flush;
-							FFVideoEncoder vdoEncoder(outputVideo, 30, Vector2i(_videoFrames[0].cols, _videoFrames[0].rows));
-							for (int i = 0; i < _videoFrames.size(); i++) {
-								vdoEncoder << _videoFrames[i];
-							}
-							_videoFrames.clear();
-							std::cout << " Done." << std::endl;
-							
-						} else {
-							SIBR_WRG << "No frames to export!! Check save frames in camera options for the view you want to render and play the path and re-export!" << std::endl;
-						}
 					}
 				}
 

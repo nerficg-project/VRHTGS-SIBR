@@ -39,6 +39,9 @@ message(STATUS "SIBR version :\n BRANCH ${SIBR_CORE_BRANCH}\n COMMIT_HASH ${SIBR
 ## Allow C++23 + other flags
 get_filename_component(currentBuildTool ${CMAKE_BUILD_TOOL} NAME_WE)	# tool that can launch the native build system. returned value may be the full path
 add_definitions(-D_USE_MATH_DEFINES -DIMGUI_DEFINE_MATH_OPERATORS)# /D_ITERATOR_DEBUG_LEVEL=1 because you need all external DLl to compile with this flag too
+file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}" SIBR_TRIM_PREFIX)
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/d1trimfile:${SIBR_TRIM_PREFIX}>"
+                    "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/d1trimfile:${SIBR_TRIM_PREFIX}>")
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
