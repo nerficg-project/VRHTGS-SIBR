@@ -162,7 +162,7 @@ In the seated VR experience the desktop camera position offsets the VR view.
 ## Experiment: `SIBR_FoveatedHTGSExperiment_App`
 
 ```cmd
-SIBR_FoveatedHTGSExperiment_App.exe -m <config prefix> --participant-id <id> [--calibration-mode] [--calibration-dir <dir>] [--english] [--start-from-condition <n>]
+SIBR_FoveatedHTGSExperiment_App.exe -m <config prefix> --participant-id <id> [--calibration-mode] [--calibration-dir <dir>] [--english] [--start-from-condition <n>] [--no-recording]
 ```
 
 - Experiment configurations are generated using the `vrhtgs_create_experiment_config.py` script provided in the
@@ -187,7 +187,7 @@ The app writes into the current working directory:
 
 - `experiment_log_participant_<id>_<timestamp>.txt`: a human-readable log of the conditions and ratings (−3..+3);
 - `experiment_recording_participant_<id>_<timestamp>.htgsrec`: a binary recording of every rendered frame (poses,
-  gaze, OpenXR display timing). The format is documented in `src/projects/vrhtgs_viewer/renderer/Recording.hpp`.
+  gaze, OpenXR display timing). The format is documented in `src/projects/vrhtgs_viewer/renderer/Recording.hpp`. Pass `--no-recording` to skip it.
 
 ## VR headsets and eye tracking
 

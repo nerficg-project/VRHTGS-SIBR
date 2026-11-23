@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <numbers>
 #include <sstream>
@@ -70,8 +71,9 @@ namespace sibr {
             _width.send();
             _height.send();
 
-            dst.clear();
+            // No clear needed: the full-screen copy overwrites every pixel (alpha 1, blending off)
             dst.bind();
+            glDisable(GL_BLEND);
 
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufferID);
 
@@ -487,6 +489,9 @@ sibr::HTGaussianView::HTGaussianView(
     loadModel(file, scale);
     allocateEyeGpuState(eyeGpu[0]);
     initializeFoveaMask();
+
+    // Pinned host staging for the view parameter uploads (one slot per eye slot, see uploadPose)
+    CUDA_SAFE_CALL_ALWAYS(cudaMallocHost(reinterpret_cast<void**>(&viewParamsHost), 2 * EyeGpuState::viewParamsFloats * sizeof(float)));
 }
 
 
@@ -506,10 +511,11 @@ void sibr::HTGaussianView::allocateEyeGpuState(EyeGpuState& state) {
     state.blurImageBuffer.resizeFunc = getBufferResizeFunction(&state.blurImageBuffer, 1.1, 0.75);
 
     // GPU memory for view parameters
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.viewCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.projCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.invRVPCuda), sizeof(sibr::Matrix4f)));
-    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.camPosCuda), 3 * sizeof(float)));
+    // One device block for view | proj | invRVP | camPos (offsets are 64-byte aligned for float4 access)
+    CUDA_SAFE_CALL_ALWAYS(cudaMalloc(reinterpret_cast<void**>(&state.viewCuda), EyeGpuState::viewParamsFloats * sizeof(float)));
+    state.projCuda = state.viewCuda + 16;
+    state.invRVPCuda = state.viewCuda + 32;
+    state.camPosCuda = state.viewCuda + 48;
 
     createImageBuffer(state);
     state.allocated = true;
@@ -521,10 +527,7 @@ void sibr::HTGaussianView::freeEyeGpuState(EyeGpuState& state) {
     }
 
     destroyImageBuffer(state);
-    cudaFree(state.viewCuda);
-    cudaFree(state.projCuda);
-    cudaFree(state.invRVPCuda);
-    cudaFree(state.camPosCuda);
+    cudaFree(state.viewCuda);  // projCuda / invRVPCuda / camPosCuda point into the same block
     state.viewCuda = state.projCuda = state.invRVPCuda = state.camPosCuda = nullptr;
     state.perPrimitiveBuffer.release();
     state.perTileBuffer.release();
@@ -859,11 +862,17 @@ static Intrinsics makeIntrinsics(const sibr::EyeRenderParams& params, const sibr
     };
 }
 
-static void uploadPose(sibr::EyeGpuState& state, const sibr::EyeRenderParams& params) {
-    CUDA_SAFE_CALL(cudaMemcpy(state.viewCuda, params.view.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(state.projCuda, params.viewProj.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(state.invRVPCuda, params.invRVP.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(state.camPosCuda, params.eyePos.data(), sizeof(float) * 3, cudaMemcpyHostToDevice));
+// Copies one eye's frame-dependent data to the GPU: one async copy from pinned memory instead of four
+// synchronous pageable copies. The staging slot is the eye slot (params.slot), so in stereo both eyes'
+// uploads are in flight at once without sharing staging memory. The rasterizers synchronize with the
+// device before they return, so a staging slot is free again by the time it is reused.
+void sibr::HTGaussianView::uploadPose(EyeGpuState& state, const EyeRenderParams& params) {
+    float* staging = viewParamsHost + params.slot * EyeGpuState::viewParamsFloats;
+    std::memcpy(staging, params.view.data(), 16 * sizeof(float));
+    std::memcpy(staging + 16, params.viewProj.data(), 16 * sizeof(float));
+    std::memcpy(staging + 32, params.invRVP.data(), 16 * sizeof(float));
+    std::memcpy(staging + 48, params.eyePos.data(), 3 * sizeof(float));
+    CUDA_SAFE_CALL(cudaMemcpyAsync(state.viewCuda, staging, EyeGpuState::viewParamsFloats * sizeof(float), cudaMemcpyHostToDevice));
 }
 
 // Whether a stereo image rendered with a was rendered for the same eye pose/projection/gaze as b
@@ -1500,6 +1509,7 @@ sibr::HTGaussianView::~HTGaussianView() {
     for (EyeGpuState& state : eyeGpu) {
         freeEyeGpuState(state);
     }
+    cudaFreeHost(viewParamsHost);
 
     delete _copyRenderer;
 }

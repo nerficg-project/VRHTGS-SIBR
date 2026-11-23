@@ -90,6 +90,9 @@ namespace sibr {
      */
     struct EyeGpuState {
         bool allocated = false;
+        // viewCuda / projCuda / invRVPCuda / camPosCuda point into one device block of viewParamsFloats
+        // (offsets 0/16/32/48, 64-byte aligned for float4 access), uploaded with a single async copy
+        static constexpr size_t viewParamsFloats = 16 * 3 + 4;
         float* viewCuda = nullptr;
         float* projCuda = nullptr;
         float* invRVPCuda = nullptr;
@@ -318,6 +321,9 @@ namespace sibr {
 
         // Frame-specific pose data
         bool gazeVisualization = false;
+        // Pinned host staging for the view parameter uploads: 2 * EyeGpuState::viewParamsFloats,
+        // one slot per eye slot (EyeRenderParams::slot), see uploadPose
+        float* viewParamsHost = nullptr;
 
         // Mask data for foveation / skipping tiles not visible in VR
         bool exportedVisibilityMask[2] = {false, false}; // Track whether we've exported the mask for each eye to avoid redundant exports
@@ -376,6 +382,8 @@ namespace sibr {
         void createImageBuffer(EyeGpuState& state);
         void destroyImageBuffer(EyeGpuState& state);
         void invalidateStereoImages() { stereoReady[0].ready = stereoReady[1].ready = false; }
+        /** Upload params' pose into state's device block (one async copy via the eye slot's pinned staging). */
+        void uploadPose(EyeGpuState& state, const EyeRenderParams& params);
 
         /**
          * Render one eye with the mono rasterizer (HTGS or VR-HTGS) into state's image buffer.

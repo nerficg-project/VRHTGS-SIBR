@@ -199,7 +199,7 @@ namespace sibr
                                      }
 
                                      // Perform the scene rendering for the given view into the RenderTarget's FBO
-                                     rt->clear();
+                                     // (not cleared here: views overwrite or clear it themselves)
                                      rt->bind();
                                      glViewport(0, 0, w, h);
                                      view.onRenderIBR(*rt.get(), cam);

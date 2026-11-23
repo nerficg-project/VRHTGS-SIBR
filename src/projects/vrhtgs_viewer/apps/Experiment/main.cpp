@@ -244,6 +244,9 @@ int main(int argc, char** argv) {
             logFile << "WARNING: No calibration found in " << dir << ", using scale 1 and the identity pose." << std::endl;
         }
     }
+    if (myArgs.noRecording) {
+        logFile << "Recording disabled (--no-recording), no .htgsrec file is written." << std::endl;
+    }
     logFile.flush();
 
     // Set up view
@@ -292,7 +295,13 @@ int main(int argc, char** argv) {
             SIBR_LOG << "Stereo rendering: " << (gaussianView->stereoRendering
                 ? "on for VRHTGS conditions (HTGS conditions render mono; disable with --no-stereo)"
                 : "off (--no-stereo)") << std::endl;
-            gaussianView->enableRecording(recording_filename.str());
+            // Without enableRecording no record is written in either path (mono onRenderIBR or the
+            // stereo hook's mask records), so --no-recording covers stereo too
+            if (myArgs.noRecording) {
+                SIBR_LOG << "Recording disabled (--no-recording)." << std::endl;
+            } else {
+                gaussianView->enableRecording(recording_filename.str());
+            }
             openxrMode->setFrameBeginCallback(
                 [view = std::weak_ptr<sibr::ExperimentView>(gaussianView)](int64_t displayTime, int64_t displayPeriod) {
                     if (auto v = view.lock()) {
