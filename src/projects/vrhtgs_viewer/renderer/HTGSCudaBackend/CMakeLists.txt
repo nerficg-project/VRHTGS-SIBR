@@ -30,7 +30,8 @@ target_include_directories(HTGSRasterizer PUBLIC
     ${CUDA_BACKEND_DIR}/rasterization/include
     ${CUDA_BACKEND_DIR}/utils
 )
-set_target_properties(HTGSRasterizer PROPERTIES CUDA_ARCHITECTURES "86")
+set(VRHTGS_CUDA_ARCHITECTURES "native" CACHE STRING "CUDA architectures for the HTGS/VRHTGS backends")
+set_target_properties(HTGSRasterizer PROPERTIES CUDA_ARCHITECTURES "${VRHTGS_CUDA_ARCHITECTURES}")
 set_target_properties(HTGSRasterizer PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(HTGSRasterizer PROPERTIES FOLDER "extlibs")
 
