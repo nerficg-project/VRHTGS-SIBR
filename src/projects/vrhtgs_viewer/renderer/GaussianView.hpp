@@ -120,6 +120,13 @@ namespace sibr {
         sibr::Matrix4f invRVP;   // Inverse of rotation-only view-projection, transposed
         sibr::Vector3f eyePos;   // Eye position in scene (model) space
         float zNear = 0.0f, zFar = 0.0f;
+
+        /**
+         * Bitwise equality of every field (an identical NaN, e.g. the gaze while eye tracking is down,
+         * compares equal). Used to check that a stereo image was rendered for exactly this eye.
+         * Update it when adding a field.
+         */
+        bool operator==(const EyeRenderParams& other) const;
     };
 
     /**
@@ -159,6 +166,24 @@ namespace sibr {
          * ready image for its eye. Otherwise does nothing and onRenderIBR renders mono.
          */
         void onPrepareStereoFrame(const sibr::Camera& left, const sibr::Camera& right) override;
+
+        /**
+         * Set up stereo rendering once at startup: stereoRendering = !noStereo, and whether the app's
+         * rendering mode calls the stereo hook at all (if not, the "Stereo Rendering" checkbox is disabled
+         * and explains why). Logs the "Stereo rendering: ..." startup line.
+         */
+        void configureStereo(bool noStereo, bool hookCalled);
+
+        /**
+         * Eye images rendered while stereo was in use (the stereo hook rendered both eyes that frame):
+         * how many there were, and how many of them were rendered mono after all because the stereo
+         * image did not match the eye's parameters. Totals since the view was created.
+         */
+        struct StereoStats {
+            uint64_t stereoEyeImages = 0;
+            uint64_t monoFallbacks = 0;
+        };
+        const StereoStats& stereoStats() const { return stereoStatsTotal; }
 
         /**
          * Update inputs (do nothing).
@@ -280,9 +305,6 @@ namespace sibr {
         bool blurPeriphery = true;
         bool exportVisibilityMask = false; // If true, will export the visibility mask for each eye as a line loop
         bool stereoRendering = true;  // Render both eyes in one stereo call when the stereo hook is called and stereo applies
-        // Set by the app when its rendering mode never calls the stereo hook (e.g. desktop mode): the
-        // "Stereo rendering" checkbox is then disabled and shows this text. Empty = the hook is called.
-        std::string stereoUnavailableReason;
 
     protected:
         // OpenGL / CUDA resources
@@ -302,6 +324,16 @@ namespace sibr {
             bool blurPeriphery = false;
         };
         StereoReadyImage stereoReady[2];
+        bool stereoAttempted[2] = {false, false};  // The hook rendered this eye in stereo this frame (for StereoStats)
+
+        // Whether the rendering mode calls the stereo hook (see configureStereo); if not, the text says why
+        bool stereoHookCalled = true;
+        std::string stereoUnavailableReason;
+
+        StereoStats stereoStatsTotal;
+        uint64_t fallbacksSinceWarning = 0;
+        std::chrono::steady_clock::time_point lastFallbackWarning{};
+        void countStereoEyeImage(bool fellBack);
 
         /** Whether the stereo hook renders this frame in stereo. ExperimentView adds its own conditions. */
         virtual bool stereoApplies() const;
@@ -331,6 +363,15 @@ namespace sibr {
         uint32_t* visibilityMask[2] = {nullptr, nullptr};
         uint32_t* visibilityMaskAreaTable[2] = {nullptr, nullptr};
         uint32_t* foveaMaskAreaTable = nullptr;
+        // Visibility mask record of a mask change, written when that eye is next rendered (writeVisibilityMaskRecord),
+        // so the stereo hook updating both masks up front gives the same record order as mono rendering
+        struct PendingMaskRecord {
+            bool pending = false;
+            uint32_t widthTiles = 0, heightTiles = 0;
+            std::vector<uint32_t> packedMask;
+        };
+        PendingMaskRecord pendingMaskRecord[2];
+        void writeVisibilityMaskRecord(uint32_t slot);
 
         // Calibration Data
         std::string conditionInfo;
@@ -382,6 +423,8 @@ namespace sibr {
         void createImageBuffer(EyeGpuState& state);
         void destroyImageBuffer(EyeGpuState& state);
         void invalidateStereoImages() { stereoReady[0].ready = stereoReady[1].ready = false; }
+        /** Free the second eye's GPU state if allocated (stereo no longer in use). */
+        void releaseSecondEye();
         /** Upload params' pose into state's device block (one async copy via the eye slot's pinned staging). */
         void uploadPose(EyeGpuState& state, const EyeRenderParams& params);
 
@@ -391,6 +434,9 @@ namespace sibr {
         void rasterizeMono(const EyeRenderParams& params, EyeGpuState& state);
         /** Render both eyes with one VR-HTGS stereo call into eyeGpu[0] / eyeGpu[1]. */
         void rasterizeStereo(const EyeRenderParams& left, const EyeRenderParams& right);
+        /** Backend inputs shared by the mono and stereo VR-HTGS calls. */
+        Masks makeMasks(uint32_t slot) const;
+        BackgroundModel makeBackground() const;
 
         /** Per-eye parameters for the current resolution, scene transform and locomotion. */
         EyeRenderParams computeEyeRenderParams(const sibr::Camera& eye) const;

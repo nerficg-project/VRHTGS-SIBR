@@ -5,6 +5,13 @@
 
 
 namespace sibr {
+    /// Values of --rendering-mode (RenderingArgs::rendering_mode)
+    enum VRHTGSRenderingMode : int {
+        RENDERING_MODE_DESKTOP = 0,    ///< Desktop window, mono (also any unknown value)
+        RENDERING_MODE_ANAGLYPH = 1,   ///< Desktop window, red/cyan anaglyph
+        RENDERING_MODE_OPENXR = 2,     ///< OpenXR headset
+    };
+
     /// Arguments shared by the Viewer and the Experiment.
     struct VRHTGSCommonArgs {
         // Stereo (both eyes in one VR-HTGS call) is on by default wherever it applies (OpenXR mode, VRHTGS rasterizer)

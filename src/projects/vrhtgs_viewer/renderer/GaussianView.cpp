@@ -709,10 +709,24 @@ void sibr::HTGaussianView::updateVisibilityMask(const sibr::Camera& eye, const u
     CUDA_SAFE_CALL(cudaMemcpy(visibilityMask[side], visibilityMaskPacked.data(), sizeof(uint32_t) * visibilityMaskPacked.size(), cudaMemcpyHostToDevice));
     CUDA_SAFE_CALL(cudaMemcpy(visibilityMaskAreaTable[side], visibilityMaskAreaTableHost.data(), sizeof(uint32_t) * visibilityMaskAreaTableHost.size(), cudaMemcpyHostToDevice));
 
-    // Record visibility mask update if recording is enabled and mask has changed
+    // Record the mask change if recording is enabled. The record is written when this eye is rendered next
+    // (writeVisibilityMaskRecord), not here: the stereo hook updates both eyes' masks before either eye is
+    // rendered, and the recording must have the same record order in mono and stereo.
     if (recordingWriter) {
-        recordingWriter->writeVisibilityMaskUpdate(widthTiles, heightTiles, visibilityMaskPacked.data());
+        PendingMaskRecord& record = pendingMaskRecord[side];
+        record.pending = true;
+        record.widthTiles = widthTiles;
+        record.heightTiles = heightTiles;
+        record.packedMask = std::move(visibilityMaskPacked);
     }
+}
+
+void sibr::HTGaussianView::writeVisibilityMaskRecord(const uint32_t slot) {
+    PendingMaskRecord& record = pendingMaskRecord[slot];
+    if (record.pending && recordingWriter) {
+        recordingWriter->writeVisibilityMaskUpdate(record.widthTiles, record.heightTiles, record.packedMask.data());
+    }
+    record.pending = false;
 }
 
 void sibr::HTGaussianView::initializeFoveaMask() {
@@ -875,13 +889,46 @@ void sibr::HTGaussianView::uploadPose(EyeGpuState& state, const EyeRenderParams&
     CUDA_SAFE_CALL(cudaMemcpyAsync(state.viewCuda, staging, EyeGpuState::viewParamsFloats * sizeof(float), cudaMemcpyHostToDevice));
 }
 
-// Whether a stereo image rendered with a was rendered for the same eye pose/projection/gaze as b
-static bool sameEyeRender(const sibr::EyeRenderParams& a, const sibr::EyeRenderParams& b) {
-    return a.slot == b.slot && a.eyeIndex == b.eyeIndex
-        && a.focalX == b.focalX && a.focalY == b.focalY && a.centerX == b.centerX && a.centerY == b.centerY
-        && a.gazePos[0] == b.gazePos[0] && a.gazePos[1] == b.gazePos[1]
-        && a.view == b.view && a.viewProj == b.viewProj && a.invRVP == b.invRVP && a.eyePos == b.eyePos
-        && a.zNear == b.zNear && a.zFar == b.zFar;
+// Bitwise comparison: values computed the same way from the same camera are identical, NaNs included
+// (operator== on floats would never match a NaN gaze, so every frame would silently fall back to mono)
+template<typename T>
+static bool sameBits(const T& a, const T& b) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    return std::memcmp(&a, &b, sizeof(T)) == 0;
+}
+
+template<typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
+static bool sameBits(const Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>& a,
+                     const Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>& b) {
+    static_assert(Rows > 0 && Cols > 0, "fixed-size matrices only");
+    return std::memcmp(a.data(), b.data(), sizeof(Scalar) * Rows * Cols) == 0;
+}
+
+bool sibr::EyeRenderParams::operator==(const EyeRenderParams& other) const {
+    return sameBits(slot, other.slot) && sameBits(eyeIndex, other.eyeIndex)
+        && sameBits(focalX, other.focalX) && sameBits(focalY, other.focalY)
+        && sameBits(centerX, other.centerX) && sameBits(centerY, other.centerY)
+        && sameBits(gazePos, other.gazePos)
+        && sameBits(view, other.view) && sameBits(viewProj, other.viewProj) && sameBits(invRVP, other.invRVP)
+        && sameBits(eyePos, other.eyePos)
+        && sameBits(zNear, other.zNear) && sameBits(zFar, other.zFar);
+}
+
+
+Masks sibr::HTGaussianView::makeMasks(const uint32_t slot) const {
+    return Masks{
+        .visibility_mask = visibilityMask[slot],
+        .visibility_mask_area_table = visibilityMaskAreaTable[slot],
+        .fovea_mask_area_table = foveaMaskAreaTable
+    };
+}
+
+BackgroundModel sibr::HTGaussianView::makeBackground() const {
+    return BackgroundModel{
+        .data = bgModelDataCuda,
+        .type = backgroundModelType,
+        .texture_resolution = backgroundTextureResolution
+    };
 }
 
 
@@ -932,17 +979,6 @@ void sibr::HTGaussianView::rasterizeMono(const EyeRenderParams& params, EyeGpuSt
             /*to_chw=*/ true
         ));
     } else if (modelType == RasterizerVariant::HTGS_FOVEATED) {
-        const BackgroundModel bgModelData = {
-            .data = bgModelDataCuda,
-            .type = backgroundModelType,
-            .texture_resolution = backgroundTextureResolution
-        };
-        const Masks masks = {
-            .visibility_mask = visibilityMask[params.slot],
-            .visibility_mask_area_table = visibilityMaskAreaTable[params.slot],
-            .fovea_mask_area_table = foveaMaskAreaTable
-        };
-
         CUDA_SAFE_CALL(vrhtgs::rasterization::inference(
             makeBuffers(state),
             (float3*)posCuda,
@@ -951,10 +987,10 @@ void sibr::HTGaussianView::rasterizeMono(const EyeRenderParams& params, EyeGpuSt
             opacityCuda,
             (float3*)shs0Cuda,
             (float3*)shsRestCuda,
-            bgModelData,
+            makeBackground(),
             makePose(state, params),
             makeIntrinsics(params, _resolution),
-            masks,
+            makeMasks(params.slot),
             intermediateImageCuda,
             imageCuda,
             /*K=*/ 16,
@@ -998,22 +1034,6 @@ void sibr::HTGaussianView::rasterizeStereo(const EyeRenderParams& left, const Ey
             : imageCuda[i];
     }
 
-    const BackgroundModel bgModelData = {
-        .data = bgModelDataCuda,
-        .type = backgroundModelType,
-        .texture_resolution = backgroundTextureResolution
-    };
-    const Masks masksLeft = {
-        .visibility_mask = visibilityMask[0],
-        .visibility_mask_area_table = visibilityMaskAreaTable[0],
-        .fovea_mask_area_table = foveaMaskAreaTable
-    };
-    const Masks masksRight = {
-        .visibility_mask = visibilityMask[1],
-        .visibility_mask_area_table = visibilityMaskAreaTable[1],
-        .fovea_mask_area_table = foveaMaskAreaTable
-    };
-
     // Both eyes share the scalar parameters (near/far come from the same SIBR camera)
     CUDA_SAFE_CALL(vrhtgs::rasterization::inference_stereo(
         makeBuffers(stateLeft),
@@ -1024,13 +1044,13 @@ void sibr::HTGaussianView::rasterizeStereo(const EyeRenderParams& left, const Ey
         opacityCuda,
         (float3*)shs0Cuda,
         (float3*)shsRestCuda,
-        bgModelData,
+        makeBackground(),
         makePose(stateLeft, left),
         makePose(stateRight, right),
         makeIntrinsics(left, _resolution),
         makeIntrinsics(right, _resolution),
-        masksLeft,
-        masksRight,
+        makeMasks(0),
+        makeMasks(1),
         intermediateImageCuda[0],
         imageCuda[0],
         intermediateImageCuda[1],
@@ -1056,8 +1076,59 @@ bool sibr::HTGaussianView::stereoApplies() const {
 }
 
 
+void sibr::HTGaussianView::configureStereo(const bool noStereo, const bool hookCalled) {
+    stereoRendering = !noStereo;
+    stereoHookCalled = hookCalled;
+    stereoUnavailableReason = hookCalled ? "" : "Stereo rendering only applies in OpenXR mode (--rendering-mode 2). This mode renders mono.";
+    if (noStereo) {
+        SIBR_LOG << "Stereo rendering: off (--no-stereo)" << std::endl;
+    } else if (hookCalled) {
+        SIBR_LOG << "Stereo rendering: on for the VRHTGS rasterizer (HTGS renders mono; disable with --no-stereo)" << std::endl;
+    } else {
+        SIBR_LOG << "Stereo rendering: ignored, only applies in OpenXR mode (--rendering-mode 2); rendering mono" << std::endl;
+    }
+}
+
+
+void sibr::HTGaussianView::releaseSecondEye() {
+    if (eyeGpu[1].allocated) {
+        SIBR_LOG << "Stereo rendering: freeing GPU state for the second eye (stereo not in use)" << std::endl;
+        stereoReady[1].ready = false;
+        freeEyeGpuState(eyeGpu[1]);
+    }
+}
+
+
+void sibr::HTGaussianView::countStereoEyeImage(const bool fellBack) {
+    ++stereoStatsTotal.stereoEyeImages;
+    if (!fellBack) {
+        return;
+    }
+    ++stereoStatsTotal.monoFallbacks;
+    ++fallbacksSinceWarning;
+
+    // Rate-limited: at most one warning every few seconds
+    constexpr auto WARNING_INTERVAL = std::chrono::seconds(5);
+    const auto now = std::chrono::steady_clock::now();
+    if (lastFallbackWarning.time_since_epoch().count() == 0 || now - lastFallbackWarning >= WARNING_INTERVAL) {
+        SIBR_WRG << "Stereo rendering: " << fallbacksSinceWarning << " eye image(s) rendered mono instead of stereo"
+                 << " since the last warning (the stereo image did not match the eye's camera or settings); "
+                 << stereoStatsTotal.monoFallbacks << " of " << stereoStatsTotal.stereoEyeImages << " in total" << std::endl;
+        lastFallbackWarning = now;
+        fallbacksSinceWarning = 0;
+    }
+}
+
+
 void sibr::HTGaussianView::onPrepareStereoFrame(const sibr::Camera& left, const sibr::Camera& right) {
     invalidateStereoImages();
+    stereoAttempted[0] = stereoAttempted[1] = false;
+
+    // Free the second eye's GPU state once stereo is no longer in use (setting off, HTGS rasterizer). Not on
+    // the transient mono phases (gaze visualization, questionnaire), so it isn't re-allocated over and over.
+    if (!stereoRendering || modelType != RasterizerVariant::HTGS_FOVEATED) {
+        releaseSecondEye();
+    }
     if (!stereoApplies() || eyeSlot(left) != 0 || eyeSlot(right) != 1) {
         return;
     }
@@ -1068,6 +1139,7 @@ void sibr::HTGaussianView::onPrepareStereoFrame(const sibr::Camera& left, const 
     }
 
     const EyeRenderParams params[2] = { computeEyeRenderParams(left), computeEyeRenderParams(right) };
+    // The masks' recording records are written when each eye is rendered (as in mono), see updateVisibilityMask
     updateVisibilityMask(left, _resolution.x(), _resolution.y());
     updateVisibilityMask(right, _resolution.x(), _resolution.y());
 
@@ -1079,6 +1151,7 @@ void sibr::HTGaussianView::onPrepareStereoFrame(const sibr::Camera& left, const 
         stereoReady[i].modelType = modelType;
         stereoReady[i].antiAliasing = antiAliasing;
         stereoReady[i].blurPeriphery = blurPeriphery;
+        stereoAttempted[i] = true;
     }
 
     if (cudaPeekAtLastError() != cudaSuccess) {
@@ -1131,15 +1204,21 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
         return;
     }
 
-    // Update visibility mask if needed
+    // Update visibility mask if needed; its record (if it changed here or in the stereo hook) goes before this
+    // eye's frame records, as in mono rendering
     updateVisibilityMask(eye, _resolution.x(), _resolution.y());
+    writeVisibilityMaskRecord(params.slot);
 
     // Show this eye's stereo image if the stereo hook rendered one for exactly this eye and these
     // settings; otherwise render mono (never show a stale image)
     StereoReadyImage& ready = stereoReady[params.slot];
-    const bool useStereoImage = ready.ready && sameEyeRender(ready.params, params) && ready.modelType == modelType
+    const bool useStereoImage = ready.ready && ready.params == params && ready.modelType == modelType
                                 && ready.antiAliasing == antiAliasing && ready.blurPeriphery == blurPeriphery;
     ready.ready = false;
+    if (stereoAttempted[params.slot]) {
+        stereoAttempted[params.slot] = false;
+        countStereoEyeImage(!useStereoImage);
+    }
     EyeGpuState& shownState = useStereoImage ? eyeGpu[params.slot] : monoState;
     if (!useStereoImage) {
         rasterizeMono(params, monoState);
@@ -1221,11 +1300,18 @@ void sibr::HTGaussianView::onGUI() {
         }
 
         // Stereo: both eyes in one VR-HTGS call (starts from --no-stereo; mono where it can't apply)
-        const bool stereoUnavailable = !stereoUnavailableReason.empty();
+        const bool stereoUnavailable = !stereoHookCalled;
         const bool stereoDisabled = stereoUnavailable || modelType == RasterizerVariant::HTGS;
         ImGui::BeginDisabled(stereoDisabled);
         ImGui::Checkbox("Stereo Rendering", &stereoRendering);
         ImGui::EndDisabled();
+        if (stereoStatsTotal.monoFallbacks > 0) {
+            // Eye images that should have been stereo but were rendered mono (see the console warnings)
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.0f, 1.0f), "%llu of %llu eye images fell back to mono",
+                               static_cast<unsigned long long>(stereoStatsTotal.monoFallbacks),
+                               static_cast<unsigned long long>(stereoStatsTotal.stereoEyeImages));
+        }
         if (stereoUnavailable) {
             ImGui::TextWrapped("%s", stereoUnavailableReason.c_str());
         } else if (modelType == RasterizerVariant::HTGS) {

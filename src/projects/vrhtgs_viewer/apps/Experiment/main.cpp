@@ -60,11 +60,39 @@ static void logCondition(std::ofstream& logFile, int conditionIndex, const std::
  * The mode a condition's scene renders with: stereo (both eyes in one VR-HTGS call) only for the VRHTGS
  * rasterizer with stereo enabled. The gaze-dot check and the questionnaire always render mono.
  */
-static std::string conditionRenderingMode(bool stereoRendering, sibr::RasterizerVariant modelType) {
+enum class ConditionRenderingMode { STEREO, MONO_STEREO_DISABLED, MONO_HTGS };
+
+static ConditionRenderingMode conditionRenderingMode(bool stereoRendering, sibr::RasterizerVariant modelType) {
     if (modelType != sibr::RasterizerVariant::HTGS_FOVEATED) {
-        return "Mono (the HTGS rasterizer has no stereo path)";
+        return ConditionRenderingMode::MONO_HTGS;
     }
-    return stereoRendering ? "Stereo" : "Mono (stereo disabled)";
+    return stereoRendering ? ConditionRenderingMode::STEREO : ConditionRenderingMode::MONO_STEREO_DISABLED;
+}
+
+static const char* toString(ConditionRenderingMode mode) {
+    switch (mode) {
+        case ConditionRenderingMode::STEREO:               return "Stereo";
+        case ConditionRenderingMode::MONO_STEREO_DISABLED: return "Mono (stereo disabled)";
+        case ConditionRenderingMode::MONO_HTGS:            return "Mono (the HTGS rasterizer has no stereo path)";
+    }
+    return "?";
+}
+
+
+// Per condition (completed or aborted), if stereo was in use: how many of its stereo eye images were rendered mono
+// after all (e.g. the stereo image didn't match the eye's camera), so the log says what was actually rendered
+static void logStereoFallbacks(std::ofstream& logFile, const sibr::HTGaussianView::StereoStats& atStart,
+                               const sibr::HTGaussianView::StereoStats& atEnd) {
+    const uint64_t eyeImages = atEnd.stereoEyeImages - atStart.stereoEyeImages;
+    const uint64_t fallbacks = atEnd.monoFallbacks - atStart.monoFallbacks;
+    if (eyeImages == 0) {
+        return;
+    }
+    logFile << "  Stereo Fallbacks: " << fallbacks << " of " << eyeImages << " stereo eye images were rendered mono" << std::endl;
+    logFile.flush();
+    if (fallbacks > 0) {
+        SIBR_WRG << "Stereo rendering: " << fallbacks << " of " << eyeImages << " stereo eye images of this condition were rendered mono" << std::endl;
+    }
 }
 
 
@@ -110,7 +138,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<sibr::OpenXRRdrMode> openxrMode = nullptr;
     sibr::MultiViewManager multiViewManager(window, false);
     switch (myArgs.rendering_mode) {
-        case 2:
+        case sibr::RENDERING_MODE_OPENXR:
             openxrMode = std::make_shared<sibr::OpenXRRdrMode>(window);
             multiViewManager.renderingMode(openxrMode);
             break;
@@ -291,12 +319,9 @@ int main(int argc, char** argv) {
                 new sibr::ExperimentView(usedResolution.x(), usedResolution.y(), plyfile.c_str(), model_scale, device, calibrationMode)
             );
             // Stereo is on by default; it only applies to VRHTGS conditions (HTGS always renders mono)
-            gaussianView->stereoRendering = !myArgs.noStereo;
-            SIBR_LOG << "Stereo rendering: " << (gaussianView->stereoRendering
-                ? "on for VRHTGS conditions (HTGS conditions render mono; disable with --no-stereo)"
-                : "off (--no-stereo)") << std::endl;
-            // Without enableRecording no record is written in either path (mono onRenderIBR or the
-            // stereo hook's mask records), so --no-recording covers stereo too
+            gaussianView->configureStereo(myArgs.noStereo, /*hookCalled=*/ true);
+            // Without enableRecording no record is written, in mono or stereo (all frame and mask records go
+            // through the view's recording writer), so --no-recording covers stereo too
             if (myArgs.noRecording) {
                 SIBR_LOG << "Recording disabled (--no-recording)." << std::endl;
             } else {
@@ -323,10 +348,12 @@ int main(int argc, char** argv) {
 
         // The mode this condition's scene renders with. The experimenter GUI can still switch stereo or the
         // rasterizer at runtime, so changes are logged as they happen (checked once per loop iteration).
-        std::string renderingMode = conditionRenderingMode(gaussianView->stereoRendering, gaussianView->modelType);
-        logFile << "  Rendering Mode: " << renderingMode << std::endl;
+        ConditionRenderingMode renderingMode = conditionRenderingMode(gaussianView->stereoRendering, gaussianView->modelType);
+        logFile << "  Rendering Mode: " << toString(renderingMode) << std::endl;
         logFile.flush();
-        SIBR_LOG << "Rendering mode: " << renderingMode << std::endl;
+        SIBR_LOG << "Rendering mode: " << toString(renderingMode) << std::endl;
+        // What was actually rendered: eye images that should have been stereo but fell back to mono
+        const sibr::HTGaussianView::StereoStats statsAtStart = gaussianView->stereoStats();
 
         // The near plane is fixed per condition (AAA Gaussians mode supports a closer one), independent of the
         // model's training config, so all conditions of the study are comparable. Only the far plane comes from it.
@@ -467,12 +494,12 @@ int main(int argc, char** argv) {
                 gaussianView->hideGazeVisualization();
             }
 
-            const std::string currentRenderingMode = conditionRenderingMode(gaussianView->stereoRendering, gaussianView->modelType);
+            const ConditionRenderingMode currentRenderingMode = conditionRenderingMode(gaussianView->stereoRendering, gaussianView->modelType);
             if (currentRenderingMode != renderingMode) {
                 renderingMode = currentRenderingMode;
-                logFile << "  Rendering Mode changed in the experimenter GUI to: " << renderingMode << std::endl;
+                logFile << "  Rendering Mode changed in the experimenter GUI to: " << toString(renderingMode) << std::endl;
                 logFile.flush();
-                SIBR_LOG << "Rendering mode changed to: " << renderingMode << std::endl;
+                SIBR_LOG << "Rendering mode changed to: " << toString(renderingMode) << std::endl;
             }
 
             multiViewManager.onUpdate(sibr::Input::global());
@@ -480,6 +507,8 @@ int main(int argc, char** argv) {
             window.swapBuffer();
             CHECK_GL_ERROR;
         }
+
+        logStereoFallbacks(logFile, statsAtStart, gaussianView->stereoStats());
 
         if (!window.isOpened()) {
             break;
