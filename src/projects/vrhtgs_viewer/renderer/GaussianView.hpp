@@ -335,6 +335,21 @@ namespace sibr {
         std::chrono::steady_clock::time_point lastFallbackWarning{};
         void countStereoEyeImage(bool fellBack);
 
+        // Render timing for mono vs. stereo comparisons: wall time of the rasterizer calls (device synchronized
+        // before and after), summed per headset frame (one stereo hook call), averaged and logged every 2 s
+        struct RenderTiming {
+            double msSum = 0.0;
+            uint64_t frames = 0;
+            uint64_t stereoCalls = 0;
+            uint64_t monoCalls = 0;
+            std::chrono::steady_clock::time_point windowStart{};
+        };
+        RenderTiming renderTiming;
+        std::string renderTimingText;
+        void beginTimedRender();
+        void endTimedRender(bool stereo, std::chrono::steady_clock::time_point start);
+        void countTimedFrame();
+
         /** Whether the stereo hook renders this frame in stereo. ExperimentView adds its own conditions. */
         virtual bool stereoApplies() const;
 

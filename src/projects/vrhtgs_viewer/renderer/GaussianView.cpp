@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <numbers>
+#include <iomanip>
 #include <sstream>
 #include <thread>
 
@@ -1120,7 +1121,44 @@ void sibr::HTGaussianView::countStereoEyeImage(const bool fellBack) {
 }
 
 
+void sibr::HTGaussianView::beginTimedRender() {
+    cudaDeviceSynchronize();  // Don't count earlier GPU work
+}
+
+
+void sibr::HTGaussianView::endTimedRender(bool stereo, std::chrono::steady_clock::time_point start) {
+    cudaDeviceSynchronize();
+    renderTiming.msSum += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    ++(stereo ? renderTiming.stereoCalls : renderTiming.monoCalls);
+}
+
+
+void sibr::HTGaussianView::countTimedFrame() {
+    const auto now = std::chrono::steady_clock::now();
+    if (renderTiming.frames == 0 && renderTiming.windowStart == std::chrono::steady_clock::time_point{}) {
+        renderTiming.windowStart = now;
+    }
+    if (now - renderTiming.windowStart >= std::chrono::seconds(2) && renderTiming.frames > 0) {
+        const char* mode = renderTiming.stereoCalls == 0 ? "mono"
+                         : renderTiming.monoCalls == 0 ? "stereo" : "mixed";
+        std::ostringstream text;
+        text << std::fixed << std::setprecision(2) << "Render time (" << mode << ", "
+             << (modelType == RasterizerVariant::HTGS ? "HTGS" : "HTGS_FOVEATED")
+             << ", AA " << (antiAliasing ? "on" : "off") << ", blur " << (blurPeriphery ? "on" : "off") << ", "
+             << _resolution.x() << "x" << _resolution.y() << " per eye): "
+             << renderTiming.msSum / renderTiming.frames << " ms per headset frame (both eyes), over "
+             << renderTiming.frames << " frames";
+        renderTimingText = text.str();
+        SIBR_LOG << renderTimingText << std::endl;
+        renderTiming = RenderTiming{};
+        renderTiming.windowStart = now;
+    }
+    ++renderTiming.frames;
+}
+
+
 void sibr::HTGaussianView::onPrepareStereoFrame(const sibr::Camera& left, const sibr::Camera& right) {
+    countTimedFrame();
     invalidateStereoImages();
     stereoAttempted[0] = stereoAttempted[1] = false;
 
@@ -1143,7 +1181,10 @@ void sibr::HTGaussianView::onPrepareStereoFrame(const sibr::Camera& left, const 
     updateVisibilityMask(left, _resolution.x(), _resolution.y());
     updateVisibilityMask(right, _resolution.x(), _resolution.y());
 
+    beginTimedRender();
+    const auto start = std::chrono::steady_clock::now();
     rasterizeStereo(params[0], params[1]);
+    endTimedRender(true, start);
 
     for (int i = 0; i < 2; ++i) {
         stereoReady[i].ready = true;
@@ -1221,7 +1262,10 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     }
     EyeGpuState& shownState = useStereoImage ? eyeGpu[params.slot] : monoState;
     if (!useStereoImage) {
+        beginTimedRender();
+        const auto start = std::chrono::steady_clock::now();
         rasterizeMono(params, monoState);
+        endTimedRender(false, start);
     }
 
     // Record frame if recording is enabled
@@ -1318,6 +1362,9 @@ void sibr::HTGaussianView::onGUI() {
             ImGui::TextWrapped("The HTGS rasterizer always renders mono.");
         } else if (stereoRendering && gazeVisualization) {
             ImGui::TextWrapped("Mono while the gaze visualization is shown.");
+        }
+        if (!renderTimingText.empty()) {
+            ImGui::TextWrapped("%s", renderTimingText.c_str());
         }
 
         if (calibrationMode) {
