@@ -38,7 +38,8 @@ target_include_directories(VRHTGSRasterizer BEFORE PUBLIC
     ${CUDA_BACKEND_DIR}/visualization/include
     ${CUDA_BACKEND_DIR}/utils
 )
-set_target_properties(VRHTGSRasterizer PROPERTIES CUDA_ARCHITECTURES "86")
+set(VRHTGS_CUDA_ARCHITECTURES "native" CACHE STRING "CUDA architectures for the HTGS/VRHTGS backends")
+set_target_properties(VRHTGSRasterizer PROPERTIES CUDA_ARCHITECTURES "${VRHTGS_CUDA_ARCHITECTURES}")
 set_target_properties(VRHTGSRasterizer PROPERTIES LINKER_LANGUAGE CUDA)
 set_target_properties(VRHTGSRasterizer PROPERTIES FOLDER "extlibs")
 
