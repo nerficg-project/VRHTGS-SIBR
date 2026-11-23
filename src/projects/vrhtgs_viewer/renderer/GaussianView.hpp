@@ -75,6 +75,26 @@ namespace sibr {
     };
 
     /**
+     * Everything the rasterizers, the gaze visualization and the recording need for one eye, in the
+     * renderer's conventions. Built by HTGaussianView::computeEyeRenderParams, the only place this
+     * math lives, so mono and stereo rendering use identical values.
+     * The matrices are stored transposed (column-major data = row-major float4 rows), i.e. exactly
+     * the layout uploaded to the GPU and written to the recording.
+     */
+    struct EyeRenderParams {
+        uint32_t slot = 0;       // Per-eye array index (0/1; 0 for mono / unexpected view indices)
+        uint32_t eyeIndex = 0;   // Raw Camera::viewIndex(), as written to the recording
+        float focalX = 0.0f, focalY = 0.0f;
+        float centerX = 0.0f, centerY = 0.0f;
+        float gazePos[2] = {0.0f, 0.0f};  // Gaze position in pixels
+        sibr::Matrix4f view;     // World (scene) -> camera, transposed
+        sibr::Matrix4f viewProj; // Projection * view, transposed
+        sibr::Matrix4f invRVP;   // Inverse of rotation-only view-projection, transposed
+        sibr::Vector3f eyePos;   // Eye position in scene (model) space
+        float zNear = 0.0f, zFar = 0.0f;
+    };
+
+    /**
      * \class HTGaussianView
      */
     class HTGaussianView : public sibr::ViewBase {
@@ -309,6 +329,9 @@ namespace sibr {
 
         void createImageBuffer();
         void destroyImageBuffer();
+
+        /** Per-eye parameters for the current resolution, scene transform and locomotion. */
+        EyeRenderParams computeEyeRenderParams(const sibr::Camera& eye) const;
 
         void updateVisibilityMask(const sibr::Camera& eye, const uint32_t width, const uint32_t height);
         void initializeFoveaMask();

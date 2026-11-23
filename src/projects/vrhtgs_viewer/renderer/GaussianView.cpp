@@ -704,14 +704,10 @@ void sibr::HTGaussianView::initializeFoveaMask() {
 }
 
 
-void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Camera& eye) {
-    // Remember the eye pose (world space) so controller input can be made head-relative
-    eyeWorldPosition[eyeSlot(eye)] = eye.position();
-    eyeWorldForward[eyeSlot(eye)] = eye.dir();
-    eyeWorldUp[eyeSlot(eye)] = eye.up();
-    if (eye.viewIndex() == 1) {
-        stereoEyesSeen = true;
-    }
+sibr::EyeRenderParams sibr::HTGaussianView::computeEyeRenderParams(const sibr::Camera& eye) const {
+    EyeRenderParams params;
+    params.slot = eyeSlot(eye);
+    params.eyeIndex = eye.viewIndex();
 
     // Get focal and center position from eye parameters
     float focalX = 0.5f / std::tan(eye.fovy() / 2.0f) / eye.aspect();
@@ -734,43 +730,10 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
     float gaze_y = eyeGazePosition.y() + t * direction.y();
 
     // Transform to screen space
-    float gazePosX = -gaze_x * focalX + centerX;
-    float gazePosY = gaze_y * focalY + centerY;
-    float gazePos[2] = {gazePosX, gazePosY};
+    params.gazePos[0] = -gaze_x * focalX + centerX;
+    params.gazePos[1] = gaze_y * focalY + centerY;
 
-    // If in gaze visualization mode, skip main rendering & render gaze position instead
-    if (gazeVisualization) {
-        float* imageCuda = nullptr;
-        size_t bytes;
-
-        CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &imageBufferCuda));
-        CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
-                reinterpret_cast<void**>(&imageCuda), &bytes, imageBufferCuda));
-
-        CUDA_SAFE_CALL(vrhtgs::visualization::clear_image(
-            imageCuda,
-            _resolution.x(),
-            _resolution.y()
-        ));
-        CUDA_SAFE_CALL(vrhtgs::visualization::visualize_gaze_position(
-            imageCuda,
-            _resolution.x(),
-            _resolution.y(),
-            40,  // radius in pixels
-            (float2*)gazePos,
-            make_float3(1.0f, 0.0f, 0.0f),  // color
-            vrhtgs::visualization::GazeVisualizationType::CIRCLE,
-            /*to_chw=*/ true
-        ));
-
-        // Copy image contents to framebuffer
-        _copyRenderer->process(imageBuffer, dst, _resolution.x(), _resolution.y());
-        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &imageBufferCuda));
-
-        return;
-    }
-
-    // Get remaining view parameters for main render path
+    // Scene transform including locomotion
     sibr::Matrix4f sceneTransform = locomotionTransform() * this->sceneTransform;
     float near = eye.znear();
     float far = eye.zfar();
@@ -802,26 +765,77 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
         { 0.0f, 0.0f, 0.0f, 1.0f },
         { 0.0f, 0.0f, -0.5f * zRange / nearFar, 0.5f * (far + near) / nearFar }
     });
-    auto mvp = sibr::Matrix4f(projMat * viewMat);
-    auto invRVP = sibr::Matrix4f(c2wRot * invProjMat);
-    viewMat.transposeInPlace();
-    mvp.transposeInPlace();
-    invRVP.transposeInPlace();
+    params.viewProj = (projMat * viewMat).transpose();
+    params.invRVP = (c2wRot * invProjMat).transpose();
+    params.view = viewMat.transpose();
 
     // Get camera position & transform
     sibr::Vector4f eyePosRaw = sibr::Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
     eyePosRaw.head<3>() = eye.position();
     sibr::Vector4f eyePosTransformed = sceneTransform.inverse() * eyePosRaw;
-    sibr::Vector3f eyePos = eyePosTransformed.head<3>() / eyePosTransformed.w();
+    params.eyePos = eyePosTransformed.head<3>() / eyePosTransformed.w();
+
+    params.focalX = focalX;
+    params.focalY = focalY;
+    params.centerX = centerX;
+    params.centerY = centerY;
+    params.zNear = near;
+    params.zFar = far;
+    return params;
+}
+
+
+void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Camera& eye) {
+    // Remember the eye pose (world space) so controller input can be made head-relative
+    eyeWorldPosition[eyeSlot(eye)] = eye.position();
+    eyeWorldForward[eyeSlot(eye)] = eye.dir();
+    eyeWorldUp[eyeSlot(eye)] = eye.up();
+    if (eye.viewIndex() == 1) {
+        stereoEyesSeen = true;
+    }
+
+    const EyeRenderParams params = computeEyeRenderParams(eye);
+
+    // If in gaze visualization mode, skip main rendering & render gaze position instead
+    if (gazeVisualization) {
+        float* imageCuda = nullptr;
+        size_t bytes;
+
+        CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &imageBufferCuda));
+        CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer(
+                reinterpret_cast<void**>(&imageCuda), &bytes, imageBufferCuda));
+
+        CUDA_SAFE_CALL(vrhtgs::visualization::clear_image(
+            imageCuda,
+            _resolution.x(),
+            _resolution.y()
+        ));
+        CUDA_SAFE_CALL(vrhtgs::visualization::visualize_gaze_position(
+            imageCuda,
+            _resolution.x(),
+            _resolution.y(),
+            40,  // radius in pixels
+            (float2*)params.gazePos,
+            make_float3(1.0f, 0.0f, 0.0f),  // color
+            vrhtgs::visualization::GazeVisualizationType::CIRCLE,
+            /*to_chw=*/ true
+        ));
+
+        // Copy image contents to framebuffer
+        _copyRenderer->process(imageBuffer, dst, _resolution.x(), _resolution.y());
+        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &imageBufferCuda));
+
+        return;
+    }
 
     // Update visibility mask if needed
     updateVisibilityMask(eye, _resolution.x(), _resolution.y());
 
     // Copy frame-dependent data to GPU
-    CUDA_SAFE_CALL(cudaMemcpy(viewCuda, viewMat.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(projCuda, mvp.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(invRVPCuda, invRVP.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(camPosCuda, &eyePos, sizeof(float) * 3, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(viewCuda, params.view.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(projCuda, params.viewProj.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(invRVPCuda, params.invRVP.data(), sizeof(sibr::Matrix4f), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(camPosCuda, params.eyePos.data(), sizeof(float) * 3, cudaMemcpyHostToDevice));
 
     // Map OpenGL buffer resource for use with CUDA
     float* imageCuda = nullptr;
@@ -861,8 +875,8 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             /*active_sh_bases=*/ 15,
             /*total_sh_bases=*/ 15,           // max degree 3 = 15 bases (16-sh0)
             _resolution.x(), _resolution.y(),
-            /*near_plane=*/ near,
-            /*far_plane=*/ far,
+            /*near_plane=*/ params.zNear,
+            /*far_plane=*/ params.zFar,
             /*scale_modifier=*/ 1.0f,
             /*to_chw=*/ true
         ));
@@ -883,19 +897,19 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             .VPM = (float4*)projCuda,
             .VPR_inv = (float4*)invRVPCuda,
             .cam_position = (float3*)camPosCuda,
-            .gaze_position = (float2*)gazePos
+            .gaze_position = (float2*)params.gazePos
         };
         const Intrinsics intrinsics = {
             .width = _resolution.x(),
             .height = _resolution.y(),
-            .focal_x = focalX,
-            .focal_y = focalY,
-            .center_x = centerX,
-            .center_y = centerY
+            .focal_x = params.focalX,
+            .focal_y = params.focalY,
+            .center_x = params.centerX,
+            .center_y = params.centerY
         };
         const Masks masks = {
-            .visibility_mask = visibilityMask[eyeSlot(eye)],
-            .visibility_mask_area_table = visibilityMaskAreaTable[eyeSlot(eye)],
+            .visibility_mask = visibilityMask[params.slot],
+            .visibility_mask_area_table = visibilityMaskAreaTable[params.slot],
             .fovea_mask_area_table = foveaMaskAreaTable
         };
 
@@ -917,8 +931,8 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
             /*n_primitives=*/ count,
             /*active_sh_bases=*/ 15,
             /*total_sh_bases=*/ 15,           // max degree 3 = 15 bases (16-sh0)
-            /*near_plane=*/ near,
-            /*far_plane=*/ far,
+            /*near_plane=*/ params.zNear,
+            /*far_plane=*/ params.zFar,
             /*scale_modifier=*/ 1.0f,
             /*to_chw=*/ true,
             blurPeriphery,
@@ -940,34 +954,34 @@ void sibr::HTGaussianView::onRenderIBR(sibr::IRenderTarget& dst, const sibr::Cam
         }
         if (modelType == RasterizerVariant::HTGS) {
             htgs::recording::FrameRenderHTGSRecord record;
-            std::memcpy(record.view, viewMat.data(), sizeof(record.view));
-            std::memcpy(record.proj, mvp.data(), sizeof(record.proj));
-            std::memcpy(record.camPos, &eyePos, sizeof(record.camPos));
+            std::memcpy(record.view, params.view.data(), sizeof(record.view));
+            std::memcpy(record.proj, params.viewProj.data(), sizeof(record.proj));
+            std::memcpy(record.camPos, params.eyePos.data(), sizeof(record.camPos));
             record.resolutionX = _resolution.x();
             record.resolutionY = _resolution.y();
-            record.nearPlane = near;
-            record.farPlane = far;
-            record.gazeX = gazePosX;
-            record.gazeY = gazePosY;
-            record.eyeIndex = eye.viewIndex();
+            record.nearPlane = params.zNear;
+            record.farPlane = params.zFar;
+            record.gazeX = params.gazePos[0];
+            record.gazeY = params.gazePos[1];
+            record.eyeIndex = params.eyeIndex;
             recordingWriter->writeFrameRenderHTGS(record);
         } else {
             htgs::recording::FrameRenderHTGSFoveatedRecord record;
-            std::memcpy(record.view, viewMat.data(), sizeof(record.view));
-            std::memcpy(record.proj, mvp.data(), sizeof(record.proj));
-            std::memcpy(record.invRVP, invRVP.data(), sizeof(record.invRVP));
-            std::memcpy(record.camPos, &eyePos, sizeof(record.camPos));
+            std::memcpy(record.view, params.view.data(), sizeof(record.view));
+            std::memcpy(record.proj, params.viewProj.data(), sizeof(record.proj));
+            std::memcpy(record.invRVP, params.invRVP.data(), sizeof(record.invRVP));
+            std::memcpy(record.camPos, params.eyePos.data(), sizeof(record.camPos));
             record.resolutionX = _resolution.x();
             record.resolutionY = _resolution.y();
-            record.focalX = focalX;
-            record.focalY = focalY;
-            record.centerX = centerX;
-            record.centerY = centerY;
-            record.nearPlane = near;
-            record.farPlane = far;
-            record.gazeX = gazePosX;
-            record.gazeY = gazePosY;
-            record.eyeIndex = eye.viewIndex();
+            record.focalX = params.focalX;
+            record.focalY = params.focalY;
+            record.centerX = params.centerX;
+            record.centerY = params.centerY;
+            record.nearPlane = params.zNear;
+            record.farPlane = params.zFar;
+            record.gazeX = params.gazePos[0];
+            record.gazeY = params.gazePos[1];
+            record.eyeIndex = params.eyeIndex;
             recordingWriter->writeFrameRenderHTGSFoveated(record);
         }
     }
