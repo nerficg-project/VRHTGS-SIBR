@@ -101,7 +101,7 @@ sibr::ExperimentView::ExperimentView(
     io.BackendFlags = 0;
     io.BackendPlatformName = "custom_no_backend";
     io.Fonts->AddFontFromFileTTF(
-        (sibr::getResourcesDirectory() + "/shaders/htgs-renderer/OpenSans-Regular.ttf").c_str(),  // TODO: Fix font directory in CMake
+        (sibr::getResourcesDirectory() + "/htgs-renderer/OpenSans-Regular.ttf").c_str(),
         32.0f
     );
     ImGui_ImplOpenGL3_Init("#version 430");
