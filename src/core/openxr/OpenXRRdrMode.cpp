@@ -87,6 +87,67 @@ namespace sibr
         return transform * headPose;
     }
 
+    sibr::Camera OpenXRRdrMode::buildEyeCamera(int viewIndex, const sibr::Camera &camera, int w, int h) const
+    {
+        const OpenXRHMD::Eye eye = viewIndex == 0 ? OpenXRHMD::Eye::LEFT : OpenXRHMD::Eye::RIGHT;
+
+        auto fov = m_openxrHmd->getFieldOfView(eye);
+        auto bounds = m_openxrHmd->getBoundsOnViewPlane(eye);
+        auto q = m_openxrHmd->getPoseQuaternion(eye);
+        auto pos = m_openxrHmd->getPosePosition(eye);
+
+        auto q_eye = m_openxrHmd->getEyeGazeQuaternion(eye);
+        auto pos_eye = m_openxrHmd->getEyeGazePosition(eye);
+
+        // OpenXR eye position is in world coordinates system (+x: right, +y: up; +z: backward)
+        // 3DGS reference scenes have the following coordinate system : +x: right, +y: down, +z: forward
+        // Let's rotate the camera to have the right-side up scene
+        if (m_flipY)
+        {
+            Eigen::Matrix3f mat;
+            mat << 1.0f, 0.0f, 0.0f,
+                0.0f, -1.0f, 0.0f,
+                0.0f, 0.0f, -1.0f;
+            Eigen::Matrix3f rot = mat * q.matrix();
+            q = Eigen::Quaternionf(rot);
+            pos = mat * pos;
+
+            Eigen::Matrix3f rot_eye = mat * q_eye.matrix();
+            q_eye = Eigen::Quaternionf(rot_eye);
+            pos_eye = mat * pos_eye;
+        }
+
+        // Define camera from OpenXR eye view position/orientation/fov
+        Camera cam;
+        cam.viewIndex(viewIndex);
+        cam.rotate(q);
+        cam.position(pos);
+        cam.zfar(camera.zfar());
+        cam.znear(camera.znear());
+        cam.fovy(fov.w() - fov.z());
+        cam.aspect((tan(fov.y()) + tan(abs(fov.x()))) / (tan(fov.w()) + tan(abs(fov.z()))));
+        cam.boundsOnViewPlane(bounds);
+
+        // Set eye gaze position and rotation by transforming to camera space
+        cam.eyeGazePosition(pos_eye);
+        cam.eyeGazeRotation(q_eye);
+
+        // Set visibility mask
+        cam.visibilityMask(m_openxrHmd->getVisibilityMask(eye));
+
+        if (m_vrExperience == 1) { // 1: seated experience - used sibr_viewer current camera's position as default position
+            cam.translate(camera.position());
+        }
+
+        // Note: setStereoCam() used in SteroAnaglyph canno be reused here,
+        // because headset eye views have asymetric fov
+        // We therefore use the perspective() method with principal point positioning instead
+        cam.principalPoint(Eigen::Vector2f(1.f, 1.f) - m_openxrHmd->getScreenCenter(eye));
+        cam.perspective(cam.fovy(), (float)w / (float)h, cam.znear(), cam.zfar());
+
+        return cam;
+    }
+
     void OpenXRRdrMode::render(ViewBase &view, const sibr::Camera &camera, const sibr::Viewport &viewport, IRenderTarget *optDest)
     {
         // Render the UI with OpenXR infos
@@ -119,61 +180,8 @@ namespace sibr
         // The callback is called for each single view (left view then right view) with the texture to render to
         m_openxrHmd->submitFrame([this, w, h, &view, &camera, optDest](int viewIndex, uint32_t texture)
                                  {
-                                     OpenXRHMD::Eye eye = viewIndex == 0 ? OpenXRHMD::Eye::LEFT : OpenXRHMD::Eye::RIGHT;
-
-                                     auto fov = this->m_openxrHmd->getFieldOfView(eye);
-                                     auto bounds = this->m_openxrHmd->getBoundsOnViewPlane(eye);
-                                     auto q = this->m_openxrHmd->getPoseQuaternion(eye);
-                                     auto pos = this->m_openxrHmd->getPosePosition(eye);
-
-                                     auto q_eye = this->m_openxrHmd->getEyeGazeQuaternion(eye);
-                                     auto pos_eye = this->m_openxrHmd->getEyeGazePosition(eye);
-
-                                     // OpenXR eye position is in world coordinates system (+x: right, +y: up; +z: backward)
-                                     // 3DGS reference scenes have the following coordinate system : +x: right, +y: down, +z: forward
-                                     // Let's rotate the camera to have the right-side up scene
-                                     if (m_flipY)
-                                     {
-                                         Eigen::Matrix3f mat;
-                                         mat << 1.0f, 0.0f, 0.0f,
-                                             0.0f, -1.0f, 0.0f,
-                                             0.0f, 0.0f, -1.0f;
-                                         Eigen::Matrix3f rot = mat * q.matrix();
-                                         q = Eigen::Quaternionf(rot);
-                                         pos = mat * pos;
-
-                                         Eigen::Matrix3f rot_eye = mat * q_eye.matrix();
-                                         q_eye = Eigen::Quaternionf(rot_eye);
-                                         pos_eye = mat * pos_eye;
-                                     }
-
-                                     // Define camera from OpenXR eye view position/orientation/fov
-                                     Camera cam;
-                                     cam.viewIndex(viewIndex);
-                                     cam.rotate(q);
-                                     cam.position(pos);
-                                     cam.zfar(camera.zfar());
-                                     cam.znear(camera.znear());
-                                     cam.fovy(fov.w() - fov.z());
-                                     cam.aspect((tan(fov.y()) + tan(abs(fov.x()))) / (tan(fov.w()) + tan(abs(fov.z()))));
-                                     cam.boundsOnViewPlane(bounds);
-
-                                     // Set eye gaze position and rotation by transforming to camera space
-                                     cam.eyeGazePosition(pos_eye);
-                                     cam.eyeGazeRotation(q_eye);
-
-                                     // Set visibility mask
-                                     cam.visibilityMask(this->m_openxrHmd->getVisibilityMask(eye));
-
-                                     if (m_vrExperience == 1) { // 1: seated experience - used sibr_viewer current camera's position as default position
-                                         cam.translate(camera.position());
-                                     }
-
-                                     // Note: setStereoCam() used in SteroAnaglyph canno be reused here,
-                                     // because headset eye views have asymetric fov
-                                     // We therefore use the perspective() method with principal point positioning instead
-                                     cam.principalPoint(Eigen::Vector2f(1.f, 1.f) - this->m_openxrHmd->getScreenCenter(eye));
-                                     cam.perspective(cam.fovy(), (float)w / (float)h, cam.znear(), cam.zfar());
+                                     const OpenXRHMD::Eye eye = viewIndex == 0 ? OpenXRHMD::Eye::LEFT : OpenXRHMD::Eye::RIGHT;
+                                     const Camera cam = buildEyeCamera(viewIndex, camera, w, h);
 
                                      // Get the render target holding the swapchain image's texture from the pool
                                      auto rt = getRenderTarget(texture, w, h);

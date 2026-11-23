@@ -61,6 +61,16 @@ namespace sibr
 		 */
 		virtual void	onRenderIBR(IRenderTarget& dst, const Camera& eye) {};
 
+		/** Optional stereo hook, called once per rendered headset frame with both eye cameras,
+		 * before onRenderIBR is called for each eye with the same cameras. Lets a view render
+		 * both eyes in one pass and only show the cached eye image in onRenderIBR.
+		 * Does nothing by default.
+		 *\param left left eye camera (viewIndex 0)
+		 *\param right right eye camera (viewIndex 1)
+		 *\sa OpenXRRdrMode
+		 */
+		virtual void	onPrepareStereoFrame(const Camera& left, const Camera& right) {}
+
 		/** Display GUI. */
 		virtual void	onGUI() { }
 

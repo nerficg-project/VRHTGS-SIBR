@@ -76,6 +76,15 @@ namespace sibr
         FrameBeginCallback m_frameBeginCallback;                 ///< Optional, see setFrameBeginCallback()
 
         SwapchainImageRenderTarget::Ptr getRenderTarget(uint32_t texture, uint32_t w, uint32_t h);
+
+        /** Build the camera of one eye from the HMD state of the current frame (valid after
+         *  waitNextFrame()): pose, FOV, bounds on the view plane, gaze, visibility mask, flip-Y
+         *  conversion, seated-mode offset, principal point and perspective.
+         *\param viewIndex 0 = left eye, 1 = right eye
+         *\param camera the SIBR (desktop) camera: provides znear/zfar and the seated-mode offset
+         *\param w headset resolution width (per eye)
+         *\param h headset resolution height (per eye) */
+        sibr::Camera buildEyeCamera(int viewIndex, const sibr::Camera &camera, int w, int h) const;
     };
 
 } /*namespace sibr*/
