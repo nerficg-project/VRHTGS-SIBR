@@ -641,9 +641,9 @@ macro(ibr_install_rsc target)
 	set(rsc_target "${target}_${install_rsc_${target}_TYPE}")
 
 	if(install_rsc_${target}_FOLDER)
-		set(rsc_folder "${install_rsc_${target}_TYPE}/${install_rsc_${target}_FOLDER}")
+		set(install_rsc_folder "${install_rsc_${target}_TYPE}/${install_rsc_${target}_FOLDER}")
 	else()
-		set(rsc_folder "${install_rsc_${target}_TYPE}")
+		set(install_rsc_folder "${install_rsc_${target}_TYPE}")
 	endif()
 
 	add_custom_target(${rsc_target}
@@ -659,13 +659,13 @@ macro(ibr_install_rsc target)
 		if(DEFINED CMAKE_BUILD_TYPE)						## for make/nmake based
 			add_custom_command(TARGET ${rsc_target} POST_BUILD
 							COMMAND ${CMAKE_COMMAND} -E
-							copy_if_different ${scriptFile} ${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/${rsc_folder}/${relativeFilename})
+							copy_if_different ${scriptFile} ${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/${install_rsc_folder}/${relativeFilename})
 		endif()
 		foreach(CONFIG_TYPES ${CMAKE_CONFIGURATION_TYPES}) 	## for multi config types (MSVC based)
 			string(TOUPPER ${CONFIG_TYPES} CONFIG_TYPES_UC)
 			add_custom_command(TARGET ${rsc_target} POST_BUILD
 							COMMAND ${CMAKE_COMMAND} -E
-							copy_if_different ${scriptFile} ${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/${rsc_folder}/${relativeFilename})
+							copy_if_different ${scriptFile} ${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/${install_rsc_folder}/${relativeFilename})
 		endforeach()
 	endforeach()
 
@@ -676,37 +676,37 @@ macro(ibr_install_rsc target)
 	add_dependencies(PREBUILD ${rsc_target})
 
 	if(DEFINED CMAKE_BUILD_TYPE)						## for make/nmake based
-		resourceFile(ADD ${rsc_folder} CONFIG_TYPE ${CMAKE_BUILD_TYPE} FILE_PATH "${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/ibr_resources.ini")
+		resourceFile(ADD ${install_rsc_folder} CONFIG_TYPE ${CMAKE_BUILD_TYPE} FILE_PATH "${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/ibr_resources.ini")
 		
 		if(install_rsc_${target}_EXECUTABLE)
 			install(
 				PROGRAMS ${install_rsc_${target}_FILES}
 				CONFIGURATIONS ${CMAKE_BUILD_TYPE}
-				DESTINATION "${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/${rsc_folder}"
+				DESTINATION "${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/${install_rsc_folder}"
 			)
 		else()
 			install(
 				FILES ${install_rsc_${target}_FILES}
 				CONFIGURATIONS ${CMAKE_BUILD_TYPE}
-				DESTINATION "${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/${rsc_folder}"
+				DESTINATION "${CMAKE_INSTALL_PREFIX_${CMAKE_BUILD_TYPE}}/${install_rsc_folder}"
 			)
 		endif()
 	endif()
 	foreach(CONFIG_TYPES ${CMAKE_CONFIGURATION_TYPES}) 	## for multi config types (MSVC based)
 		string(TOUPPER ${CONFIG_TYPES} CONFIG_TYPES_UC)
-		resourceFile(ADD ${rsc_folder} CONFIG_TYPE ${CONFIG_TYPES} FILE_PATH "${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/ibr_resources.ini")
+		resourceFile(ADD ${install_rsc_folder} CONFIG_TYPE ${CONFIG_TYPES} FILE_PATH "${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/ibr_resources.ini")
 		
 		if(install_rsc_${target}_EXECUTABLE)
 			install(
 				PROGRAMS ${install_rsc_${target}_FILES}
 				CONFIGURATIONS ${CONFIG_TYPES}
-				DESTINATION "${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/${rsc_folder}"
+				DESTINATION "${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/${install_rsc_folder}"
 			)
 		else()
 			install(
 				FILES ${install_rsc_${target}_FILES}
 				CONFIGURATIONS ${CONFIG_TYPES}
-				DESTINATION "${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/${rsc_folder}"
+				DESTINATION "${CMAKE_INSTALL_PREFIX_${CONFIG_TYPES_UC}}/${install_rsc_folder}"
 			)
 		endif()
 	endforeach()
